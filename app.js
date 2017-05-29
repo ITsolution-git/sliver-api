@@ -1,8 +1,10 @@
 let express = require('express');
 let http = require('http');
-
+let path = require('path');
 let bodyParser = require('body-parser');
 let expressValidator = require('express-validator');
+let swaggerJSDoc = require('swagger-jsdoc');
+const router = express.Router();
 
 const fs = require('fs');
 const join = require('path').join;
@@ -11,6 +13,7 @@ const port = process.env.PORT || 8000;
 
 let app = express();
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(expressValidator({
     customValidators: {
@@ -19,6 +22,28 @@ app.use(expressValidator({
         }
     }
 }));
+
+// swagger definition
+let swaggerDefinition = {
+    info: {
+        title: 'SLAP API',
+        version: '1.0.0',
+        description: 'SLAP CENTER API',
+    },
+    host: 'http://34.210.128.241:8000/',
+    basePath: '/',
+};
+
+// options for the swagger docs
+let options = {
+    // import swaggerDefinitions
+    swaggerDefinition: swaggerDefinition,
+    // path to the API docs
+    apis: ['./controllers/*.js'],
+};
+
+// initialize swagger-jsdoc
+let swaggerSpec = swaggerJSDoc(options);
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -37,6 +62,12 @@ fs.readdirSync(models)
     });
 
 require('./router/index')(app);
+
+// Swagger json file
+app.use('/swagger.json', function(req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+});
 
 http.createServer(app).listen(port, () => {
     console.log('Runing server on port: ' + port);

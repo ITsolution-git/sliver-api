@@ -7,7 +7,8 @@ gulp.task('default', () => {
         ext : 'js',
         ignore : ['./node_modules/**']
     })
-        .on('restart', () => {
-            console.log('Restart');
-        });
+    .on('restart', () => {
+        console.log('Restart');
+    });
 });
+

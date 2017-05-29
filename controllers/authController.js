@@ -12,8 +12,34 @@ const Product = mongoose.model('Product');
 const Coupon = mongoose.model('Coupon');
 const Payment = mongoose.model('Payment');
 
+/**
+ * @swagger
+ * definitions:
+ *   NewUser:
+ *     type: object
+ *     required:
+ *       - email
+ *       - password
+ *     properties:
+ *       email:
+ *         type: string
+ *         format: email
+ *       password:
+ *         type: string
+ *         format: password
+ *   User:
+ *     allOf:
+ *       - $ref: '#/definitions/NewUser'
+ *       - required:
+ *         - id
+ *       - properties:
+ *         id:
+ *           type: integer
+ *           format: int64
+ */
 
 class AuthController {
+
     static signin(req) {
         return User.load({email: req.body.email}).then((user) => {
             if (!user.comparePassword(req.body.password)) {
@@ -104,6 +130,37 @@ class AuthController {
             });
     }
 
+    /**
+     * @swagger
+     * /auth/:
+     *  post:
+     *    description: Sign up admin user
+     *    tags:
+     *       - auth
+     *    produces:
+     *      - application/json
+     *    parameters:
+     *      - name: email
+     *        description: email
+     *        in:  body
+     *        required: true
+     *        type: string
+     *      - name: password
+     *        description: password
+     *        in:  body
+     *        required: true
+     *        type: string
+     *    responses:
+     *      200:
+     *        description: Returns token on success
+     *        schema:
+     *          type: object
+     *          properties:
+     *            token:
+     *              type: string
+     *        examples:
+     *          token: string
+     */
     static signinAdmin(req) {
         return User.load({email: req.body.email})
             .then((user) => {
@@ -141,7 +198,7 @@ class AuthController {
                 return new CustomError('Letter email was sent! Run to your inbox to check it out', 'OK', {orig: result});
             });
     }
-
+    
     static authToken(req) {
         return new Promise((resolve) => {
             resolve(req.decoded._doc);

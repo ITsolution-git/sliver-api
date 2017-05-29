@@ -29,6 +29,10 @@ const runAction =  (action, req, res) => {
             return;
         });
 };
+//Status
+router.get('/', (req, res) => {
+    res.json({status: "/admin is running healthy."});
+});
 
 //Admin
 router.get('/auth/',  isAuth, (req, res) => runAction(authController.authToken, req, res));

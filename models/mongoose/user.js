@@ -6,7 +6,7 @@ const HashPass = require('../../libs/class/HashPass');
 let Schema = mongoose.Schema;
 
 let schema = new Schema({
-     name : {
+    name : {
          type : String,
          required : true
      },

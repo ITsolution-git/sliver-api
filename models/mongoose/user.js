@@ -52,7 +52,7 @@ let schema = new Schema({
     admin : {
         type : Number,
         enum : [0,1],
-        default : 1
+        default : 0
     },
     planId : {
         type: String

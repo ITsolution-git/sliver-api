@@ -2,7 +2,7 @@ const config = require('./../config');
 const jwt = require('jsonwebtoken');
 
 module.exports = (req,res,next) => {
-    let token = req.query['access-token'];
+    let token = req.headers['access-token'];
 
     if(token) {
         jwt.verify(token, config.secret, function(err, decoded) {

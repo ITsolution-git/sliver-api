@@ -164,7 +164,7 @@ class AuthController {
     static signinAdmin(req) {
         return User.load({email: req.body.email})
             .then((user) => {
-                if (!user.comparePassword(req.body.password) && !user.checkAdmin()) {
+                if (!user.comparePassword(req.body.password) && !user.isAdmin()) {
                     throw new CustomError('Whoops, your password are incorrect', 'UNAUTH');
                 }
 

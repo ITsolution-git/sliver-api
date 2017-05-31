@@ -52,6 +52,11 @@ class User {
         });
     }
 
+    isAdmin(){
+
+        return this.admin === 1;
+    }
+
     /**
      * Checks compare password user
      * @param {string} password

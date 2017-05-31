@@ -162,7 +162,7 @@ class AuthController {
                 throw new CustomError('Whoops, your password are incorrect', 'UNAUTH');
             }
 
-            let token = jwt.sign(user._id, config.secret, {
+            let token = jwt.sign(user, config.secret, {
                 expiresIn: "300d" // expires in 24 hours
             });
 

@@ -68,7 +68,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .post(rootUrl + '/products')
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .send(productToCreate)
                 .end(function(err, res) {
                     res.body._id.should.equal(productToCreate._id.toString());
@@ -80,7 +80,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .get(rootUrl + '/products')
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     res.body.should.have.lengthOf(3);
                     done();
@@ -91,7 +91,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .get(rootUrl + '/products/' + product._id)
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     res.body._id.should.equal(product._id.toString());
                     done();
@@ -102,7 +102,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .put(rootUrl + '/products/' + product._id)
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .send({ name: 'Updated name' })
                 .end(function(err, res) {
                     res.body.name.should.equal('Updated name');
@@ -114,7 +114,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .delete(rootUrl + '/products/' + product._id)
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     done();
                 });
@@ -127,7 +127,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .get(rootUrl + '/plans')
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     done();
                 });
@@ -146,7 +146,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .post(rootUrl + '/coupons')
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .send(couponToCreate)
                 .end(function(err, res) {
                     res.body._id.should.equal(couponToCreate._id.toString());
@@ -158,7 +158,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .get(rootUrl + '/coupons')
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     res.body.should.have.lengthOf(3);
                     done();
@@ -169,7 +169,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .delete(rootUrl + '/coupons/' + coupon._id)
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     res.body._id.should.equal(coupon.toString());
                     done();
@@ -180,7 +180,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .put(rootUrl + '/coupons/' + coupon._id)
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .send({ name: 'Awesome coupon' })
                 .end(function(err, res) {
                     res.body.name.should.equal('Awesome coupon');
@@ -192,7 +192,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .delete(rootUrl + '/coupons/' + coupon._id)
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     db.model('Coupon').findById(coupon._id, function(err, doc) {
                         expect(doc).to.not.exist;
@@ -209,7 +209,7 @@ describe('Admin ', function() {
             chai
                 .request(app)
                 .get(rootUrl + '/financialTracker')
-                .set('access-token', token)
+                .set('authorization', 'BEARER ' + token)
                 .end(function(err, res) {
                     done();
                 });

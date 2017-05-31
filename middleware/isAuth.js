@@ -2,9 +2,9 @@ const config = require('./../config');
 const jwt = require('jsonwebtoken');
 
 module.exports = (req,res,next) => {
-    let token = req.headers['Authorization'];
+    let token = req.headers['authorization'];
 
-    if(token && (token.indeoxOf('BEARER') != -1) && token.split(' ')>=2) {
+    if(token && (token.indexOf('BEARER') != -1) && (token.split(' ').length>=2)) {
         
         jwt.verify(token.split(' ')[1], config.secret, function(err, decoded) {
             if (err) {

@@ -14,46 +14,189 @@ const Payment = mongoose.model('Payment');
 
 /**
  * @swagger
+ * securityDefinitions:
+ *   api_key:
+ *     type: "apiKey"
+ *     name: "Authorization"
+ *     vlaue: "Authorization"
+ *     in: "header"    
  * definitions:
- *   NewUser:
+ *   LoginUser:
  *     type: object
  *     required:
  *       - email
  *       - password
  *     properties:
  *       email:
+ *         type: email
+ *         example: "admin@admin.loc"
+ *       password:
+ *         type: string
+ *         example: "password"
+ *   NewUser:
+ *     type: object
+ *     required:
+ *       - email
+ *       - lastName
+ *       - businessName
+ *       - phone
+ *       - email
+ *       - password
+ *       - confirmPassword
+ *       - billingAddress
+ *       - planId
+ *     properties:
+ *       name:
+ *         type: string
+ *         example: "John"
+ *       lastName:
+ *         type: string
+ *         example: "Doe"
+ *       businessName:
+ *         type: string
+ *         example: "Fashion clothing"
+ *       phone:
+ *         type: string
+ *         example: "123456789"
+ *       email:
  *         type: string
  *         format: email
  *       password:
  *         type: string
- *         format: password
+ *         example: "password"
+ *       confirmPassword:
+ *         type: string
+ *         example: "password"
+ *       billingAddress:
+ *         type: string
+ *         example: "23 West Av."
+ *       planId:
+ *         type: string
+ *         example: "575d0c22964ddb3b6ba41bed"
+ *       code:
+ *         type: string
+ *         example: "575d0c22964ddb3b6ba41bed"
+ *       buildId:
+ *         type: string
+ *         example: "575d0c22964ddb3b6ba41bed"
  *   User:
- *     allOf:
- *       - $ref: '#/definitions/NewUser'
- *       - required:
- *         - id
- *       - properties:
- *         id:
- *           type: integer
- *           format: int64
+ *     type: object
+ *     required:
+ *       - email
+ *       - lastName
+ *       - businessName
+ *       - phone
+ *       - email
+ *       - password
+ *       - confirmPassword
+ *       - billingAddress
+ *       - planId
+ *     properties:
+ *       name:
+ *         type: string
+ *         example: "John"
+ *       lastName:
+ *         type: string
+ *         example: "Doe"
+ *       businessName:
+ *         type: string
+ *         example: "Fashion clothing"
+ *       phone:
+ *         type: string
+ *         example: "123456789"
+ *       email:
+ *         type: string
+ *         format: email
+ *       password:
+ *         type: string
+ *         example: "password"
+ *       confirmPassword:
+ *         type: string
+ *         example: "password"
+ *       billingAddress:
+ *         type: string
+ *         example: "23 West Av."
+ *       planId:
+ *         type: string
+ *         example: "575d0c22964ddb3b6ba41bed"
+ *       code:
+ *         type: string
+ *         example: "575d0c22964ddb3b6ba41bed"
+ *       buildId:
+ *         type: string
+ *         example: "575d0c22964ddb3b6ba41bed"
  */
 
 class AuthController {
 
+    /**
+     * @swagger
+     * v1/auth/:
+     *  post:
+     *    description: Sign in  user
+     *    tags:
+     *       - v1
+     *    produces:
+     *      - application/json
+     *    parameters:
+     *      - in: "body"
+     *        name: "body"
+     *        description: "SignInUser"
+     *        required: true
+     *        schema:
+     *          $ref: "#/definitions/LoginUser"
+     *    responses:
+     *      200:
+     *        description: Returns token on success
+     *        schema:
+     *          type: object
+     *          properties:
+     *            token:
+     *              type: string
+     *        examples:
+     *          token: string
+     */
     static signin(req) {
         return User.load({email: req.body.email}).then((user) => {
             if (!user.comparePassword(req.body.password)) {
                 throw new CustomError('Whoops, your password are incorrect', 'UNAUTH');
             }
 
-            let token = jwt.sign(user, config.secret, {
-                expiresIn: "24h" // expires in 24 hours
+            let token = jwt.sign(user._id, config.secret, {
+                expiresIn: "300d" // expires in 24 hours
             });
 
             return {token: token};
         });
     }
 
+    /**
+     * @swagger
+     * v1/auth/signup:
+     *  post:
+     *    description: Sign up a user
+     *    tags:
+     *       - v1
+     *    produces:
+     *      - application/json
+     *    parameters:
+     *      - in: "body"
+     *        name: "body"
+     *        description: "SignUpUser"
+     *        required: true
+     *        schema:
+     *          $ref: "#/definitions/NewUser"
+     *    responses:
+     *      200:
+     *        description: Returns token on success
+     *        schema:
+     *          type: object
+     *          properties:
+     *            token:
+     *              type: string
+     *        examples:
+     *          token: string
+     */
     static signup(req) {
         let mObj = {payments: new Payment()};
         return (new User(req.body)).save()
@@ -132,11 +275,11 @@ class AuthController {
 
     /**
      * @swagger
-     * /auth/:
+     * /admin/auth/:
      *  post:
-     *    description: Sign up admin user
+     *    description: Sign in admin user
      *    tags:
-     *       - auth
+     *       - admin
      *    produces:
      *      - application/json
      *    parameters:
@@ -199,6 +342,26 @@ class AuthController {
             });
     }
     
+    /**
+     * @swagger
+     * v1/auth/:
+     *  get:
+     *    description: Get token
+     *    tags:
+     *       - v1
+     *    produces:
+     *      - application/json
+     *    responses:
+     *      200:
+     *        description: Success
+     *        schema:
+     *          type: object
+     *          properties:
+     *            token:
+     *              type: "#/definitions/User"
+     *        examples:
+     *          token: string
+     */
     static authToken(req) {
         return new Promise((resolve) => {
             resolve(req.decoded._doc);

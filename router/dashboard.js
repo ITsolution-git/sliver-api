@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 //Validators
+const validate = require('../libs/class/ParamValidator');
 let signinValid = require('../middleware/validation/signinValid');
 let signupValid = require('../middleware/validation/signupValid');
 let productValid = require('../middleware/validation/productValid');
+let authValidation = require('../middleware/validation/authValidation');
 
 //Middleware
 const isAuth = require('../middleware/isAuth');

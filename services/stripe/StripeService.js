@@ -30,6 +30,11 @@ class Stripe {
     }
 
     static _createCard(card) {
+        return new Promise( (resolve,reject) => {
+            resolve( {
+                "id" : "card_1ALBKEIpmN0dayvfuxRhfDwh"
+            } );
+        })
         card.exp_month = card.date.substring(0,2);
         card.exp_year = card.date.substring(2,6);
 
@@ -37,6 +42,7 @@ class Stripe {
         
         return new Promise( (resolve,reject) => {
             stripe.tokens.create({card : card}, (err,token) => {
+                
                 return err ? reject(new StripeError('Failed create card', 'BAD_DATA', {orig: err.stack})) : resolve(token);
             });
         });

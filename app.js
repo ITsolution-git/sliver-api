@@ -1,3 +1,4 @@
+require('dotenv').config()
 let express = require('express');
 let http = require('http');
 let path = require('path');
@@ -30,8 +31,8 @@ let swaggerDefinition = {
         version: '1.0.0',
         description: 'SLAP CENTER API',
     },
-    host: 'http://34.210.128.241:8000/',
-    basePath: '/',
+    host: 'localhost:8000/',
+    basePath: '/'
 };
 
 // options for the swagger docs

@@ -1,0 +1,117 @@
+[{
+    "_id" : {"$oid":"575d0c22964ddb3b6ba41bed"},
+    "billingFrequency" : 12,
+    "typeProduct" : 1,
+    "buildType" : 1,
+    "status" : 1,
+    "productName" : "selfSLAP",
+    "productDescription" : "self slap description",
+    "costProduct" : 200,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 0,
+    "expertHours" : null,
+    "__v" : 0
+},
+{   
+    "_id" : {"$oid":"58f4ed792fbe2a27060c8d99"},
+    "billingFrequency" : 12,
+    "typeProduct" : 1,
+    "buildType" : 1,
+    "status" : 1,
+    "productName" : "groupSLAP",
+    "productDescription" : "group SLAP description",
+    "costProduct" : 250,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 0,
+    "expertHours" : 20,
+    "__v" : 0
+},
+{
+    "_id" : {"$oid":"58f4ed972fbe2a27060c8d9a"},
+    "billingFrequency" : 12,
+    "typeProduct" : 1,
+    "buildType" : 1,
+    "status" : 1,
+    "productName" : "monthlySLAP",
+    "productDescription" : "monthly SLAP description",
+    "costProduct" : 300,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 0,
+    "expertHours" : 50,
+    "__v" : 0
+}
+,
+{
+    "_id" : {"$oid":"58f4edb72fbe2a27060c8d9b"},
+    "billingFrequency" : 12,
+    "typeProduct" : 1,
+    "buildType" : 1,
+    "status" : 1,
+    "productName" : "seriousSLAP",
+    "productDescription" : "seriousSLAP description",
+    "costProduct" : 400,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 0,
+    "expertHours" : 100,
+    "__v" : 0
+}
+,
+{
+    "_id" : {"$oid":"58f4edd32fbe2a27060c8d9c"},
+    "billingFrequency" : 12,
+    "typeProduct" : 1,
+    "buildType" : 1,
+    "status" : 1,
+    "productName" : "masterSLAP",
+    "productDescription" : "masterSLAP description",
+    "costProduct" : 500,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 0,
+    "expertHours" : 200,
+    "__v" : 0
+}
+,
+{
+    "_id" : {"$oid":"58f4edeb2fbe2a27060c8d9d"},
+    "billingFrequency" : 12,
+    "typeProduct" : 1,
+    "buildType" : 1,
+    "status" : 1,
+    "productName" : "teamSLAP",
+    "productDescription" : "team SLAP description",
+    "costProduct" : 1000,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 0,
+    "expertHours" : 500,
+    "__v" : 0
+}
+,
+{
+    "_id" : {"$oid":"58f4ee162fbe2a27060c8d9e"},
+    "billingFrequency" : 1,
+    "typeProduct" : 2,
+    "buildType" : 2,
+    "status" : 1,
+    "productName" : "One time SLAP",
+    "productDescription" : "description",
+    "costProduct" : 2500,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 0,
+    "expertHours" : 200,
+    "__v" : 0
+}
+,
+{
+    "_id" : {"$oid":"58f4ee3c2fbe2a27060c8d9f"},
+    "billingFrequency" : 12,
+    "typeProduct" : 2,
+    "buildType" : 1,
+    "status" : 1,
+    "productName" : "Installments",
+    "productDescription" : "installments description",
+    "costProduct" : 200,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "amountFirstPayment" : 500,
+    "expertHours" : 200,
+    "__v" : 0
+}]

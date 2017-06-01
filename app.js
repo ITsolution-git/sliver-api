@@ -24,6 +24,13 @@ app.use(expressValidator({
     }
 }));
 
+var host = 'localhost:8000/';
+if (process.env.NODE_ENV=='production') {
+    host = 'api.slapcenter.com:8000/';
+} else if (process.env.NODE_ENV=='staging') {
+    host = 'api.staging.slapcenter.com:8000/';
+}
+
 // swagger definition
 let swaggerDefinition = {
     info: {
@@ -31,7 +38,7 @@ let swaggerDefinition = {
         version: '1.0.0',
         description: 'SLAP CENTER API',
     },
-    host: process.env.NODE_ENV=='development' ? 'localhost:8000/' : 'api.slapcenter.com:8000/',
+    host: host,
     basePath: '/'
 };
 

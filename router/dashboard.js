@@ -30,7 +30,7 @@ const runAction = (action, req, res) => {
         })
         .catch((err) => {
             console.log('Router: ' + err);
-            res.status(err.status || 400).send(err);
+            res.status(err.status || 400).send({err: err.name ? err.name : 'Error', message:err.message});
             return;
         });
 };

@@ -30,11 +30,6 @@ class Stripe {
     }
 
     static _createCard(card) {
-        return new Promise( (resolve,reject) => {
-            resolve( {
-                "id" : "card_1ALBKEIpmN0dayvfuxRhfDwh"
-            } );
-        })
         card.exp_month = card.date.substring(0,2);
         card.exp_year = card.date.substring(2,6);
 
@@ -51,7 +46,7 @@ class Stripe {
     static createCharges(customer,amount) {
         return new Promise((resolve,reject) => {
             stripe.charges.create({
-                amount: amount,
+                amount: amount * 100,
                 currency: 'usd',
                 source: customer.default_source ? customer.default_source : customer.stripeSource,
                 customer: customer.stripeId ? customer.stripeId : customer.id

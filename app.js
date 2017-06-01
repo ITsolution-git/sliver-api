@@ -31,7 +31,7 @@ let swaggerDefinition = {
         version: '1.0.0',
         description: 'SLAP CENTER API',
     },
-    host: 'localhost:8000/',
+    host: process.env.NODE_ENV=='development' ? 'localhost:8000/' : 'api.slapcenter.com:8000/',
     basePath: '/'
 };
 

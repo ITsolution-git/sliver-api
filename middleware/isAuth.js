@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 module.exports = (req,res,next) => {
     let token = req.headers['authorization'];
 
-    if(token && (token.indexOf('BEARER') != -1) && (token.split(' ').length>=2)) {
+    if(token && (token.indexOf('Bearer') != -1) && (token.split(' ').length>=2)) {
         
         jwt.verify(token.split(' ')[1], config.secret, function(err, decoded) {
             if (err) {

@@ -4,6 +4,7 @@ const PaymentTime = require('../jobs/PaymentTime');
 class Scheduler {
 
     static run() {
+        PaymentTime.payment();
         return schedule.scheduleJob({hour: 1, minute: 30}, () => {
             return PaymentTime.payment();
         });

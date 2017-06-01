@@ -199,11 +199,17 @@ class AuthController {
      */
     static signup(req) {
         let mObj = {payments: new Payment()};
-        return (new User(req.body)).save()
-            .then((user) => {
-                mObj.user = user;
-                console.log(user);
-                return Product.load({_id: req.body.planId});
+        return User.load({email: req.body.email}).then((user)=>{
+                if (!user)
+                    return user;
+                else
+                    throw new CustomError('Email duplicated', 'BAD_DATA');
+            }).then((user)=>{
+                return new User(req.body).save();
+            }).then((user) => {
+                    mObj.user = user;
+                    console.log(user);
+                    return Product.load({_id: req.body.planId});
             })
             .then((plan) => {
                 mObj.plan = plan;
@@ -263,13 +269,16 @@ class AuthController {
                 return mObj.user;
             })
             .catch((err) => {
-                if (err instanceof StripeError) {
+                // if (err instanceof StripeError) {
+                if (mObj.user)
                     return mObj.user.remove().then(() => {
-                        return err;
+                        throw err;
                     })
-                }
+                else
+                    throw err;
+                // }
 
-                return err;
+                // return err;
             });
     }
 

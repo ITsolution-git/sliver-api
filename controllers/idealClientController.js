@@ -1,23 +1,37 @@
 const mongoose = require('./../libs/mongoose');
 const IdealClient = mongoose.model('IdealClient');
 const User = mongoose.model('User');
+const Statement = mongoose.model('Statement');
+
 
 class IdealClientController {
 
     static setNameIdealClient(req) {
-        return IdealClient.UpdateOrCreate({userId: req.decoded._doc._id, nameYourIdealClient: req.body.data})
-            .then(() => {
-                return User.UpdateOrCreate({userId: req.decoded._doc._id, finishedSteps: req.body.finishedSteps});
-            });
+   
+        let options = {
+            userId:req.decoded._doc._id,
+            select: 'yourStatement'
+        };
+
+        return Statement.load(options).then(yourStatement => {
+            yourStatement.yourStatement.fourth = req.body.data.fourth;
+
+            return Statement.UpdateOrCreate({userId: req.decoded._doc._id, yourStatement: yourStatement.yourStatement})
+                .then(() => {
+                    return User.UpdateOrCreate({userId: req.decoded._doc._id, finishedSteps: req.body.finishedSteps});
+                });
+        });
     }
 
     static getNameIdealClient(req) {
         let options = {
-            userId: req.decoded._doc._id,
-            select: 'nameYouIdealClient'
+            userId:req.decoded._doc._id,
+            select: 'yourStatement'
         };
 
-        return IdealClient.load(options);
+        return Statement.load(options).then(yourStatement => {
+            return yourStatement.yourStatement.fourth;
+        });
     }
 
     static setWhoAreYouIdealClient(req) {

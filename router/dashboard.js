@@ -20,6 +20,7 @@ let financialTrackerController = require('../controllers/financialTrackerControl
 let mindsetController = require('../controllers/mindsetController');
 let idealClientController = require('../controllers/idealClientController');
 let statementController = require('../controllers/statementController');
+let yearGoalController = require('../controllers/yearGoalController');
 
 const runAction = (action, req, res) => {
     action(req, res)
@@ -72,6 +73,17 @@ router.post('/whoAreYouIdealClient', isAuth, (req, res) => runAction(idealClient
 router.get('/whoAreYouIdealClient', isAuth, (req, res) => runAction(idealClientController.getWhoAreYouIdealClient, req, res));
 router.post('/nameYourIdealClient', isAuth, (req, res) => runAction(idealClientController.setNameIdealClient, req, res));
 router.get('/nameYourIdealClient', isAuth, (req, res) => runAction(idealClientController.getNameIdealClient, req, res));
+
+//1YearGoal
+router.post('/personalExpenses', isAuth, (req, res) => runAction(yearGoalController.setPersonalExpenses, req, res));
+router.get('/personalExpenses', isAuth, (req, res) => runAction(yearGoalController.getPersonalExpenses, req, res));
+router.post('/fixedBusinessExpenses', isAuth, (req, res) => runAction(yearGoalController.setFixedBusinessExpenses, req, res));
+router.get('/fixedBusinessExpenses', isAuth, (req, res) => runAction(yearGoalController.getFixedBusinessExpenses, req, res));
+router.post('/revenueStreams', isAuth, (req, res) => runAction(yearGoalController.setRevenueStreams, req, res));
+router.get('/revenueStreams', isAuth, (req, res) => runAction(yearGoalController.getRevenueStreams, req, res));
+router.post('/adjustYourYearGoal', isAuth, (req, res) => runAction(yearGoalController.setRevenueStreams, req, res));
+router.get('/adjustYourYearGoal', isAuth, (req, res) => runAction(yearGoalController.getRevenueStreams, req, res));
+
 
 //AuthAdmin
 router.get('/auth/reset', (req, res) => runAction(authController.sendToken, req, res));

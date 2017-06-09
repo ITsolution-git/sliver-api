@@ -3,6 +3,7 @@ const User = mongoose.model('User');
 const slapMindset = mongoose.model('slapMindset');
 const IdealClient = mongoose.model('IdealClient');
 const Statement = mongoose.model('Statement');
+const YearGoal = mongoose.model('YearGoal');
 
 class UserController {
     static getFinishedSteps(req) {
@@ -26,6 +27,19 @@ class UserController {
                     })
                     .then((statement) => {
                         data.statement = statement;
+                        return YearGoal.load({userId: userId})
+                    })
+                    .then((yearGoal) => {
+                        data.yearGoal = JSON.parse(JSON.stringify(yearGoal));
+                        data.yearGoal.sellingPrice = yearGoal.revenueStreams;
+                        data.yearGoal.variableBusinessExpenses = yearGoal.revenueStreams;
+                        data.yearGoal.profitMargin = yearGoal.revenueStreams;
+                        data.yearGoal.revenueBreakdown = yearGoal.revenueStreams;
+                        data.yearGoal.yourYearGoal = yearGoal.revenueStreams;
+                        data.yearGoal.adjustYourYearGoal = yearGoal.revenueStreams;
+                        
+                        data.yearGoal.commitYourYearGoal = yearGoal.revenueStreams;
+                        
                         return data;
                     });
             });

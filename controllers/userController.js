@@ -31,15 +31,16 @@ class UserController {
                     })
                     .then((yearGoal) => {
                         data.yearGoal = JSON.parse(JSON.stringify(yearGoal));
-                        data.yearGoal.sellingPrice = yearGoal.revenueStreams;
-                        data.yearGoal.variableBusinessExpenses = yearGoal.revenueStreams;
-                        data.yearGoal.profitMargin = yearGoal.revenueStreams;
-                        data.yearGoal.revenueBreakdown = yearGoal.revenueStreams;
-                        data.yearGoal.yourYearGoal = yearGoal.revenueStreams;
-                        data.yearGoal.adjustYourYearGoal = yearGoal.revenueStreams;
-                        
-                        data.yearGoal.commitYourYearGoal = yearGoal.revenueStreams;
-                        
+                        if ( yearGoal && yearGoal.revenueStreams) { 
+                            data.yearGoal.sellingPrice = yearGoal.revenueStreams;
+                            data.yearGoal.variableBusinessExpenses = yearGoal.revenueStreams;
+                            data.yearGoal.profitMargin = yearGoal.revenueStreams;
+                            data.yearGoal.revenueBreakdown = yearGoal.revenueStreams;
+                            data.yearGoal.yourYearGoal = yearGoal.revenueStreams;
+                            data.yearGoal.adjustYourYearGoal = yearGoal.revenueStreams;
+                            
+                            data.yearGoal.commitYourYearGoal = yearGoal.revenueStreams;
+                        }
                         return data;
                     });
             });

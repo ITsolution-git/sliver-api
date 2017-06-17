@@ -21,6 +21,7 @@ let mindsetController = require('../controllers/mindsetController');
 let idealClientController = require('../controllers/idealClientController');
 let statementController = require('../controllers/statementController');
 let yearGoalController = require('../controllers/yearGoalController');
+let actionPlanController = require('../controllers/actionPlanController');
 
 const runAction = (action, req, res) => {
     action(req, res)
@@ -81,13 +82,22 @@ router.post('/fixedBusinessExpenses', isAuth, (req, res) => runAction(yearGoalCo
 router.get('/fixedBusinessExpenses', isAuth, (req, res) => runAction(yearGoalController.getFixedBusinessExpenses, req, res));
 router.post('/revenueStreams', isAuth, (req, res) => runAction(yearGoalController.setRevenueStreams, req, res));
 router.get('/revenueStreams', isAuth, (req, res) => runAction(yearGoalController.getRevenueStreams, req, res));
-router.post('/adjustYourYearGoal', isAuth, (req, res) => runAction(yearGoalController.setRevenueStreams, req, res));
-router.get('/adjustYourYearGoal', isAuth, (req, res) => runAction(yearGoalController.getRevenueStreams, req, res));
+
+//Action Plan
+
+router.post('/worldAroundYou', isAuth, (req, res) => runAction(actionPlanController.setWorldAroundYou, req, res));
+router.get('/worldAroundYou', isAuth, (req, res) => runAction(actionPlanController.getWorldAroundYou, req, res));
+router.post('/doubleCheckStartDate', isAuth, (req, res) => runAction(mindsetController.setStartDate, req, res));
+
+router.post('/whatsHappening', isAuth, (req, res) => runAction(actionPlanController.setWhatsHappening, req, res));
+router.get('/whatsHappening', isAuth, (req, res) => runAction(actionPlanController.getWhatsHappening, req, res));
+
+router.post('/rateConnectingStrategies', isAuth, (req, res) => runAction(actionPlanController.setRateConnectingStrategies, req, res));
+router.get('/rateConnectingStrategies', isAuth, (req, res) => runAction(actionPlanController.getRateConnectingStrategies, req, res));
 
 
 //AuthAdmin
 router.get('/auth/reset', (req, res) => runAction(authController.sendToken, req, res));
 router.post('/auth/check-password', (req, res) => runAction(authController.checkPassword, req, res));
-
 
 module.exports = router;

@@ -4,6 +4,7 @@ const slapMindset = mongoose.model('slapMindset');
 const IdealClient = mongoose.model('IdealClient');
 const Statement = mongoose.model('Statement');
 const YearGoal = mongoose.model('YearGoal');
+const ActionPlan = mongoose.model('ActionPlan');
 
 class UserController {
     static getFinishedSteps(req) {
@@ -40,6 +41,24 @@ class UserController {
                             data.yearGoal.adjustYourYearGoal = yearGoal.revenueStreams;
                             
                             data.yearGoal.commitYourYearGoal = yearGoal.revenueStreams;
+                        }
+                        return ActionPlan.load({userId: userId})
+                    })
+                    .then((actionPlan) => {
+                        data.actionPlan = JSON.parse(JSON.stringify(actionPlan));
+                        if ( actionPlan && data.slapMindset.slapStartDate ) {
+                            data.actionPlan.doubleCheckStartDate = JSON.parse(JSON.stringify(data.slapMindset.slapStartDate));
+                        } 
+                        if ( actionPlan && data.actionPlan.whatsHappening) {
+                            data.actionPlan.connectingStrategyStrategizing = JSON.parse(JSON.stringify(data.actionPlan.whatsHappening));
+
+                            data.actionPlan.doubleCheckYearGoal = JSON.parse(JSON.stringify(data.actionPlan.whatsHappening));
+
+                            data.actionPlan.chooseYourConnectingStrategies = JSON.parse(JSON.stringify(data.actionPlan.whatsHappening));
+                            data.actionPlan.actionItems = JSON.parse(JSON.stringify(data.actionPlan.whatsHappening));   
+                            data.actionPlan.quarterlyGoals = JSON.parse(JSON.stringify(data.actionPlan.whatsHappening));
+                            data.actionPlan.commitToYourActionPlan = JSON.parse(JSON.stringify(data.actionPlan.whatsHappening));(JSON.stringify(data.actionPlan.whatsHappening));
+                            
                         }
                         return data;
                     });

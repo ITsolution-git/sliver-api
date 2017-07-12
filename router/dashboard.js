@@ -22,6 +22,7 @@ let idealClientController = require('../controllers/idealClientController');
 let statementController = require('../controllers/statementController');
 let yearGoalController = require('../controllers/yearGoalController');
 let actionPlanController = require('../controllers/actionPlanController');
+let excuteItemsController = require('../controllers/excuteItemsController');
 
 const runAction = (action, req, res) => {
     action(req, res)
@@ -94,6 +95,13 @@ router.get('/whatsHappening', isAuth, (req, res) => runAction(actionPlanControll
 
 router.post('/rateConnectingStrategies', isAuth, (req, res) => runAction(actionPlanController.setRateConnectingStrategies, req, res));
 router.get('/rateConnectingStrategies', isAuth, (req, res) => runAction(actionPlanController.getRateConnectingStrategies, req, res));
+
+//Excute Items
+
+router.post('/excuteItems', isAuth, (req, res) => runAction(excuteItemsController.create, req, res));
+router.get('/excuteItems', isAuth, (req, res) => runAction(excuteItemsController.getExcuteItems, req, res));
+router.delete('/excuteItems/:id', isAuth, (req, res) => runAction(excuteItemsController.remove, req, res));
+router.put('/excuteItems/:id', isAuth, (req, res) => runAction(excuteItemsController.update, req, res));
 
 
 //AuthAdmin

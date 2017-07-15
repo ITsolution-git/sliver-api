@@ -372,8 +372,11 @@ class AuthController {
      *          token: string
      */
     static authToken(req) {
-        return new Promise((resolve) => {
-            resolve(req.decoded._doc);
+        return User.list({criteria: { businessName: req.decoded._doc.businessName } })
+        .then(function(users){
+            var user = req.decoded._doc;
+            user.accounts = users;
+            return user;
         });
     }
 

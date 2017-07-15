@@ -9,7 +9,7 @@ let schema = new Schema({
     name : {
          type : String,
          required : true
-     },
+    },
     lastName : {
         type : String,
         required : true
@@ -20,7 +20,7 @@ let schema = new Schema({
     },
     email : {
         type : String,
-        unique : true,
+        unique : [true, 'should unique'],
         required : true
     },
     phone : {
@@ -31,7 +31,7 @@ let schema = new Schema({
     password : {
         type : String,
         require : true
-    },    
+    },
     token : {
         type : String
     },
@@ -40,7 +40,7 @@ let schema = new Schema({
     },
     billingAddress : {
         type : String,
-        required : true
+        default: ''
     },
     stripeId : {
         type : String
@@ -49,10 +49,20 @@ let schema = new Schema({
     stripeSource : {
         type: String
     },
-    admin : {
-        type : Number,
-        enum : [0,1],
-        default : 0
+    // No Deprecation and use role
+    // admin : {
+    //     type : Number,
+    //     enum : [0,1],
+    //     default : 0
+    // },
+    
+    // User Role model
+    // Admin 1 SLAPexpert 2 SLAPmanagers 3 SLAPster 4 Partner 5
+
+    role: {
+        type: Number,
+        enum: [1,2,3,4,5],  
+        default: 4  
     },
     planId : {
         type: String
@@ -79,8 +89,12 @@ let schema = new Schema({
     finishedSteps: {
         type: Array,
         default: []
+    },
+    status: {
+        type: String,
+        enum: ['active', 'deleted', 'inactive', 'confirmed'],
+        default: 'active'
     }
-
 
 });
 

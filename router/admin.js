@@ -14,7 +14,10 @@ const isAuth = require('../middleware/isAuth');
 let authController = require('../controllers/authController');
 let couponController = require('../controllers/couponController');
 let productController = require('../controllers/productController');
+let userController = require('../controllers/userController');
 let financialTrackerController = require('../controllers/financialTrackerController');
+
+//TODO: I am going to add JOI validation.~~~
 
 const runAction =  (action, req, res) => {
     action(req, res)
@@ -37,6 +40,14 @@ router.get('/', (req, res) => {
 //Admin
 router.get('/auth/',  isAuth, (req, res) => runAction(authController.authToken, req, res));
 router.post('/auth', signinValid, (req,res) => runAction(authController.signinAdmin,req,res));
+
+
+//Manage Users 
+router.put('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.updateUser, req, res));
+router.post('/users',isAuth, isAdmin, (req, res) => runAction(userController.createUser, req, res));
+router.get('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.getUser, req, res));
+router.delete('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.deleteUser, req, res));
+router.get('/users',isAuth, isAdmin, (req, res) => runAction(userController.getUsers, req, res));
 
 //Manage Products
 router.post('/products',isAuth, isAdmin, productValid, (req, res) => runAction(productController.create, req, res));

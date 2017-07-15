@@ -5,22 +5,10 @@ const moment = require('moment');
 
 class User {
 
-    /**
-     * Find one user by criteria
-     *
-     * @param criteria
-     * @returns {Promise}
-     */
     static load(criteria, select) {
         return this.findOne(criteria).select(select).exec();
     }
 
-    /**
-     * List Users
-     *
-     * @param {Object} options
-     * @api private
-     */
     static list(options) {
         options = options || {};
         const criteria = options.criteria || {};
@@ -54,7 +42,7 @@ class User {
 
     isAdmin(){
 
-        return this.admin === 1;
+        return this.role === 1;
     }
 
     /**

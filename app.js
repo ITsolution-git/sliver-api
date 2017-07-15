@@ -58,7 +58,16 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version, X-File-Name, Authorization');
     res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Credentials', true);
-    next();
+    
+    //intercepts OPTIONS method
+    if ('OPTIONS' === req.method) {
+      //respond with 200
+      res.sendStatus(200);
+    }
+    else {
+    //move on
+      next();
+    }
 });
 
 // Bootstrap models

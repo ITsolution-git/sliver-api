@@ -1,5 +1,6 @@
 const mongoose = require('./../libs/mongoose');
 const User = mongoose.model('User');
+
 const slapMindset = mongoose.model('slapMindset');
 const IdealClient = mongoose.model('IdealClient');
 const Statement = mongoose.model('Statement');
@@ -7,6 +8,39 @@ const YearGoal = mongoose.model('YearGoal');
 const ActionPlan = mongoose.model('ActionPlan');
 
 class UserController {
+    
+    static createUser(req) {
+        req.body.firstName = '';
+        return (new User(req.body)).save().catch(function(err){
+            // if (11000 === err.code || 11001 === err.code) {
+            //     var MongooseError = require('mongoose/lib/error')
+            //     var valError = new MongooseError.ValidationError(err)
+            //     valError.errors["xxx"] = new MongooseError.ValidatorError('xxx', 'Duplicate found', err.err)
+            //     err = valError;
+            //     return err;
+            // }
+            throw err;
+        });
+    }
+
+    static getUsers() {
+        return User.list();
+    }
+
+    static getUser(req) {
+        return User.load({_id: req.params.id});
+    }
+
+    static updateUser(req) {
+        return User.findByIdAndUpdate(req.query._id, req.query);
+    }
+
+    static deleteUser(req) {
+        // return User.findByIdAndRemove({_id: req.params.id});
+        req.body.status = 'deleted';
+        return User.findByIdAndUpdate(req.query._id, req.query);
+    }
+
     static getFinishedSteps(req) {
         let select = 'finishedSteps';
         let userId = req.decoded._doc._id;

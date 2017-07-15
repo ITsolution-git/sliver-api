@@ -70,7 +70,7 @@
     "couponId" : null,
     "build_date" : { "$date": "2017-05-19T13:37:14.759Z" },
     "plan_date" : { "$date": "2017-05-19T13:37:14.759Z" },
-    "admin" : 1,
+    "role" : 1,
     "__v" : 0,
     "stripeId" : "cus_AgYRQHAeYHTGvP",
     "stripeSource" : "card_1ALBKEIpmN0dayvfuxRhfDwh"

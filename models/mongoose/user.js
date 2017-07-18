@@ -20,12 +20,12 @@ let schema = new Schema({
     },
     email : {
         type : String,
-        unique : [true, 'should unique'],
+        // unique : [true, 'should unique'],
         required : true
     },
     phone : {
         type : Number,
-        unique : true,
+        // unique : true,
         required : true
     },
     password : {

@@ -41,9 +41,9 @@ class UserController {
         return User.findByIdAndUpdate(req.query._id, req.query);
     }
 
-    static getFinishedSteps(req) {
+    static getFinishedSteps(req, _id) {
         let select = 'finishedSteps';
-        let userId = req.decoded._doc._id;
+        let userId = req ? req.decoded._doc._id : _id;
         let data = {};
         return User.load({_id: userId}, select)
             .then((steps) => {

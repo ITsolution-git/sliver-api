@@ -3,6 +3,9 @@ let Schema = mongoose.Schema;
 let ExcuteItem = require('./class/ExcuteItem');
 
 let schema = new Schema({
+    userId: {
+        type: String
+    },
     title: {
         type: String,
         // Disable required for refextion title can be empty when blank.

@@ -54,7 +54,7 @@ router.post('/products',isAuth, isAdmin, productValid, (req, res) => runAction(p
 router.get('/products',isAuth, isAdmin, (req, res) => runAction(productController.getProducts, req, res));
 router.get('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.getProduct, req, res));
 router.put('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.updateProduct, req, res));
-router.post('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.deleteProduct, req, res));
+router.delete('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.deleteProduct, req, res));
 router.get('/plans',isAuth, isAdmin, (req,res) => runAction(productController.getPlans, req, res));
 
 //Manage Coupons
@@ -62,7 +62,7 @@ router.post('/coupon',isAuth, isAdmin, (req,res) => runAction(couponController.c
 router.get('/coupon',isAuth, isAdmin, (req,res) => runAction(couponController.getCoupons, req,res));
 router.get('/coupon/:id',isAuth, isAdmin, (req,res) => runAction(couponController.getCoupon, req,res));
 router.put('/coupon/:id',isAuth, isAdmin, (req, res) => runAction(couponController.update, req, res));
-router.delete('/coupon',isAuth, isAdmin, (req,res) => runAction(couponController.remove,req,res));
+router.delete('/coupon/:id',isAuth, isAdmin, (req,res) => runAction(couponController.remove,req,res));
 
 //Reports Financial Tracker
 router.get('/financialTracker',isAuth, isAdmin, (req,res) => runAction(financialTrackerController.getPayments,req,res));

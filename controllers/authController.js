@@ -12,6 +12,12 @@ const Product = mongoose.model('Product');
 const Coupon = mongoose.model('Coupon');
 const Payment = mongoose.model('Payment');
 
+let userController = require('./userController');
+let idealClientController = require('./idealClientController');
+let statementController = require('./statementController');
+const IdealClient = mongoose.model('IdealClient');
+const Statement = mongoose.model('Statement');
+const SlapMindset = mongoose.model('slapMindset');
 /**
  * @swagger
  * securityDefinitions:
@@ -128,7 +134,9 @@ const Payment = mongoose.model('Payment');
  */
 
 class AuthController {
-
+    constructor() {
+        // this.signUpSaveUser = signUpSaveUser;
+    }
     /**
      * @swagger
      * v1/auth/:
@@ -158,6 +166,10 @@ class AuthController {
      */
     static signin(req) {
         return User.load({email: req.body.email}).then((user) => {
+            if(!user){
+                throw new CustomError('Whoops, your email is wrong.', 'UNAUTH');
+            }
+
             if (!user.comparePassword(req.body.password)) {
                 throw new CustomError('Whoops, your password are incorrect', 'UNAUTH');
             }
@@ -167,9 +179,23 @@ class AuthController {
             });
 
             return {token: token};
+        }).catch(err=>{
+            throw err;
         });
+
     }
 
+    static selectSLAPyear(req) {
+
+        return User.load({_id: req.params.id}).then((user) => {
+ 
+            let token = jwt.sign(user, config.secret, {
+                expiresIn: "300d" // expires in 24 hours
+            });
+
+            return {token: token};
+        });
+    }
     /**
      * @swagger
      * v1/auth/signup:
@@ -199,14 +225,8 @@ class AuthController {
      */
     static signup(req) {
         let mObj = {payments: new Payment()};
-        return User.load({email: req.body.email}).then((user)=>{
-                if (!user)
-                    return user;
-                else
-                    throw new CustomError('Email duplicated', 'BAD_DATA');
-            }).then((user)=>{
-                return new User(req.body).save();
-            }).then((user) => {
+        return AuthController.signUpSaveUser(req)
+        .then((user) => {
                     mObj.user = user;
                     console.log(user);
                     return Product.load({_id: req.body.planId});
@@ -241,13 +261,18 @@ class AuthController {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
                 }
+                if (req.body.isRenew)
+                    return StripeService.getCustomerById(mObj.user.stripeId)
+                    .then((customer) => {
+                        mObj.customer = customer;
+                    });
+                else
+                    return StripeService.createCustomer(req.body)
+                    .then((customer) => {
+                        mObj.customer = customer;
 
-                return StripeService.createCustomer(req.body);
-            })
-            .then((customer) => {
-                mObj.customer = customer;
-
-                return mObj.user.updateStripeCustomer(customer, mObj.coupon)
+                        return mObj.user.updateStripeCustomer(customer, mObj.coupon)
+                    });
             })
             .then(() => {
                 return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
@@ -276,12 +301,64 @@ class AuthController {
                     })
                 else
                     throw err;
-                // }
-
-                // return err;
             });
     }
 
+    static signUpSaveUser(req) {
+        if(!req.body.isRenew) {
+            return User.load({email: req.body.email}).then((user)=>{
+                if (!user)
+                    return user;
+                else
+                    throw new CustomError('Email duplicated', 'BAD_DATA');
+            })
+            .then((user)=>{
+                return new User(req.body).save();
+            });
+        } else {
+            let user_id = null;
+            return User.load({_id: req.body.renewFrom})
+            .then((user)=>{
+                req.body.billingAddress = user.billingAddress;
+                req.body.password = user.password;
+                req.body.finishedSteps = [0];
+                req.body.stripeId = user.stripeId;
+                req.body.stripeSource = user.stripeSource;
+                return User.collection.insert(req.body);
+                
+            })
+            .then((resp) => {
+                user_id = resp.insertedIds[0];
+                return userController.getFinishedSteps(null, req.body.renewFrom);
+            })
+            .then((stepInfoFrom) => {
+                if (!stepInfoFrom.slapMindset || !stepInfoFrom.idealClient || !stepInfoFrom.statement) {
+                    throw new Error('Cannot renew from new account.');
+                    return;
+                }
+                var slapMindset = stepInfoFrom.slapMindset.toJSON();
+                delete slapMindset._id;
+                slapMindset.userId = user_id;
+                var idealClient = stepInfoFrom.idealClient.toJSON();
+                delete idealClient._id;
+                idealClient.userId = user_id;
+                var statement = stepInfoFrom.statement.toJSON();
+                delete statement._id;
+                statement.userId = user_id;
+                
+                return Promise.all([
+                    new IdealClient(idealClient).save(),
+                    new Statement(statement).save(),
+                    new SlapMindset(slapMindset).save()
+                ]);
+                
+            })
+            .then(resps => {
+                return User.load({_id: user_id});
+            });
+            
+        }
+    }
     /**
      * @swagger
      * /admin/auth/:

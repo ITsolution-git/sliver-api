@@ -8,7 +8,6 @@ const stripe = require('../../services/stripe');
 const StripeService = stripe.service;
 const Mailer = require('../class/Mailer');
 
-
 class PaymentTime {
 
     static payment() {
@@ -20,7 +19,7 @@ class PaymentTime {
                 users.forEach((user) => { //TODO: limit on users
                     let productsToPay = this.checkUserPaymentDay(user, days);
 
-                    if (productsToPay.length < 0) return;
+                    if (productsToPay.length <= 0) return;
 
                     const productsToCharge = [];
                     Product.find({_id: {$in: productsToPay}})

@@ -40,6 +40,7 @@ const runAction = (action, req, res) => {
 
 //Auth
 router.get('/auth/', isAuth, (req, res) => runAction(authController.authToken, req, res));
+router.post('/auth/selectslapyear/:id', isAuth, (req, res) => runAction(authController.selectSLAPyear, req, res));
 router.post('/auth/', signinValid, (req, res) => runAction(authController.signin, req, res));
 router.post('/auth/signup', signupValid, (req, res) => runAction(authController.signup, req, res));
 

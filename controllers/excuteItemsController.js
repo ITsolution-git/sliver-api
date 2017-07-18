@@ -6,6 +6,7 @@ class ExcuteItemController {
     static create(req) {
         
         let excuteItem = req.body;
+        excuteItem.userId = req.decoded._doc._id;
         // if(ExcuteItem.dateFrom) {
         //     ExcuteItem.dateFrom = new Date(ExcuteItem.dateFrom);
         // }
@@ -17,8 +18,8 @@ class ExcuteItemController {
         return (new ExcuteItem(excuteItem)).save();
     }
 
-    static getExcuteItems() {
-        return ExcuteItem.list();
+    static getExcuteItems(req) {
+        return ExcuteItem.list({userId: req.decoded._doc._id});
     }
 
 

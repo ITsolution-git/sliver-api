@@ -35,6 +35,15 @@ class Payment {
         return payment;
     }
 
+
+    createExtraPayment(extra) {
+        let payment = {};
+        payment.productId = extra._id;
+        payment.amount = extra.costProduct;
+        payment.name = extra.productName;
+
+        return payment;
+    }
     /**
      * Create build first payment
      * @param build
@@ -55,6 +64,8 @@ class Payment {
         payment.name = build.productName;
         return payment;
     }
+
+
 
     /**
      * Calculate all summ plan cost and build cost

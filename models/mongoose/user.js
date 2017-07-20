@@ -94,8 +94,28 @@ let schema = new Schema({
         type: String,
         enum: ['active', 'deleted', 'inactive', 'confirmed'],
         default: 'active'
+    },
+    partnerId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    expertId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    extrainfo: {
+        type: Object,
+        default: {
+            workPhone: '',
+            cellPhone: '',
+            contactMethod:'',
+            textNotes:'',
+        }
+    },
+    pausingPayment: {
+        type: Object,
+        default: false,
     }
-
 });
 
 /**

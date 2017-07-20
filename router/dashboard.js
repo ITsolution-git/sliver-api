@@ -23,6 +23,7 @@ let statementController = require('../controllers/statementController');
 let yearGoalController = require('../controllers/yearGoalController');
 let actionPlanController = require('../controllers/actionPlanController');
 let excuteItemsController = require('../controllers/excuteItemsController');
+let activityController = require('../controllers/activityController');
 
 const runAction = (action, req, res) => {
     action(req, res)
@@ -49,13 +50,15 @@ router.post('/auth/signup', signupValid, (req, res) => runAction(authController.
 //Dashboard buy
 router.get('/products/plans', (req, res) => runAction(productController.getPlans, req, res));
 router.get('/products/builds', (req, res) => runAction(productController.getBuilds, req, res));
-
+router.get('/products/all', (req, res) => runAction(productController.getAll, req, res));
 //Dashboard buy couponValid
 router.get('/coupon/:code/:planId', (req, res) => runAction(couponController.isValidCode, req, res));
 
 //Dashboard settingUser
 router.get('/payments', isAuth, (req, res) => runAction(financialTrackerController.getPaymentsByUser, req, res));
 
+//Get All step information by user_id or req.decoded._doc.id
+router.get('/getFinishedUserStep/:user_id', isAuth, (req, res) => runAction(userController.getFinishedStepsForUser, req, res));
 router.get('/getFinishedUserStep', isAuth, (req, res) => runAction(userController.getFinishedSteps, req, res));
 
 //SlapMindset
@@ -100,6 +103,7 @@ router.get('/rateConnectingStrategies', isAuth, (req, res) => runAction(actionPl
 //Excute Items
 
 router.post('/excuteItems', isAuth, (req, res) => runAction(excuteItemsController.create, req, res));
+router.get('/excuteItemsByUser/:user_id', isAuth, (req, res) => runAction(excuteItemsController.getExcuteItemsByUser, req, res));
 router.get('/excuteItems', isAuth, (req, res) => runAction(excuteItemsController.getExcuteItems, req, res));
 router.delete('/excuteItems/:id', isAuth, (req, res) => runAction(excuteItemsController.remove, req, res));
 router.put('/excuteItems/:id', isAuth, (req, res) => runAction(excuteItemsController.update, req, res));
@@ -108,5 +112,12 @@ router.put('/excuteItems/:id', isAuth, (req, res) => runAction(excuteItemsContro
 //AuthAdmin
 router.get('/auth/reset', (req, res) => runAction(authController.sendToken, req, res));
 router.post('/auth/check-password', (req, res) => runAction(authController.checkPassword, req, res));
+
+
+//Log Activity
+router.post('/acitivites/:user_id', isAuth, (req, res) => runAction(activityController.create, req, res));
+router.get('/acitivites/:user_id', isAuth, (req, res) => runAction(activityController.getActivitys, req, res));
+router.delete('/acitivites/:user_id/:id', isAuth, (req, res) => runAction(activityController.remove, req, res));
+router.put('/acitivites/:user_id/:id', isAuth, (req, res) => runAction(activityController.update, req, res));
 
 module.exports = router;

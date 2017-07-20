@@ -54,7 +54,7 @@ const ProductModel = mongoose.model('Product', schema);
 
 ProductModel.TYPE_PLAN = 1;
 ProductModel.TYPE_BUILD = 2;
-
+ProductModel.TYPE_EXTRA = 2;
 
 ProductModel.ACTIVE = 1;
 ProductModel.INACTIVE = 0;

@@ -14,6 +14,7 @@ const Payment = mongoose.model('Payment');
 
 let userController = require('./userController');
 let idealClientController = require('./idealClientController');
+let activityController = require('./activityController');
 let statementController = require('./statementController');
 const IdealClient = mongoose.model('IdealClient');
 const Statement = mongoose.model('Statement');
@@ -291,6 +292,30 @@ class AuthController {
                     mObj.coupon.minusRedemption();
                 }
 
+                if(mObj.user.isRenew)
+                    activityController.create({ userId: mObj.user._id,
+                                                title: 'Account Renewed', 
+                                                type: 'Milestone',  
+                                                notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
+                                                journey: {section: 'start', name: 'Account Created'}})
+                else
+                    activityController.create({ userId: mObj.user._id,
+                                            title: 'Account Created', 
+                                            type: 'Milestone',  
+                                            notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.',
+                                            journey: {section: 'start', name: 'Account Created'}})
+
+                activityController.create({ userId: mObj.user._id,
+                                            title: 'T&C Signed',
+                                            type: 'Milestone',
+                                            notes: mObj.user.businessName + ' agreed T&C Signed.',
+                                            journey: {section: 'start', name: 'T&C Signed'}});                                       
+                activityController.create({ userId: mObj.user._id,
+                                            title: 'Payment Set Up', 
+                                            type: 'Milestone',  
+                                            notes: mObj.user.businessName + ' set up the payment.',
+                                            journey: {section: 'start', name: 'Payment Set Up'}});
+                
                 return mObj.user;
             })
             .catch((err) => {
@@ -324,6 +349,12 @@ class AuthController {
                 req.body.finishedSteps = [0];
                 req.body.stripeId = user.stripeId;
                 req.body.stripeSource = user.stripeSource;
+                req.body.createdAt = new Date();
+                
+                delete req.body.planDate;
+                delete req.body.code;
+                delete req.body.check;
+
                 return User.collection.insert(req.body);
                 
             })

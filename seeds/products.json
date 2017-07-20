@@ -114,4 +114,28 @@
     "amountFirstPayment" : 500,
     "expertHours" : 200,
     "__v" : 0
+},
+
+{
+    "_id" : {"$oid":"58f4ee3c2fbe2a27060c8d4f"},
+    "typeProduct" : 3,
+    "buildType" : 2,
+    "status" : 1,
+    "productName" : "Missing 1:1 Meeting",
+    "productDescription" : "Missing 1:1 Meeting",
+    "costProduct" : 25,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "__v" : 0
+},
+
+{
+    "_id" : {"$oid":"58f4ee3c2fbe2a27060c8d5f"},
+    "typeProduct" : 3,
+    "buildType" : 2,
+    "status" : 1,
+    "productName" : "Missing Group Meeting",
+    "productDescription" : "Missing Group Meeting",
+    "costProduct" : 250,
+    "createdAt" : "2017-04-17T16:17:21.556Z",
+    "__v" : 0
 }]

@@ -35,6 +35,17 @@ class ProductController {
         return Product.list(options);
     }
 
+    static getAll() {
+
+        let options = {
+            criteria: {
+                status: Product.ACTIVE
+            }
+        };
+
+        return Product.list(options);
+    }
+
     static getBuilds() {
         return new Promise((resolve, reject) => {
             let result = [];

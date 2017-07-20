@@ -1,4 +1,4 @@
-[{
+[[{
     "_id" : {"$oid":"591ef60f4dc01a565e091ac3"},
     "planId" : "58f4edeb2fbe2a27060c8d9d",
     "buildId" : "58f4ee162fbe2a27060c8d9e",
@@ -75,3 +75,4 @@
     "stripeId" : "cus_AgYRQHAeYHTGvP",
     "stripeSource" : "card_1ALBKEIpmN0dayvfuxRhfDwh"
 }]
+]]

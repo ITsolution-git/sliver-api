@@ -16,7 +16,7 @@ let couponController = require('../controllers/couponController');
 let productController = require('../controllers/productController');
 let userController = require('../controllers/userController');
 let financialTrackerController = require('../controllers/financialTrackerController');
-
+let activityController = require('../controllers/activityController');
 //TODO: I am going to add JOI validation.~~~
 
 const runAction =  (action, req, res) => {
@@ -67,5 +67,9 @@ router.delete('/coupon/:id',isAuth, isAdmin, (req,res) => runAction(couponContro
 //Reports Financial Tracker
 router.get('/financialTracker',isAuth, isAdmin, (req,res) => runAction(financialTrackerController.getPayments,req,res));
 
+//Payments
+
+router.get('/payments/paymentsByUser/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.getPaymentsByUserID, req, res));
+router.post('/payments/charge/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.chargeUser, req, res));
 
 module.exports = router;

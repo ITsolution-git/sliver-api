@@ -32,7 +32,31 @@ class UserController {
     }
 
     static updateUser(req) {
-        return User.findByIdAndUpdate(req.query._id, req.query);
+        var bizName;
+        return User.load({_id: req.query._id}).then(function(user){
+            bizName = user.businessName;
+            delete req.query.$$hashKey;
+            return User.findByIdAndUpdate(req.query._id, req.query);
+        })
+        .then(function(user){
+            return User.list({criteria: {businessName: bizName}});
+        })
+        .then(function(users){
+            return Promise.all( users.map(function(user){
+                user.businessName = req.query.businessName;
+                user.name = req.query.name;
+                user.lastName = req.query.lastName;
+                user.email = req.query.email;
+                user.phone = req.query.phone;
+                user.partnerId = req.query.partnerId;
+                user.expertId = req.query.expertId;
+                user.extrainfo = JSON.parse(req.query.extrainfo);
+                return user.save();
+            }));
+        })
+        .then(function(responses){
+            return responses;
+        })
     }
 
     static deleteUser(req) {
@@ -94,6 +118,40 @@ class UserController {
                             data.actionPlan.commitToYourActionPlan = JSON.parse(JSON.stringify(data.actionPlan.whatsHappening));(JSON.stringify(data.actionPlan.whatsHappening));
                             
                         }
+                        return data;
+                    });
+            });
+    }
+    static getFinishedStepsForUser(req) {
+        let select = 'finishedSteps';
+        let userId = req.params.user_id;
+        let data = {};
+        return User.load({_id: userId}, select)
+            .then((steps) => {
+                if (steps.finishedSteps.length <= 0) return null;
+
+                data.steps = steps;
+
+                return slapMindset.load({userId: userId})
+                    .then((slapMindset) => {
+                        data.slapMindset = slapMindset;
+                        return IdealClient.load({userId: userId});
+                    })
+                    .then((idealClient) => {
+                        data.idealClient = idealClient;
+                        return Statement.load({userId: userId})
+                    })
+                    .then((statement) => {
+                        data.statement = statement;
+                        return YearGoal.load({userId: userId})
+                    })
+                    .then((yearGoal) => {
+                        data.yearGoal = JSON.parse(JSON.stringify(yearGoal));
+                        return ActionPlan.load({userId: userId})
+                    })
+                    .then((actionPlan) => {
+                        data.actionPlan = JSON.parse(JSON.stringify(actionPlan));
+                        
                         return data;
                     });
             });

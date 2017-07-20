@@ -7,8 +7,8 @@ class ExcuteItemController {
     static create(req) {
         var con = {
             action: { name:'ActionItem'},
-            reflextion: { name:'Reflection'} ,
-            sales: { name:'SalesItem'} 
+            reflextion: { name:'Pause & Reflect'} ,
+            sales: { name:'Sales'} 
         }
         let excuteItem = req.body;
         excuteItem.userId = req.decoded._doc._id;

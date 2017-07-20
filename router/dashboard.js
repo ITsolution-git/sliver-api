@@ -113,11 +113,13 @@ router.put('/excuteItems/:id', isAuth, (req, res) => runAction(excuteItemsContro
 router.get('/auth/reset', (req, res) => runAction(authController.sendToken, req, res));
 router.post('/auth/check-password', (req, res) => runAction(authController.checkPassword, req, res));
 
-
 //Log Activity
 router.post('/acitivites/:user_id', isAuth, (req, res) => runAction(activityController.create, req, res));
 router.get('/acitivites/:user_id', isAuth, (req, res) => runAction(activityController.getActivitys, req, res));
 router.delete('/acitivites/:user_id/:id', isAuth, (req, res) => runAction(activityController.remove, req, res));
 router.put('/acitivites/:user_id/:id', isAuth, (req, res) => runAction(activityController.update, req, res));
 
+//Change ME
+router.put('/me/', isAuth, (req, res) => runAction(userController.updateMe, req, res));
+router.post('/me/change-password', isAuth, (req, res) => runAction(userController.changeMyPassword, req, res));
 module.exports = router;

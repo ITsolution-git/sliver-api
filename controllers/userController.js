@@ -48,6 +48,7 @@ class UserController {
                 user.lastName = req.query.lastName;
                 user.email = req.query.email;
                 user.phone = req.query.phone;
+                user.password = req.query.password;
                 user.partnerId = req.query.partnerId;
                 user.expertId = req.query.expertId;
                 user.extrainfo = JSON.parse(req.query.extrainfo);
@@ -57,6 +58,45 @@ class UserController {
         .then(function(responses){
             return responses;
         })
+    }
+
+    static updateMe(req) {
+        var bizName;
+        var userObj;
+        return User.load({_id: req.decoded._doc._id}).then(function(user){
+            bizName = user.businessName;
+            delete req.query.$$hashKey;
+            return User.findByIdAndUpdate(req.decoded._doc._id, req.body);
+        })
+        .then(function(user){
+            userObj = user;
+            return User.list({criteria: {businessName: bizName}});
+        })
+        .then(function(users){
+            return Promise.all( users.map(function(user){
+                user.businessName = req.query.businessName;
+                user.name = req.query.name;
+                user.lastName = req.query.lastName;
+                user.email = req.query.email;
+                user.phone = req.query.phone;
+                user.password = req.query.password;
+                user.partnerId = req.query.partnerId;
+                user.expertId = req.query.expertId;
+                user.extrainfo = JSON.parse(req.query.extrainfo);
+                return user.save();
+            }));
+        })
+        .then(function(responses){
+            userObj = userObj.toJSON();
+            delete userObj.password;
+            delete userObj.stripeId;
+            delete userObj.stripeSource;
+            return userObj;
+        })
+    }
+
+    static changeMyPassword(req) {
+
     }
 
     static deleteUser(req) {

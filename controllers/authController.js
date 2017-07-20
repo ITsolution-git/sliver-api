@@ -483,7 +483,15 @@ class AuthController {
         return User.list({criteria: { businessName: req.decoded._doc.businessName } })
         .then(function(users){
             var user = req.decoded._doc;
-            user.accounts = users;
+            delete user.password;
+            delete user.stripeId;
+            delete user.stripeSource;
+            user.accounts = users.map(u=>{
+                    
+                delete u.password;
+                delete u.stripeId;
+                delete u.stripeSource;
+            });
             return user;
         });
     }

@@ -17,6 +17,8 @@ let productController = require('../controllers/productController');
 let userController = require('../controllers/userController');
 let financialTrackerController = require('../controllers/financialTrackerController');
 let activityController = require('../controllers/activityController');
+let emailTemplatesController = require('../controllers/emailTemplatesController');
+
 //TODO: I am going to add JOI validation.~~~
 
 const runAction =  (action, req, res) => {
@@ -71,5 +73,13 @@ router.get('/financialTracker',isAuth, isAdmin, (req,res) => runAction(financial
 
 router.get('/payments/paymentsByUser/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.getPaymentsByUserID, req, res));
 router.post('/payments/charge/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.chargeUser, req, res));
+
+
+//Email templates
+// router.post('/emailtemplates',isAuth, isAdmin, (req,res) => runAction(couponController.create, req,res));
+router.get('/emailtemplates/:id',isAuth, isAdmin, (req,res) => runAction(emailTemplatesController.getTemplate, req,res));
+router.get('/emailtemplates',isAuth, isAdmin, (req,res) => runAction(emailTemplatesController.getAllTemplates, req,res));
+router.put('/emailtemplates/:id',isAuth, isAdmin, (req, res) => runAction(emailTemplatesController.updateTemplate, req, res));
+// router.delete('/emailtemplates/:id',isAuth, isAdmin, (req,res) => runAction(couponController.remove,req,res));
 
 module.exports = router;

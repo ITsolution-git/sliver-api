@@ -122,10 +122,20 @@ let schema = new Schema({
  * Before saving hash password
  */
 schema.pre('save', function(next) {
-    this.password = HashPass.createHash(this.password);
-    return next();
+    if(this.password) {
+        this.password = HashPass.createHash(this.password);
+        return next();
+    } else {
+        return UserModel.load({_id: this._id}).then(user=>{
+            this.password = user.password;
+            return next();
+        })
+    }
+        
 });
 
 schema.loadClass(User);
 
 module.exports = mongoose.model('User', schema);
+
+const UserModel = mongoose.model('User');

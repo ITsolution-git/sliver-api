@@ -11,7 +11,7 @@ class FinancialTrackerController {
         return Payment.list()
             .then((payments) => {
                 return Promise.all(
-                    payments.map((payment) => {
+                    paymeants.map((payment) => {
                         return User.load({_id: payment.userId})
                             .then((user) => {
                                 let pay = {
@@ -73,7 +73,9 @@ class FinancialTrackerController {
         })
         .then((customer) => {
             Pay.amountSaved = customer.account_balance;
-            Pay.save();
+            return Pay.save();
+        })
+        .then(() => {
             if (Pay.status == 0) {
                 let subject = 'Payment issue';
                 let content = "Hi,there, " +

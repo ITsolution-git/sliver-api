@@ -1,6 +1,9 @@
 const config = require('./../config');
 const jwt = require('jsonwebtoken');
 
+
+const mongoose = require('mongoose');
+const User = mongoose.model('User');
 module.exports = (req,res,next) => {
     let token = req.headers['authorization'];
 
@@ -11,9 +14,10 @@ module.exports = (req,res,next) => {
                 return res.json({ success: false, message: 'Failed to authenticate token.' });
             } else {
                 // if everything is good, save to request for use in other routes
-                req.decoded = decoded;
-                
-                next();
+                return User.load({_id: decoded._id}).then(user => {
+                    req.decoded = user;
+                    next();
+                });
             }
         });
     } else {

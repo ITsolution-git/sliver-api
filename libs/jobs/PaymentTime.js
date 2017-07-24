@@ -89,7 +89,7 @@ class PaymentTime {
                                     Pay.userId = user._id;
                                     Pay.status = charges ? 1 : 0;
                                     Pay.paymentDate = charges ? (charges.created * 1000) : new Date();
-                                    Pay.amountCharges = charges ? charges.amount : Pay.calculate();
+                                    Pay.amountCharges = charges ? (charges.amount / 100) : Pay.calculate();
                                     return StripeService.getCustomerById(user.stripeId);
                                 })
                                 .then((customer) => {

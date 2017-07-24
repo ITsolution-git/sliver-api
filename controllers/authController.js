@@ -175,7 +175,7 @@ class AuthController {
                 throw new CustomError('Whoops, your password are incorrect', 'UNAUTH');
             }
 
-            let token = jwt.sign(user, config.secret, {
+            let token = jwt.sign({_id: user._id}, config.secret, {
                 expiresIn: "300d" // expires in 24 hours
             });
 
@@ -190,7 +190,7 @@ class AuthController {
 
         return User.load({_id: req.params.id}).then((user) => {
  
-            let token = jwt.sign(user, config.secret, {
+            let token = jwt.sign({_id: user._id}, config.secret, {
                 expiresIn: "300d" // expires in 24 hours
             });
 
@@ -303,7 +303,7 @@ class AuthController {
                                             title: 'Account Created', 
                                             type: 'Milestone',  
                                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.',
-                                            journey: {section: 'start', name: 'Account Created'}})
+                                            journey: {section: 'start', name: 'Account Created'}});
 
                 activityController.create({ userId: mObj.user._id,
                                             title: 'T&C Signed',
@@ -444,18 +444,14 @@ class AuthController {
                 return user.createToken();
             })
             .then((user) => {
-                let subject = 'SLAPCenter Password Reset';
-                let content = 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
-                    'Please click on the following link, or paste this into your browser to complete the process:\n\n'
-                    + config.host + '#/reset/' + user.token + '\n\n' +
-                    'If you did not request this, please ignore this email and your password will remain unchanged.\n';
-
-                return Mailer.send(user.email, subject, content);
+                return Mailer.renderTemplateAndSend(user.email, {user: user.toJSON(), link: config.host + '#!/reset/' + user.token }, 'reset-password');
             })
-            .then((result) => {
-                if (!result) throw new CustomError('Not send mail!', 'SERVICE_UNAVAILABLE');
-
-                return new CustomError('Letter email was sent! Run to your inbox to check it out', 'OK', {orig: result});
+            .then((res)=>{
+                return res;
+            })
+            .catch((err) => {
+                console.log(err);
+                throw new CustomError('Not send mail!', 'SERVICE_UNAVAILABLE');
             });
     }
     
@@ -480,9 +476,13 @@ class AuthController {
      *          token: string
      */
     static authToken(req) {
-        return User.list({criteria: { businessName: req.decoded._doc.businessName } })
+        var u;
+        return User.load({_id: req.decoded._doc._id}).then(function(user){
+            u = user;
+            return User.list({criteria: { businessName: user.businessName } })
+        })
         .then(function(users){
-            var user = req.decoded._doc;
+            var user = u.toJSON();
             delete user.password;
             delete user.stripeId;
             delete user.stripeSource;
@@ -491,6 +491,7 @@ class AuthController {
                 delete u.password;
                 delete u.stripeId;
                 delete u.stripeSource;
+                return u;
             });
             return user;
         });

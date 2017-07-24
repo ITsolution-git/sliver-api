@@ -120,6 +120,9 @@ router.delete('/acitivites/:user_id/:id', isAuth, (req, res) => runAction(activi
 router.put('/acitivites/:user_id/:id', isAuth, (req, res) => runAction(activityController.update, req, res));
 
 //Change ME
-router.put('/me/', isAuth, (req, res) => runAction(userController.updateMe, req, res));
+router.post('/me/', isAuth, (req, res) => runAction(userController.updateMe, req, res));
 router.post('/me/change-password', isAuth, (req, res) => runAction(userController.changeMyPassword, req, res));
+router.post('/me/change-card', isAuth, (req, res) => runAction(userController.changeMyCard, req, res));
+router.get('/me/current-card', isAuth, (req, res) => runAction(userController.currentMyCard, req, res));
+
 module.exports = router;

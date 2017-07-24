@@ -21,6 +21,8 @@
     "bluebird": "^3.5.0",
     "body-parser": "^1.17.1",
     "dotenv": "^4.0.0",
+    "ejs": "^2.5.6",
+    "email-templates": "^2.6.0",
     "express": "^4.15.2",
     "express-validator": "^3.1.2",
     "gulp": "^3.9.1",
@@ -29,9 +31,12 @@
     "moment": "^2.18.1",
     "mongoose": "^4.8.6",
     "node-mongo-seeds": "^2.3.1",
+    "node-sass": "^4.5.3",
     "node-schedule": "^1.2.1",
     "nodemailer": "^3.1.5",
     "nodemailer-ses-transport": "^1.5.0",
+    "nodemailer-smtp-transport": "^2.7.4",
+    "sendgrid": "^5.2.0",
     "stripe": "^4.15.1"
   },
   "devDependencies": {

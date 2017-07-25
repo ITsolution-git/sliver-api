@@ -122,15 +122,12 @@ let schema = new Schema({
  * Before saving hash password
  */
 schema.pre('save', function(next) {
-    if(this.password) {
+    if(this.isModified('password')) {
         this.password = HashPass.createHash(this.password);
         return next();
     } else {
-        return UserModel.load({_id: this._id}).then(user=>{
-            this.password = user.password;
-            return next();
-        })
-    }
+        return next();
+    }   
         
 });
 

@@ -2,8 +2,7 @@ const mongoose = require('./../../../libs/mongoose');
 const Product = mongoose.model('Product');
 const HashPass = require('../../../libs/class/HashPass');
 const moment = require('moment');
-
-class User {
+class User extends mongoose.Model {
 
     static load(criteria, select) {
         return this.findOne(criteria).select(select).exec();
@@ -59,11 +58,25 @@ class User {
      * @returns {Promise|*}
      */
     createToken() {
-        this.token = HashPass.createHash(this.email);
-        this.expirationDate = new Date() + 360000;
-        return this.save();
+        let token = HashPass.createHash(this.email);
+        let expirationDate = new Date() + 360000;
+        let _this = this;
+        return this.getSameBiz()
+        .then(business => {
+            return Promise.all( business.map(biz=>{
+                biz.token = token;
+                biz.expirationDate = expirationDate;
+                return biz.save();
+            }));
+        })
+        .then(biz => {
+            return this.constructor.load({_id: _this._id});
+        });
     }
 
+    getSameBiz() {
+        return this.constructor.list({criteria: {businessName: this.businessName}});
+    }
     /**
      * Date verification
      * @returns {*}
@@ -79,10 +92,18 @@ class User {
      * @returns {Promise|*}
      */
     resetPassword(password) {
-        this.password = HashPass.createHash(password);
-        this.token = null;
-        this.expirationDate = null;
-        return this.save();
+        let _this = this;
+        return this.getSameBiz()
+        .then(business => {
+            return Promise.all( business.map(biz=>{
+                biz.password = password;
+                biz.token = null;
+                biz.expirationDate = null;
+                return biz.save();
+            }));
+        }).then(biz => {
+            return this.constructor.load({_id: _this._id});
+        });
     }
 
     /**
@@ -99,6 +120,15 @@ class User {
         this.buildId = null;
         this.build_date = null;
         return this.save();
+    }
+
+    safe() {
+        let userObj = this.toJSON();
+        delete userObj.password;
+        delete userObj.stripeId;
+        delete userObj.stripeSource;
+
+        return userObj;
     }
 }
 

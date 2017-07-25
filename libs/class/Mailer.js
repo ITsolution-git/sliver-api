@@ -25,7 +25,6 @@ class Mailer {
         //         pass: config.AWS_SMTP.password,
         //     }
         // }));
-
         // let transporter = nodemailer.createTransport(sgTransport(options));
 
         // let transporter = nodemailer.createTransport(ses(config.mailer));
@@ -47,6 +46,13 @@ class Mailer {
                 }
         });
 
+        // transporter.verify(function(error, success) {
+        //     if (error) {
+        //             console.log(error);
+        //     } else {
+        //             console.log('Server is ready to take our messages');
+        //     }
+        // });
         return new Promise((resolve, reject) => {
             return transporter.sendMail({
                     from: config.emailAddressAdmin,

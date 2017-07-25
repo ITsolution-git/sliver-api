@@ -41,11 +41,7 @@ class UserController {
         return User.list()
         .then(function(users){
             return users.map(user=>{
-                let userObj = user.toJSON();
-                delete userObj.password;
-                delete userObj.stripeId;
-                delete userObj.stripeSource;
-                return userObj;
+                return user.safe();
             });
         });
     }
@@ -53,12 +49,7 @@ class UserController {
     static getUser(req) {
         return User.load({_id: req.params.id})
         .then((user) => {
-            let userObj = user.toJSON();
-            delete userObj.password;
-            delete userObj.stripeId;
-            delete userObj.stripeSource;
-
-            return userObj;
+            return user.safe();
         });
     }
 
@@ -87,11 +78,7 @@ class UserController {
         })
         .then(function(users){
             return users.map(user=>{
-                let userObj = user.toJSON();
-                delete userObj.password;
-                delete userObj.stripeId;
-                delete userObj.stripeSource;
-                return userObj;
+                return user.safe();
             });
         });
     }
@@ -128,12 +115,7 @@ class UserController {
             return User.load({_id: req.decoded._doc._id});
         })
         .then((user) => {
-            let userObj = user.toJSON();
-            delete userObj.password;
-            delete userObj.stripeId;
-            delete userObj.stripeSource;
-
-            return userObj;
+            return user.safe();
         })
     }
 
@@ -148,11 +130,7 @@ class UserController {
             return user.save();
         })
         .then(user=>{
-            let userObj = user.toJSON();
-            delete userObj.password;
-            delete userObj.stripeId;
-            delete userObj.stripeSource;
-            return userObj;
+            return user.safe();
         })
     }
 
@@ -270,10 +248,7 @@ class UserController {
                                         notes: mObj.user.businessName + ' set up the payment.'});
         })
         .then(()=>{
-            var userObj = mObj.user.toJSON();
-            delete userObj.password;
-            delete userObj.stripeId;
-            delete userObj.stripeSource;
+            let userObj = mObj.user.safe();
             userObj.last4 = last4;
             return userObj;
         })

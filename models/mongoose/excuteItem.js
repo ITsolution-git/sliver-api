@@ -40,7 +40,10 @@ let schema = new Schema({
         type: String
     },  
     //For prior 3 default actions when user enters slapexcute before start date.
-    // 0 : none 1: prior actions 3: prior reflections
+    // 0 : none 
+    // 1: prior actions(auto action items from action item page in build)
+    // 2: prior action items in excute
+    // 3: prior reflections
     isPriorItem: {
         type: Number,
         default: 0

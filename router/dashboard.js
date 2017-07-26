@@ -24,6 +24,7 @@ let yearGoalController = require('../controllers/yearGoalController');
 let actionPlanController = require('../controllers/actionPlanController');
 let excuteItemsController = require('../controllers/excuteItemsController');
 let activityController = require('../controllers/activityController');
+let excuteController = require('../controllers/excuteController');
 
 const runAction = (action, req, res) => {
     action(req, res)
@@ -99,6 +100,9 @@ router.get('/whatsHappening', isAuth, (req, res) => runAction(actionPlanControll
 
 router.post('/rateConnectingStrategies', isAuth, (req, res) => runAction(actionPlanController.setRateConnectingStrategies, req, res));
 router.get('/rateConnectingStrategies', isAuth, (req, res) => runAction(actionPlanController.getRateConnectingStrategies, req, res));
+
+//Excute
+router.post('/tourExecute', isAuth, (req, res) => runAction(excuteController.setFinishBuild, req, res));
 
 //Excute Items
 

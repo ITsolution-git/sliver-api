@@ -1,0 +1,26 @@
+<body>
+    <div class="container">
+        <%- include('../layout-main/header') -%>
+        
+        <div class="content">
+            <h1>Hi <%= user.name %> <%= user.lastName %></h1>
+            <%if (isRenew) { %>
+
+                <p>
+                    Thank you for renewing SLAP. We will help you to build action plans to improve your revenues.
+                    Welcome Email here.
+                </p>
+            <% } else {%>
+                <p>
+                    Thank you for signing up SLAPcenter. We will help you to build action plans to improve your revenues.
+                    Welcome Email here.
+                </p>
+            <% }%>
+        </div>
+
+        <hr/>
+        
+        <%- include('../layout-main/footer') -%>
+        
+    </div>
+</body>

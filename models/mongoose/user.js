@@ -115,20 +115,33 @@ let schema = new Schema({
     pausingPayment: {
         type: Object,
         default: false,
-    }
+    },
+
+    confirmationToken : {
+        type : String
+    },
+    confirmationExpirationDate : {
+        type : Date
+    },
 });
 
 /**
  * Before saving hash password
  */
 schema.pre('save', function(next) {
-    if(this.isModified('password')) {
-        this.password = HashPass.createHash(this.password);
-        return next();
-    } else {
-        return next();
-    }   
-        
+    let _this = this;
+    if ((this.isModified('businessName') || this.isModified('email'))
+        && (this.role != 4)) {
+        return this.constructor.list({criteria: {$or :[{businessName: this.businessName}, {email: this.email}]}})
+        .then(function(users){
+            if (users.length != 0)
+                next(new Error('There\'s a user with same email or business name.'));
+            else {
+                return _this.updatePassword(next);   
+            }
+        })
+    }
+    return this.updatePassword(next);   
 });
 
 schema.loadClass(User);

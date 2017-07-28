@@ -130,6 +130,15 @@ class User extends mongoose.Model {
 
         return userObj;
     }
+
+    updatePassword(next) {
+        if(this.isModified('password') && this.password) {
+            this.password = HashPass.createHash(this.password);
+            return next();
+        } else {
+            return next();
+        }   
+    }
 }
 
 module.exports = User;

@@ -18,6 +18,7 @@ let userController = require('../controllers/userController');
 let financialTrackerController = require('../controllers/financialTrackerController');
 let activityController = require('../controllers/activityController');
 let emailTemplatesController = require('../controllers/emailTemplatesController');
+let reportController = require('../controllers/reportController');
 
 //TODO: I am going to add JOI validation.~~~
 
@@ -30,7 +31,7 @@ const runAction =  (action, req, res) => {
         })
         .catch((err) => {
             console.log('Router: ' + err);
-            res.status(err.status || 400).send(err);
+            res.status(err.status || 400).send({err: err.name ? err.name : 'Error', message:err.message});
             return;
         });
 };
@@ -53,9 +54,9 @@ router.get('/users',isAuth, isAdmin, (req, res) => runAction(userController.getU
 
 //Manage Products
 router.post('/products',isAuth, isAdmin, productValid, (req, res) => runAction(productController.create, req, res));
-router.get('/products',isAuth, isAdmin, (req, res) => runAction(productController.getProducts, req, res));
+router.get('/products',isAuth, isAdmin,  (req, res) => runAction(productController.getProducts, req, res));
 router.get('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.getProduct, req, res));
-router.put('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.updateProduct, req, res));
+router.put('/products/:id',isAuth, isAdmin, productValid, (req, res) => runAction(productController.updateProduct, req, res));
 router.delete('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.deleteProduct, req, res));
 router.get('/plans',isAuth, isAdmin, (req,res) => runAction(productController.getPlans, req, res));
 
@@ -81,5 +82,13 @@ router.get('/emailtemplates/:id',isAuth, isAdmin, (req,res) => runAction(emailTe
 router.get('/emailtemplates',isAuth, isAdmin, (req,res) => runAction(emailTemplatesController.getAllTemplates, req,res));
 router.put('/emailtemplates/:id',isAuth, isAdmin, (req, res) => runAction(emailTemplatesController.updateTemplate, req, res));
 // router.delete('/emailtemplates/:id',isAuth, isAdmin, (req,res) => runAction(couponController.remove,req,res));
+
+
+//Manage Reports
+router.post('/report',isAuth, isAdmin, (req,res) => runAction(reportController.create, req,res));
+router.get('/report',isAuth, isAdmin, (req,res) => runAction(reportController.getReports, req,res));
+router.get('/report/:id',isAuth, isAdmin, (req,res) => runAction(reportController.getReport, req,res));
+router.put('/report/:id',isAuth, isAdmin, (req, res) => runAction(reportController.update, req, res));
+router.delete('/report/:id',isAuth, isAdmin, (req,res) => runAction(reportController.remove,req,res));
 
 module.exports = router;

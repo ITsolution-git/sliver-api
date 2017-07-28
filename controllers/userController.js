@@ -15,15 +15,9 @@ let activityController = require('./activityController');
 class UserController {
     
     static createUser(req) {
-        req.body.firstName = '';
         return (new User(req.body)).save()
         .then(function(user){
-            userObj = user.toJSON();
-            delete userObj.password;
-            delete userObj.stripeId;
-            delete userObj.stripeSource;
-
-            return userObj;
+            return user.safe();
         })
         .catch(function(err){
             // if (11000 === err.code || 11001 === err.code) {
@@ -54,24 +48,32 @@ class UserController {
     }
 
     static updateUser(req) {
-        var bizName;
+        let bizName;
+        let userObj;
         return User.load({_id: req.body._id}).then(function(user){
             bizName = user._doc.businessName;
-            return User.findByIdAndUpdate(req.body._id, req.body);
-        })
-        .then(function(user){
+            userObj = user;
             return User.list({criteria: {businessName: bizName}});
         })
         .then(function(users){
             return Promise.all( users.map(function(user){
+                if(user.id == userObj._id) {// If user is current user, update all other informations.
+                    user.expertId = req.body.expertId; 
+                    user.pausingPayment = req.body.pausingPayment;
+                    user.couponId = req.body.couponId;
+                }
                 user.businessName = req.body.businessName;
                 user.name = req.body.name;
                 user.lastName = req.body.lastName;
+                user.role = req.body.role;
+                user.status = req.body.status;
                 user.email = req.body.email;
                 user.phone = req.body.phone;
-                user.password = req.body.password;
+                if(req.body.password)  //Avoid to set password undefined
+                    user.password = req.body.password;
+
                 user.partnerId = req.body.partnerId;
-                user.expertId = req.body.expertId;
+                
                 user.extrainfo = req.body.extrainfo;
                 return user.save();
             }));
@@ -93,14 +95,22 @@ class UserController {
         })
         .then(function(users){
             return Promise.all( users.map(function(user){
+                if(user.id == userObj._id) {// If user is current user, update all other informations.
+                    user.expertId = req.body.expertId; 
+                    user.pausingPayment = req.body.pausingPayment;
+                    user.couponId = req.body.couponId;
+                }
+                
                 user.businessName = req.body.businessName;
                 user.name = req.body.name;
                 user.lastName = req.body.lastName;
                 user.email = req.body.email;
+                user.role = req.body.role;
+                user.status = req.body.status;
                 user.phone = req.body.phone;
-                user.password = req.body.password;
+                if(req.body.password)
+                    user.password = req.body.password;
                 user.partnerId = req.body.partnerId;
-                user.expertId = req.body.expertId;
                 user.extrainfo = req.body.extrainfo;
                 return user.save();
             }));
@@ -108,8 +118,8 @@ class UserController {
         .then(function(responses){
             return activityController.create({ userId: req.decoded._doc._id,
                                         title: 'Updated Account Info', 
-                                        type: 'Account',  
-                                        notes: bizName + ' set up the payment.'});
+                                        type: 'Other',  
+                                        notes: bizName + ' updated account information.'});
         })
         .then(()=>{
             return User.load({_id: req.decoded._doc._id});
@@ -244,8 +254,8 @@ class UserController {
                                         
             return activityController.create({ userId: req.decoded._doc._id,
                                         title: 'Updated Account Info', 
-                                        type: 'Account',  
-                                        notes: mObj.user.businessName + ' set up the payment.'});
+                                        type: 'Other',  
+                                        notes: mObj.user.businessName + ' changed payment card.'});
         })
         .then(()=>{
             let userObj = mObj.user.safe();

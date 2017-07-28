@@ -40,8 +40,7 @@ class User extends mongoose.Model {
     }
 
     isAdmin(){
-
-        return this.role === 1;
+        return this.role !== 4;
     }
 
     /**

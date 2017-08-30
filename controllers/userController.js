@@ -1,6 +1,6 @@
 const mongoose = require('./../libs/mongoose');
 const User = mongoose.model('User');
-
+const Mailer = require('../libs/class/Mailer');
 const slapMindset = mongoose.model('slapMindset');
 const IdealClient = mongoose.model('IdealClient');
 const Statement = mongoose.model('Statement');
@@ -285,6 +285,12 @@ class UserController {
             throw new Error('Failed.');
         })
            
+    }
+
+    static getHelp(req){
+        let subject = 'User have a problem';
+        let content = `User with ${req.body.user_email}, have a problem: ${req.body.message}`;
+        return Mailer.send('support@smallbizsilverlining.com', subject, content);
     }
     
 }

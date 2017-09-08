@@ -25,7 +25,7 @@ let actionPlanController = require('../controllers/actionPlanController');
 let excuteItemsController = require('../controllers/excuteItemsController');
 let activityController = require('../controllers/activityController');
 let excuteController = require('../controllers/excuteController');
-
+let zoomController = require('../controllers/zoomController');
 const runAction = (action, req, res) => {
     action(req, res)
         .then((data) => {
@@ -131,5 +131,8 @@ router.get('/me/current-card', isAuth, (req, res) => runAction(userController.cu
 
 //Get help
 router.post('/get-help', isAuth, (req, res) => runAction(userController.getHelp, req, res));
+
+//ZOOM US api
+router.get('/zoom/meetings', isAuth, (req, res) => runAction(zoomController.getMeetings, req, res));
 
 module.exports = router;

@@ -288,8 +288,18 @@ class UserController {
     }
 
     static getHelp(req){
-        let subject = 'User have a problem';
-        let content = `User with ${req.body.user_email}, have a problem: ${req.body.message}`;
+        let subject = 'User have a problem' ;
+        if(req.body.prefer === 'Call') {
+            var mess = 'Call him.';
+        } else {
+            var mess = 'Write him an email.';
+        } 
+        let content = `User ${req.body.user_email}.<br>
+                        Kind of problem: ${req.body.kind}.<br>
+                        <hr>
+                        Message: <br>
+                        <em>${req.body.message}</em><br><br><hr>
+                       ${mess}`;
         return Mailer.send('support@smallbizsilverlining.com', subject, content);
     }
     

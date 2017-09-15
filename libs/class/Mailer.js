@@ -17,17 +17,28 @@ const options = {
 class Mailer {
     
     static send(email, subject, htmlContent, textContent) {
+       let smtpConfig = {
+            host: config.AWS_SMTP.region,
+            auth: {
+                user: config.AWS_SMTP.username,
+                pass: config.AWS_SMTP.password,
 
-        // let transporter = nodemailer.createTransport(smtpTransport({
-        //     service: 'SES',
-        //     auth: {
-        //         user: config.AWS_SMTP.username,
-        //         pass: config.AWS_SMTP.password,
-        //     }
-        // }));
-        // let transporter = nodemailer.createTransport(sgTransport(options));
+            }
+        };
+        let transporter = nodemailer.createTransport(smtpConfig);
+        transporter.verify(function (error, success) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Server is ready to take our messages');
+            }
+        });
+        // console.log(transporter);
+        //let transporter = nodemailer.createTransport(sgTransport(options));
 
-        // let transporter = nodemailer.createTransport(ses(config.mailer));
+        // let transporter = nodemailer.createTransport(
+        //     ses(config.mailer)
+        // );
         // var transport = nodemailer.createTransport({
         //     host: "smtp.mailtrap.io",
         //     port: 2525,
@@ -37,22 +48,16 @@ class Mailer {
         //     }
         // });
 
-        var transporter = nodemailer.createTransport({
-                service: 'Gmail',
-                auth:
-                {
-                    user: "victor@silverlininglimited.com",
-                    pass: "123calendar"
-                }
-        });
-
-        // transporter.verify(function(error, success) {
-        //     if (error) {
-        //             console.log(error);
-        //     } else {
-        //             console.log('Server is ready to take our messages');
-        //     }
+        // var transporter = nodemailer.createTransport({
+        //         service: 'Gmail',
+        //         auth:
+        //         {
+        //             user: "victor@silverlininglimited.com",
+        //             pass: "123calendar"
+        //         }
         // });
+
+       
         return new Promise((resolve, reject) => {
             return transporter.sendMail({
                     from: config.emailAddressAdmin,

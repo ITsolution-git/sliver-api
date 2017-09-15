@@ -133,6 +133,6 @@ router.get('/me/current-card', isAuth, (req, res) => runAction(userController.cu
 router.post('/get-help', isAuth, (req, res) => runAction(userController.getHelp, req, res));
 
 //ZOOM US api
-router.get('/zoom/meetings', isAuth, (req, res) => runAction(zoomController.getMeetings, req, res));
+router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getWebinars, req, res));
 
 module.exports = router;

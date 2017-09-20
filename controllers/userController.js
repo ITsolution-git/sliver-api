@@ -6,11 +6,12 @@ const IdealClient = mongoose.model('IdealClient');
 const Statement = mongoose.model('Statement');
 const YearGoal = mongoose.model('YearGoal');
 const ActionPlan = mongoose.model('ActionPlan');
-
+var Grid = require('gridfs-stream');
 const stripe = require('../services/stripe');
 const StripeService = stripe.service;
-
-
+var conn = mongoose.connection;
+Grid.mongo = mongoose.mongo;
+var gfs = Grid(conn.db, mongoose.mongo);
 let activityController = require('./activityController');
 class UserController {
     
@@ -302,7 +303,67 @@ class UserController {
                        ${mess}`;
         return Mailer.send('support@smallbizsilverlining.com', subject, content);
     }
-    
+    static changeAvatar(req, res){
+        var user = req.decoded;
+        if (req.decoded.avatarId && req.file.id != req.decoded.avatarId){
+            UserController.deleteOldAvatar(req.decoded.avatarId).then(() => {
+                return User.findByIdAndUpdate(req.decoded._id, { avatarId: req.file.id })
+            }).then(() => {
+                res.send(req.file.id);
+                //UserController.getAvatar(req.file, res);
+            });
+        }
+       
+        else{
+            User.findByIdAndUpdate(req.decoded._id, { avatarId: req.file.id })
+            .then(() => {
+                res.send(req.file.id);
+                //UserController.getAvatar(req.file, res);
+            });
+        }
+    };
+    static deleteOldAvatar(id){
+        
+        return  new Promise((res, rej) => {
+            //return new Promise((res, rej) => {
+                gfs.remove({ _id: mongoose.Types.ObjectId(id) }, (err) => err ? rej(err) : res());
+            //});
+            
+        });
+    }
+    static getUserAvatar(req, res){
+        var id = req.params.id;
+        return gfs.files.findOne({ _id: mongoose.Types.ObjectId(id) }).then((file)=>{
+            var rstream = gfs.createReadStream(file.filename);
+            var bufs = [];
+            rstream.on('data', function (chunk) {
+                bufs.push(chunk);
+            }).on('error', function () {
+                return new Error('Bad data');
+            }).on('end', function () { // done
+                var fbuf = Buffer.concat(bufs);
+                res.contentType(file.contentType);
+                res.send(fbuf);
+            });
+        });
+    }
+    static getAvatar(file, res){
+        
+        var rstream = gfs.createReadStream(file.filename);
+        var bufs = [];
+        rstream.on('data', function (chunk) {
+            bufs.push(chunk);
+        }).on('error', function () {
+            return new Error('Bad data');
+        }).on('end', function () { // done
+            var fbuf = Buffer.concat(bufs);
+            var File = (fbuf.toString('base64'));
+            res.send(File);
+        });
+    }
 }
+
+    
+
 
 module.exports = UserController;

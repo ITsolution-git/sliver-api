@@ -189,7 +189,7 @@ class AuthController {
     static selectSLAPyear(req) {
 
         return User.load({_id: req.params.id}).then((user) => {
- 
+            
             let token = jwt.sign({_id: user._id}, config.secret, {
                 expiresIn: "300d" // expires in 24 hours
             });
@@ -291,8 +291,7 @@ class AuthController {
                 if (mObj.coupon) {
                     mObj.coupon.minusRedemption();
                 }
-
-                if(mObj.user.isRenew) {
+                if (req.body.isRenew) {
                     activityController.create({ userId: mObj.user._id,
                                                 title: 'Auto Email Sent', 
                                                 type: 'Communication',  
@@ -304,7 +303,13 @@ class AuthController {
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Account Renewed', 
                                                 type: 'Milestone',  
-                                                notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.'});
+                                                notes: mObj.businessName + ' renewed an account with ' + mObj.plan.productName + '.'})
+                                                .then((user)=>{
+                                                    let token = jwt.sign({ _id: mObj.user._id }, config.secret, {
+                                                        expiresIn: "300d" // expires in 24 hours
+                                                    });
+                                                    return { token: token, id: mObj.user._id };
+                                                });
                     // });
                 } else {
                     return activityController.create({ userId: mObj.user._id,
@@ -382,6 +387,8 @@ class AuthController {
                     throw new Error('Cannot renew from new account.');
                     return;
                 }
+                
+                stepInfoFrom.slapMindset.privilegeAndResponsibility = undefined;
                 var slapMindset = stepInfoFrom.slapMindset.toJSON();
                 delete slapMindset._id;
                 slapMindset.userId = user_id;

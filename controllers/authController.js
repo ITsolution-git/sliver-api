@@ -366,7 +366,7 @@ class AuthController {
             .then((user)=>{
                 req.body.billingAddress = user.billingAddress;
                 req.body.password = user.password;
-                req.body.finishedSteps = [0];
+                req.body.finishedSteps = [0, 1, 2];
                 req.body.stripeId = user.stripeId;
                 req.body.stripeSource = user.stripeSource;
                 req.body.createdAt = new Date();
@@ -387,7 +387,7 @@ class AuthController {
                     throw new Error('Cannot renew from new account.');
                     return;
                 }
-                
+
                 stepInfoFrom.slapMindset.privilegeAndResponsibility = undefined;
                 var slapMindset = stepInfoFrom.slapMindset.toJSON();
                 delete slapMindset._id;

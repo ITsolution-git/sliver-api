@@ -38,7 +38,7 @@ class Stripe {
         return new Promise( (resolve,reject) => {
             stripe.tokens.create({card : card}, (err,token) => {
                 
-                return err ? reject(new StripeError('Failed create card', 'BAD_DATA', {orig: err.stack})) : resolve(token);
+                return err ? reject(new StripeError('We were unable to process your credit card.  Please try again or use a new card.', 'BAD_DATA', {orig: err.stack})) : resolve(token);
             });
         });
     }

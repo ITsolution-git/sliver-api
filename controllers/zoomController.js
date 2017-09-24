@@ -14,28 +14,59 @@ class zoomController {
         })
     }
 
-
-    static getWebinars (){
-        return zoomController.getWebinarSpeaker().then(function(speakers){
-            let speakersWithWebinar = speakers.filter(speaker => speaker.enable_webinar);
-            return Promise.map(speakersWithWebinar, (speaker => {
-                    console.log(speaker);
-                return new Promise((resolve, reject) => {
-                    const WEBINAR = {
-                        host_id: speaker.id
-                    }
-                    Zoom.webinar.list(WEBINAR, (res) => {
-                        if (res.error) reject(erorr);
-                        resolve ({
-                            name: speaker.first_name + " " + speaker.last_name, 
-                            webinars: res.webinars,
-                        })
-                    });
-                    })
-                })
-            )
+    static getWebinarsList (WEBINAR) {
+        return new Promise((resolve, reject) => {
+            Zoom.webinar.list(WEBINAR, (res) => res.error? reject(res.err) : resolve(res.webinars));
         })
     }
+
+
+    static getWebinars() {
+        return zoomController.getWebinarSpeaker().then(function (speakers) {
+            let speakersWithWebinar = speakers.filter(speaker => speaker.enable_webinar);
+            return Promise.map(speakersWithWebinar, (speaker => {
+                console.log(speaker);
+                const WEBINAR = {
+                    host_id: speaker.id
+                }
+                return zoomController.getWebinarsList(WEBINAR).then(function (webinars) {
+                    return Promise.map(webinars, (webinar => {
+                        return new Promise((resolve, reject) => {
+                            const WEBINARS = {
+                                id: webinar.id,
+                                host_id: speaker.id,
+                            };
+                            Zoom.webinar.listPanelists(WEBINARS, (res) => {
+                                resolve({
+                                    name: res.panelists,
+                                    webinars: webinars,
+                                })
+                            })
+
+                        });
+                    }))
+                })
+            }))
+        })
+    }
+                    // Zoom.webinar.list(WEBINAR, (res) => {
+                    //     if (res.error) reject(erorr);
+                    //     resolve ({ 
+                    //         webinars: res.webinars.id,
+                    //     })
+                    // });
+                    // const WEBINARS = {
+                    //     host_id: speaker.id,
+                    // }
+                    // console.log(WEBINARS);
+                    // Zoom.webinar.listPanelists(WEBINARS, (res) => {
+                    //     if (res.error) reject(erorr);
+                    //     resolve ({
+                    //         name: speaker.first_name + " " + speaker.last_name, 
+                    //         webinars: res.webinars.panelists.name,
+                    //     })
+                    // });
+                
     
 }
 

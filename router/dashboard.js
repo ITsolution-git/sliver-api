@@ -26,6 +26,7 @@ let excuteItemsController = require('../controllers/excuteItemsController');
 let activityController = require('../controllers/activityController');
 let excuteController = require('../controllers/excuteController');
 let zoomController = require('../controllers/zoomController');
+let videoController = require('../controllers/videoController');
 const runAction = (action, req, res) => {
     action(req, res)
         .then((data) => {
@@ -150,5 +151,8 @@ router.post('/get-help', isAuth, (req, res) => runAction(userController.getHelp,
 
 //ZOOM US api
 router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getWebinars, req, res));
+
+//Video api
+router.get('/video/:videoName', videoController.getVideo);
 
 module.exports = router;

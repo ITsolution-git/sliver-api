@@ -168,11 +168,11 @@ class AuthController {
     static signin(req) {
         return User.load({email: req.body.email}).then((user) => {
             if(!user){
-                throw new CustomError('Whoops, your email is wrong.', 'UNAUTH');
+                throw new CustomError('Your Email or Password are incorrect. Please try again!', 'UNAUTH');
             }
 
             if (!user.comparePassword(req.body.password)) {
-                throw new CustomError('Whoops, your password are incorrect', 'UNAUTH');
+                throw new CustomError('The password you entered is incorrect.  Please remember they are case sensitive and try again!', 'UNAUTH');
             }
 
             let token = jwt.sign({_id: user._id}, config.secret, {

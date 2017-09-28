@@ -150,7 +150,7 @@ router.get('/user/avatar/:id', userController.getUserAvatar);
 router.post('/get-help', isAuth, (req, res) => runAction(userController.getHelp, req, res));
 
 //ZOOM US api
-router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getWebinars, req, res));
+router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getWebinarsFromDB, req, res));
 
 //Video api
 router.get('/video/:videoName', videoController.getVideo);

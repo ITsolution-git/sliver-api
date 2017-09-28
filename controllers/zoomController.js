@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 const moment = require('moment');
 const config =require('../config');
+const Webinars = require('../models/mongoose/webinars');
 var Zoom = require("zoomus")({
     key: config.zoom.key,
     secret: config.zoom.secret 
@@ -19,8 +20,9 @@ class zoomController {
             Zoom.webinar.list(WEBINAR, (res) => res.error? reject(res.err) : resolve(res.webinars));
         })
     }
-
-
+    static getWebinarsFromDB() {
+        return Webinars.find();
+    }
     static getWebinars() {
         return zoomController.getWebinarSpeaker().then(function (speakers) {
             let speakersWithWebinar = speakers.filter(speaker => speaker.enable_webinar);
@@ -42,11 +44,17 @@ class zoomController {
                                     webinars: webinars,
                                 })
                             })
-
                         });
-                    }))
+                    })
+)
                 })
             }))
+        }).then(webinars => {
+            return Webinars.remove({}).then(()=>{
+                return Promise.map(webinars, (webinar => {
+                    return Webinars.create(webinar);
+                }));
+            })
         })
     }
                     // Zoom.webinar.list(WEBINAR, (res) => {

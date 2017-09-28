@@ -11,7 +11,7 @@ class Scheduler {
     }
 
     static runZoomJob(){
-        return schedule.scheduleJob('00 59 * * * *', () => {
+        return schedule.scheduleJob('00 00 12 * * *', () => {
             console.log('ZOOM CRON STARTED');
            return zoomController.getWebinars();
         });

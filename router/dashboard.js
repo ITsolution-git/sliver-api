@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+let P = require("path");
 //Validators
 const validate = require('../libs/class/ParamValidator');
 let signinValid = require('../middleware/validation/signinValid');
@@ -25,7 +25,8 @@ let actionPlanController = require('../controllers/actionPlanController');
 let excuteItemsController = require('../controllers/excuteItemsController');
 let activityController = require('../controllers/activityController');
 let excuteController = require('../controllers/excuteController');
-
+let zoomController = require('../controllers/zoomController');
+let videoController = require('../controllers/videoController');
 const runAction = (action, req, res) => {
     action(req, res)
         .then((data) => {
@@ -40,6 +41,21 @@ const runAction = (action, req, res) => {
         });
 };
 
+var multer = require('multer');
+var GridFsStorage = require('multer-gridfs-storage');
+var Grid = require('gridfs-stream');
+let config = require('../config.js');
+const mongoose = require('../libs/mongoose.js');
+var conn = mongoose.connection;
+Grid.mongo = mongoose.mongo;
+var gfs = Grid(conn.db, mongoose.mongo);
+var storage = GridFsStorage({
+    url: config.db,
+    gfs: gfs
+});
+var upload = multer({ //multer settings for single upload
+    storage: storage
+}).single('avatar');
 //Auth
 router.get('/auth/', isAuth, (req, res) => runAction(authController.authToken, req, res));
 router.post('/auth/selectslapyear/:id', isAuth, (req, res) => runAction(authController.selectSLAPyear, req, res));
@@ -128,5 +144,15 @@ router.post('/me/', isAuth, (req, res) => runAction(userController.updateMe, req
 router.post('/me/change-password', isAuth, (req, res) => runAction(userController.changeMyPassword, req, res));
 router.post('/me/change-card', isAuth, (req, res) => runAction(userController.changeMyCard, req, res));
 router.get('/me/current-card', isAuth, (req, res) => runAction(userController.currentMyCard, req, res));
+router.post('/me/avatar', isAuth, upload, userController.changeAvatar);
+router.get('/user/avatar/:id', userController.getUserAvatar);
+//Get help
+router.post('/get-help', isAuth, (req, res) => runAction(userController.getHelp, req, res));
+
+//ZOOM US api
+router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getWebinarsFromDB, req, res));
+
+//Video api
+router.get('/video/:videoName', videoController.getVideo);
 
 module.exports = router;

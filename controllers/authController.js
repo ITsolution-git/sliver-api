@@ -168,11 +168,11 @@ class AuthController {
     static signin(req) {
         return User.load({email: req.body.email}).then((user) => {
             if(!user){
-                throw new CustomError('Whoops, your email is wrong.', 'UNAUTH');
+                throw new CustomError('Your Email or Password are incorrect. Please try again!', 'UNAUTH');
             }
 
             if (!user.comparePassword(req.body.password)) {
-                throw new CustomError('Whoops, your password are incorrect', 'UNAUTH');
+                throw new CustomError('The password you entered is incorrect.  Please remember they are case sensitive and try again!', 'UNAUTH');
             }
 
             let token = jwt.sign({_id: user._id}, config.secret, {
@@ -189,7 +189,7 @@ class AuthController {
     static selectSLAPyear(req) {
 
         return User.load({_id: req.params.id}).then((user) => {
- 
+            
             let token = jwt.sign({_id: user._id}, config.secret, {
                 expiresIn: "300d" // expires in 24 hours
             });
@@ -291,34 +291,39 @@ class AuthController {
                 if (mObj.coupon) {
                     mObj.coupon.minusRedemption();
                 }
-
-                if(mObj.user.isRenew) {
+                if (req.body.isRenew) {
                     activityController.create({ userId: mObj.user._id,
                                                 title: 'Auto Email Sent', 
                                                 type: 'Communication',  
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
 
-                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    .then(res=>{
+                    // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                    // .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Account Renewed', 
                                                 type: 'Milestone',  
-                                                notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.'});
-                    });
+                                                notes: mObj.businessName + ' renewed an account with ' + mObj.plan.productName + '.'})
+                                                .then((user)=>{
+                                                    let token = jwt.sign({ _id: mObj.user._id }, config.secret, {
+                                                        expiresIn: "300d" // expires in 24 hours
+                                                    });
+                                                    return { token: token, id: mObj.user._id };
+                                                });
+                    // });
                 } else {
-                    activityController.create({ userId: mObj.user._id,
+                    return activityController.create({ userId: mObj.user._id,
                                             title: 'Account Created', 
                                             type: 'Milestone',  
                                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.',
                                             journey: {section: 'start', name: 'Account Created'}});
-                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    .then(res=>{
-                        return activityController.create({ userId: mObj.user._id,
-                                                title: 'Auto Email Sent', 
-                                                type: 'Communication',  
-                                                notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
-                    });
+                    // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                    // .then(res=>{
+                    //     return activityController.create({ userId: mObj.user._id,
+                    //                             title: 'Auto Email Sent',
+                    //                             type: 'Communication',
+                    //                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
+                    // });
                 }
                 activityController.create({ userId: mObj.user._id,
                                             title: 'T&C Signed',
@@ -346,8 +351,8 @@ class AuthController {
 
     static signUpSaveUser(req) {
         if(!req.body.isRenew) {
-            return User.load({email: req.body.email}).then((user)=>{
-                if (!user)
+            return User.load({email: req.body.email}).then((user)=>{    
+                if (!user)                 
                     return user;
                 else
                     throw new CustomError('Email duplicated', 'BAD_DATA');
@@ -361,7 +366,7 @@ class AuthController {
             .then((user)=>{
                 req.body.billingAddress = user.billingAddress;
                 req.body.password = user.password;
-                req.body.finishedSteps = [0];
+                req.body.finishedSteps = [0, 1, 2];
                 req.body.stripeId = user.stripeId;
                 req.body.stripeSource = user.stripeSource;
                 req.body.createdAt = new Date();
@@ -382,6 +387,8 @@ class AuthController {
                     throw new Error('Cannot renew from new account.');
                     return;
                 }
+
+                stepInfoFrom.slapMindset.privilegeAndResponsibility = undefined;
                 var slapMindset = stepInfoFrom.slapMindset.toJSON();
                 delete slapMindset._id;
                 slapMindset.userId = user_id;

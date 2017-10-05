@@ -1,11 +1,19 @@
 const schedule = require('node-schedule');
 const PaymentTime = require('../jobs/PaymentTime');
+const zoomController = require('../../controllers/zoomController');
 
 class Scheduler {
 
     static run() {
         return schedule.scheduleJob({hour: 1, minute: 30}, () => {
             return PaymentTime.payment();
+        });
+    }
+
+    static runZoomJob(){
+        return schedule.scheduleJob('00 00 12 * * *', () => {
+            console.log('ZOOM CRON STARTED');
+           return zoomController.getWebinars();
         });
     }
 

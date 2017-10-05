@@ -16,6 +16,7 @@ class PaymentTime {
 
         return User.list()
             .then((users) => {
+                users = users.filter( user => !user.pausingPayment && user.status === 'active');
                 users.forEach((user) => { //TODO: limit on users
                     let productsToPay = this.checkUserPaymentDay(user, days);
 

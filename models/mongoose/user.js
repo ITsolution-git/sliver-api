@@ -123,6 +123,9 @@ let schema = new Schema({
     confirmationExpirationDate : {
         type : Date
     },
+    avatarId:{
+        type: String
+    },
 });
 
 /**

@@ -4,7 +4,7 @@ module.exports = function(app) {
     const admin = require('./admin');
 
     schedule.run();  
-    
+    schedule.runZoomJob();
     app.use('/v1', dashboard);
 
     app.use('/admin', admin);

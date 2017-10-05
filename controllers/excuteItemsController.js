@@ -22,11 +22,14 @@ class ExcuteItemController {
         // }
         
         return (new ExcuteItem(excuteItem)).save().then(resp => {
-            return activityController.create({ 
+            return activityController.create({
                 userId: req.decoded._doc._id,
-                title: 'Create a ' + con[excuteItem.type].name, 
+                title: 'Create a ' + con[excuteItem.type].name,
                 type: con[excuteItem.type].name,
-                notes: req.decoded._doc.businessName + ' created a ' + con[excuteItem.type].name});
+                notes: req.decoded._doc.businessName + ' created a ' + con[excuteItem.type].name
+            }).then(() => {
+                return resp;
+            });
         });
     }
 

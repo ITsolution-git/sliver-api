@@ -74,6 +74,7 @@ router.get('/financialTracker',isAuth, isAdmin, (req,res) => runAction(financial
 
 router.get('/payments/paymentsByUser/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.getPaymentsByUserID, req, res));
 router.post('/payments/charge/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.chargeUser, req, res));
+router.post('/payments/subscription/toggle/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.toggleSubscription, req, res));
 
 
 //Email templates

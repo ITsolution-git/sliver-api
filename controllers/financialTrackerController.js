@@ -2,6 +2,7 @@ const mongoose = require('../libs/mongoose');
 const Payment = mongoose.model('Payment');
 const User = mongoose.model('User');
 const Coupon = mongoose.model('Coupon');
+const Product = mongoose.model('Product');
 const stripe = require('../services/stripe');
 const StripeService = stripe.service;
 class FinancialTrackerController {
@@ -91,6 +92,10 @@ class FinancialTrackerController {
         .catch((err) => {
             console.log(err); // TODO: winston logger add;
         });
+    }
+
+    static toggleSubscription(req) {
+        return StripeService.toggleSubscription(req.params.user_id, req.body.enable);
     }
 }
 

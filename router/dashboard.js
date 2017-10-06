@@ -155,4 +155,12 @@ router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getW
 //Video api
 router.get('/video/:videoName', videoController.getVideo);
 
+const stripe = require('stripe')(config.stripe_key);
+
+router.get('/stripe/list', (req, res) => {
+    stripe.customers.list({ limit: 100/*, starting_after: "cus_AYHQSxN4MtLWhh" */}).then(list => {
+        res.send(list);
+    });
+})
+
 module.exports = router;

@@ -5,6 +5,7 @@ module.exports = function(app) {
 
     schedule.run();  
     schedule.runZoomJob();
+    schedule.runReportJob();
     app.use('/v1', dashboard);
 
     app.use('/admin', admin);

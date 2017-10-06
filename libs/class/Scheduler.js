@@ -1,6 +1,7 @@
 const schedule = require('node-schedule');
 const PaymentTime = require('../jobs/PaymentTime');
 const zoomController = require('../../controllers/zoomController');
+const EverydayReportService = require('../../services/everydayReportService');
 
 class Scheduler {
 
@@ -14,6 +15,13 @@ class Scheduler {
         return schedule.scheduleJob('00 00 12 * * *', () => {
             console.log('ZOOM CRON STARTED');
            return zoomController.getWebinars();
+        });
+    }
+
+    static runReportJob(){
+        return schedule.scheduleJob('0 1 07 * * *', () => {
+            console.log('REPORT CRON STARTED');
+            return EverydayReportService.getLocalVariables();
         });
     }
 

@@ -12,7 +12,7 @@ class FinancialTrackerController {
         return Payment.list()
             .then((payments) => {
                 return Promise.all(
-                    paymeants.map((payment) => {
+                    payments.map((payment) => {
                         return User.load({_id: payment.userId})
                             .then((user) => {
                                 let pay = {
@@ -47,6 +47,10 @@ class FinancialTrackerController {
 
     static getPaymentsByUserID(req) {
          return Payment.list({criteria: {userId: req.params.user_id}});
+    }
+
+    static getStripePaymentsByUser(req) {
+        return StripeService.getPayments(req.decoded._doc._id);
     }
     
     static chargeUser(req) {

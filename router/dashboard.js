@@ -73,6 +73,7 @@ router.get('/coupon/:code/:planId', (req, res) => runAction(couponController.isV
 
 //Dashboard settingUser
 router.get('/payments', isAuth, (req, res) => runAction(financialTrackerController.getPaymentsByUser, req, res));
+router.get('/stripe-payments', isAuth, (req, res) => runAction(financialTrackerController.getStripePaymentsByUser, req, res));
 
 //Get All step information by user_id or req.decoded._doc.id
 router.get('/getFinishedUserStep/:user_id', isAuth, (req, res) => runAction(userController.getFinishedStepsForUser, req, res));

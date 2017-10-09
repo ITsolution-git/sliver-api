@@ -6,6 +6,7 @@ const Payment = mongoose.model('Payment');
 const ExecuteItem = mongoose.model('ExcuteItem');
 const ActionPlan = mongoose.model('ActionPlan');
 const YearGoal = mongoose.model('YearGoal');
+const Mindset = mongoose.model('slapMindset');
 const Moment = require('moment');
 const Mailer = require('../libs/class/Mailer');
 const config = require('../config');
@@ -13,6 +14,7 @@ const nodemailer = require('nodemailer');
 const smtpTransport = require('nodemailer-smtp-transport');
 const EmailTemplate = require('email-templates').EmailTemplate;
 const path = require('path');
+
 
 let  local;
 
@@ -86,11 +88,9 @@ class everydayReportService {
         console.log(dateDiff);
     }
 
-    // static getQuaterlyGoals() {
-    //     return everydayReportService.getUserId(function (user) {
-    //         everydayReportService.getGoals(user.id)
-    //     })
-    // }
+    static getMindset(userId) {
+        return Mindset.find({userId: userId}).exec();
+    }
 
 
 
@@ -134,7 +134,8 @@ class everydayReportService {
     static getQuaterlyGoals(userId) {
         let count = 0;
         let goals = [];
-        
+        let quaters = [];
+        let startDate = [];
         let revenues = [];
         
         return everydayReportService.getGoals(userId).then(function (goal){
@@ -147,7 +148,17 @@ class everydayReportService {
                            
                             revenues.push(obj[key]);}
                         }
-                    
+                    return everydayReportService.getMindset(userId).then(function (mindset){
+                        startDate = Moment(mindset[0].slapStartDate).tz('America/Los_Angeles');
+                        quaters.push(startDate);
+                        quaters.push(Moment(startDate).add(4, 'month').tz('America/Los_Angeles'));
+                        quaters.push(Moment(quaters[1]).add(4, 'month').tz('America/Los_Angeles'));
+                        quaters.push(Moment(quaters[2]).add(4, 'month').tz('America/Los_Angeles'));
+                        console.log(quaters[0].format('MM YYYY'));
+                        console.log(quaters[1].format('MM YYYY'));
+                        console.log(quaters[2].format('MM YYYY'));
+                        console.log(quaters[3].format('MM YYYY'));
+                    })
                     return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                         let el = 0;
                             for (let i=0; i<4; i++) {
@@ -159,6 +170,7 @@ class everydayReportService {
                                     totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
                                 })
                                 for(let i=0; i<goals.length; i++) {
+
                                     // need to do a check "What quater is it?"
                                     sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
                                 }
@@ -172,46 +184,47 @@ class everydayReportService {
     }
 
     static getLocalVariables() {
-        return everydayReportService.totalNumberOfAccounts().then(function (numberOfUsers){
-            return everydayReportService.numberOfNewAccounts().then(function (newUsers){
-                return everydayReportService.numberOfRenewals().then(function (numberOfRenewals){
-                    return everydayReportService.numberOfDeleted().then(function (numberOfDeleted){
-                        return everydayReportService.numberOfAccountsInBuild().then(function (numberOfAccountsInBuild){
-                            return everydayReportService.numberOfAccountsInExecute().then(function (numberOfAccountsInExecute){
-                                return everydayReportService.getUserId().then(function (users){
-                                        let results = [];
-                                        for (let i = 0; i < users.length; i++) {
-                                            console.log(users[i]._id);
-                                            results.push(everydayReportService.getAnnualGoals(users[i]._id));
-                                        }
-                                        return Promise.all(results).then(function(countsAnnual){
-                                            let results = [];
-                                            for (let i = 0; i < users.length; i++) {
-                                                console.log(users[i]._id);
-                                                results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
-                                            }
-                                            return Promise.all(results).then(function(countsQuaterly){
-                                            local = {
-                                            numberOfUsers: numberOfUsers,
-                                            newUsers: newUsers,
-                                            numberOfRenewals: numberOfRenewals,
-                                            numberOfDeleted: numberOfDeleted,
-                                            numberOfAccountsInBuild: numberOfAccountsInBuild,
-                                            numberOfAccountsInExecute: numberOfAccountsInExecute,
-                                            annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
-                                            quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0)
-                                        };
-                                        everydayReportService.renderTemplate(local);
-                                        }) 
-                                    })
-                                })
+        return everydayReportService.getQuaterlyGoals('59d20b1a05b0b30b5097c805');
+        // return everydayReportService.totalNumberOfAccounts().then(function (numberOfUsers){
+        //     return everydayReportService.numberOfNewAccounts().then(function (newUsers){
+        //         return everydayReportService.numberOfRenewals().then(function (numberOfRenewals){
+        //             return everydayReportService.numberOfDeleted().then(function (numberOfDeleted){
+        //                 return everydayReportService.numberOfAccountsInBuild().then(function (numberOfAccountsInBuild){
+        //                     return everydayReportService.numberOfAccountsInExecute().then(function (numberOfAccountsInExecute){
+        //                         return everydayReportService.getUserId().then(function (users){
+        //                                 let results = [];
+        //                                 for (let i = 0; i < users.length; i++) {
+        //                                     console.log(users[i]._id);
+        //                                     results.push(everydayReportService.getAnnualGoals(users[i]._id));
+        //                                 }
+        //                                 return Promise.all(results).then(function(countsAnnual){
+        //                                     let results = [];
+        //                                     for (let i = 0; i < users.length; i++) {
+        //                                         console.log(users[i]._id);
+        //                                         results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
+        //                                     }
+        //                                     return Promise.all(results).then(function(countsQuaterly){
+        //                                     local = {
+        //                                     numberOfUsers: numberOfUsers,
+        //                                     newUsers: newUsers,
+        //                                     numberOfRenewals: numberOfRenewals,
+        //                                     numberOfDeleted: numberOfDeleted,
+        //                                     numberOfAccountsInBuild: numberOfAccountsInBuild,
+        //                                     numberOfAccountsInExecute: numberOfAccountsInExecute,
+        //                                     annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
+        //                                     quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0)
+        //                                 };
+        //                                 everydayReportService.renderTemplate(local);
+        //                                 }) 
+        //                             })
+        //                         })
                                             
-                            })
-                        })
-                    })
-                });
-            });
-        });
+        //                     })
+        //                 })
+        //             })
+        //         });
+        //     });
+        // });
     }
 
     static send(subject, htmlContent, textContent) {

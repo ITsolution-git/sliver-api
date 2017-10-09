@@ -3,7 +3,7 @@ module.exports = function(app) {
     const dashboard = require('./dashboard');
     const admin = require('./admin');
 
-    schedule.run();  
+    // schedule.run();
     schedule.runZoomJob();
     schedule.runReportJob();
     app.use('/v1', dashboard);

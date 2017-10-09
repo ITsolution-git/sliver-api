@@ -254,7 +254,7 @@ class AuthController {
                 return mObj.payments.createPlanPayment(mObj.plan, coupon);
             })
             .then((payment) => {
-                mObj.payments.products.push(payment);
+                // mObj.payments.products.push(payment);
 
                 return Product.load({_id: req.body.buildId});
             })
@@ -275,8 +275,18 @@ class AuthController {
                         return mObj.user.updateStripeCustomer(customer, mObj.coupon)
                     });
             })
-            .then(() => {
-                return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
+            .then((customer) => {
+                return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
+                    mObj.customer.stripeSubscription = subscription.id;
+                    return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                })
+            })
+            .then((subscription) => {
+                if (mObj.payments.products.length > 0) {
+                    return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
+                } else {
+                    return null;
+                }
             })
             .then((charges) => {
                 mObj.charges = charges;

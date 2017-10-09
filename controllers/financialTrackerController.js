@@ -2,6 +2,7 @@ const mongoose = require('../libs/mongoose');
 const Payment = mongoose.model('Payment');
 const User = mongoose.model('User');
 const Coupon = mongoose.model('Coupon');
+const Product = mongoose.model('Product');
 const stripe = require('../services/stripe');
 const StripeService = stripe.service;
 class FinancialTrackerController {
@@ -11,7 +12,7 @@ class FinancialTrackerController {
         return Payment.list()
             .then((payments) => {
                 return Promise.all(
-                    paymeants.map((payment) => {
+                    payments.map((payment) => {
                         return User.load({_id: payment.userId})
                             .then((user) => {
                                 let pay = {
@@ -46,6 +47,10 @@ class FinancialTrackerController {
 
     static getPaymentsByUserID(req) {
          return Payment.list({criteria: {userId: req.params.user_id}});
+    }
+
+    static getStripePaymentsByUser(req) {
+        return StripeService.getPayments(req.decoded._doc._id);
     }
     
     static chargeUser(req) {
@@ -91,6 +96,10 @@ class FinancialTrackerController {
         .catch((err) => {
             console.log(err); // TODO: winston logger add;
         });
+    }
+
+    static toggleSubscription(req) {
+        return StripeService.toggleSubscription(req.params.user_id, req.body.enable);
     }
 }
 

@@ -80,6 +80,20 @@ class UserController {
             }));
         })
         .then(function(users){
+            return Promise.all(users.map(user=>{
+                return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
+
+                // if ((user.status == 'inactive' || user.status == 'deleted') && user.stripeSubscription != null) {
+                //     return StripeService.deleteSubscription(user.stripeSubscription).then(subscription => {
+                //         user.stripeSubscription = null;
+                //         return user.save();
+                //     });
+                // } else {
+                //     return user;
+                // }
+            }));
+        })
+        .then(function(users){
             return users.map(user=>{
                 return user.safe();
             });

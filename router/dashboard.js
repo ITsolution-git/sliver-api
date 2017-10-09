@@ -73,6 +73,7 @@ router.get('/coupon/:code/:planId', (req, res) => runAction(couponController.isV
 
 //Dashboard settingUser
 router.get('/payments', isAuth, (req, res) => runAction(financialTrackerController.getPaymentsByUser, req, res));
+router.get('/stripe-payments', isAuth, (req, res) => runAction(financialTrackerController.getStripePaymentsByUser, req, res));
 
 //Get All step information by user_id or req.decoded._doc.id
 router.get('/getFinishedUserStep/:user_id', isAuth, (req, res) => runAction(userController.getFinishedStepsForUser, req, res));
@@ -154,5 +155,13 @@ router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getW
 
 //Video api
 router.get('/video/:videoName', videoController.getVideo);
+
+const stripe = require('stripe')(config.stripe_key);
+
+router.get('/stripe/list', (req, res) => {
+    stripe.customers.list({ limit: 100/*, starting_after: "cus_AYHQSxN4MtLWhh" */}).then(list => {
+        res.send(list);
+    });
+})
 
 module.exports = router;

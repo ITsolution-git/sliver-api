@@ -14,15 +14,58 @@ const nodemailer = require('nodemailer');
 const smtpTransport = require('nodemailer-smtp-transport');
 const EmailTemplate = require('email-templates').EmailTemplate;
 const path = require('path');
+const Activity = mongoose.model('Activity');
 
 
 let  local;
+
+let  activityTypes = [
+    { id: "Milestone", name: "Milestone", show: true },
+    { id: "ActionItem", name: "ActionItem", show: true },
+    { id: "Pause & Reflect", name: "Pause & Reflect", show: true },
+    { id: "Sales", name: "Sales", show: true },
+    { id: "Communication", name: "Communication", show: true },
+    { id: "SLAPexpert", name: "SLAPexpert", show: true },
+    { id: "SLAPassistant", name: "SLAPassistant", show: true },
+    { id: "SLAPworld", name: "SLAPworld", show: true },
+    { id: "SLAPschool", name: "SLAPschool", show: true },
+    { id: "SLAPmanager", name: "SLAPmanager", show: true }
+];
 
 
 
 class everydayReportService {
     static everydayReportService() {
         console.log('Cron run');
+    }
+
+    static getActivity(userId) {
+        let results = [];
+        let count = 0;
+        let types = activityTypes
+            .filter(function(type){ return type.show == true; })
+            .map(function(type){return type.name});
+
+        return Activity.list({criteria: {userId:userId}}).then(function (list){
+            let activity = [];
+            for (let i=0; i<list.length; i++) {
+                let act = Moment(list[i].createdAt);
+                if (act.isBetween(Moment(), Moment(), 'day', []))
+                    activity.push = list[i];
+            }
+            types.forEach(function (element,index) {
+                for(let i=0; i<results.length; i++) {
+                    if(activity[i].type === types[element])
+                        count++;
+                }
+                // if (count != 0) {
+                //     let obj = {}
+                //     results.push();
+                //}
+            })
+
+            
+        });
     }
 
     static totalNumberOfAccounts() {
@@ -42,7 +85,7 @@ class everydayReportService {
     }
 
     static numberOfAccountsInBuild() {
-        return User.count({role: '4', status: 'active'}).where("finishedSteps <> '47'").exec();
+        return User.count({role: '4', status: 'active'}).where("finishedSteps <> '46'").exec();
     }
 
     static numberOfAccountsInExecute() {
@@ -51,32 +94,17 @@ class everydayReportService {
 
     // all sales of user
     static getGoals(userId) {
-        return ExecuteItem.find({userId: userId}).exec()
-        // .then(function (Execute) {
-        //     Execute.forEach(function (element, index) {
-        //         if ((element.type == 'sales') && (element.progress == 100))
-        //         return items[index]=element;
-        //     })
-        // })
+        return ExecuteItem.find({userId: userId, type: 'sales'}).exec();
     }
     
     // all user goals 
     static getTotalGoals(userId) {
         return ActionPlan.find({userId: userId}).exec();
-        //.then(function (Action) {
-           // Object.keys(Action[0].whatsHappening[0].units).forEach(function (element, index) {
-           //     return sum = +Action[0].whatsHappening[0].units[element] + sum;
-           // })
-       // })
     }
 
     // all user 
     static getRevenues(userId) {
         return YearGoal.find({userId: userId}).exec();
-        // .then(function (Revenue) {
-        //     if (!Revenue[0].revenueStreams.deleted)
-        //     return items=Revenue[0].revenueStreams;
-        // })
     }
 
     static getUserId() {
@@ -85,7 +113,6 @@ class everydayReportService {
 
     static getNoLogged() {
         let dateDiff = Moment().tz('America/Los_Angeles').format('MMMM d, YYYY');
-        console.log(dateDiff);
     }
 
     static getMindset(userId) {
@@ -149,42 +176,48 @@ class everydayReportService {
                             revenues.push(obj[key]);}
                         }
                     return everydayReportService.getMindset(userId).then(function (mindset){
-                        startDate = Moment(mindset[0].slapStartDate).tz('America/Los_Angeles');
-                        quaters.push(startDate);
-                        quaters.push(Moment(startDate).add(4, 'month').tz('America/Los_Angeles'));
-                        quaters.push(Moment(quaters[1]).add(4, 'month').tz('America/Los_Angeles'));
-                        quaters.push(Moment(quaters[2]).add(4, 'month').tz('America/Los_Angeles'));
-                        console.log(quaters[0].format('MM YYYY'));
-                        console.log(quaters[1].format('MM YYYY'));
-                        console.log(quaters[2].format('MM YYYY'));
-                        console.log(quaters[3].format('MM YYYY'));
-                    })
-                    return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
-                        let el = 0;
-                            for (let i=0; i<4; i++) {
-                                let totalGoals = 0; 
-                                let sum = 0;
-                                Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
-                                    if (revenues[index].name == element) 
-                                        el = revenues[index].sellingPrice;
-                                    totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
-                                })
-                                for(let i=0; i<goals.length; i++) {
-
-                                    // need to do a check "What quater is it?"
-                                    sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
+                        startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
+                        quaters.push(Moment(startDate).format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[0]).add(4, 'month').format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[1]).add(4, 'month').format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[2]).add(4, 'month').format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[3]).add(4, 'month').format('YYYY-MM-DD'));
+                        return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
+                            let el = 0;
+                            let totalGoals = []; 
+                                for (let i=0; i<4; i++) {
+                                    
+                                    let sum = 0;
+                                    Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
+                                        if (revenues[index].name == element) 
+                                            el = revenues[index].sellingPrice;
+                                        sum = ((+totalGoal[0].whatsHappening[i].units[element] * el) + sum);
+                                    })
+                                    totalGoals.push(sum);
                                 }
-                                if ((sum/totalGoals) * 100 >=75) count++;
-                            }
 
-                        return count;
+                                for(let i=0; i<goals.length; i++) {
+                                    let sum = 0;
+                                    let totalSum = [];
+                            
+                                    for(let j=1; j<quaters.length; j++) {
+
+                                        if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]'))
+                                            sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
+
+                                        totalSum.push(sum);
+                                    }
+
+                                    if ((totalSum[i]/totalGoals[i]) * 100 >=75) count++;
+                                    }
+                            return count;
                     })
                 })
             })
+        })
     }
 
     static getLocalVariables() {
-        return everydayReportService.getQuaterlyGoals('59d20b1a05b0b30b5097c805');
         // return everydayReportService.totalNumberOfAccounts().then(function (numberOfUsers){
         //     return everydayReportService.numberOfNewAccounts().then(function (newUsers){
         //         return everydayReportService.numberOfRenewals().then(function (numberOfRenewals){
@@ -194,13 +227,12 @@ class everydayReportService {
         //                         return everydayReportService.getUserId().then(function (users){
         //                                 let results = [];
         //                                 for (let i = 0; i < users.length; i++) {
-        //                                     console.log(users[i]._id);
+                                            
         //                                     results.push(everydayReportService.getAnnualGoals(users[i]._id));
         //                                 }
         //                                 return Promise.all(results).then(function(countsAnnual){
         //                                     let results = [];
         //                                     for (let i = 0; i < users.length; i++) {
-        //                                         console.log(users[i]._id);
         //                                         results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
         //                                     }
         //                                     return Promise.all(results).then(function(countsQuaterly){
@@ -225,6 +257,7 @@ class everydayReportService {
         //         });
         //     });
         // });
+        everydayReportService.getActivity('59d20b1a05b0b30b5097c805');
     }
 
     static send(subject, htmlContent, textContent) {

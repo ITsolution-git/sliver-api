@@ -172,6 +172,10 @@ class AuthController {
                 throw new CustomError('Your Email or Password are incorrect. Please try again!', 'UNAUTH');
             }
 
+            if(user.status === 'archived'){
+                throw new CustomError('User inactive anymore!', 'UNAUTH');
+            }
+
             if (!user.comparePassword(req.body.password)) {
                 throw new CustomError('The password you entered is incorrect.  Please remember they are case sensitive and try again!', 'UNAUTH');
             }

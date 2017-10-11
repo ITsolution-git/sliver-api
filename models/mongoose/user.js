@@ -95,7 +95,7 @@ let schema = new Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'deleted', 'inactive', 'confirmed'],
+        enum: ['active', 'archived', 'inactive', 'confirmed'],
         default: 'active'
     },
     partnerId: {

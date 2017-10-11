@@ -149,15 +149,21 @@ class UserController {
     }
 
     static deleteUser(req) {
-        return User.load({_id: req.body._id})
-        .then(user => {
-            user.status = 'deleted';
-            return user.save();
+        return User.load({_id: req.params.id})
+        .then(user => { 
+                if (user.status != 'archived') {
+                    user.status = 'archived';
+                    return user.save();}
+                else throw 'Remove from DB';
         })
         .then(user=>{
             return user.safe();
         })
+        .catch(function (e) {
+            return User.delete({_id: req.params.id});
+        })
     }
+
 
     static getFinishedSteps(req, _id) {
         let select = 'finishedSteps';

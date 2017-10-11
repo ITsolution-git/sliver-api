@@ -8,6 +8,10 @@ class User extends mongoose.Model {
         return this.findOne(criteria).select(select).exec();
     }
 
+    static delete(criteria, select) {
+        return this.findOne(criteria).remove(select).exec();
+    }
+
     static list(options) {
         options = options || {};
         const criteria = options.criteria || {};

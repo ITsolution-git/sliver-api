@@ -150,17 +150,22 @@ class UserController {
 
     static deleteUser(req) {
         return User.load({_id: req.params.id})
+        .then(user => {
+            return StripeService.toggleSubscription(req.params.id, false);
+        })
         .then(user => { 
                 if (user.status != 'archived') {
                     user.status = 'archived';
-                    return user.save();}
-                else throw 'Remove from DB';
+                    return user.save();
+                }
+                else {
+                    return User.delete({_id: req.params.id});
+                }
         })
         .then(user=>{
-            return user.safe();
-        })
-        .catch(function (e) {
-            return User.delete({_id: req.params.id});
+            if (user.safe) {
+                return user.safe();
+            }
         })
     }
 

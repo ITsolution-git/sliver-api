@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 const ExcuteItem = mongoose.model('ExcuteItem');
 
+const AdminTokenService = require('../services/AdminTokenService.js');
+
 let activityController = require('./activityController');
+
 class ExcuteItemController {
     
     static create(req) {
@@ -12,7 +15,6 @@ class ExcuteItemController {
         }
         let excuteItem = req.body;
         excuteItem.userId = req.decoded._doc._id;
-
         // if(ExcuteItem.dateFrom) {
         //     ExcuteItem.dateFrom = new Date(ExcuteItem.dateFrom);
         // }
@@ -20,17 +22,29 @@ class ExcuteItemController {
         // if(ExcuteItem.dateUntil) {
         //     ExcuteItem.dateUntil = new Date(ExcuteItem.dateUntil);
         // }
-        
-        return (new ExcuteItem(excuteItem)).save().then(resp => {
-            return activityController.create({
-                userId: req.decoded._doc._id,
-                title: 'Create a ' + con[excuteItem.type].name,
-                type: con[excuteItem.type].name,
-                notes: req.decoded._doc.businessName + ' created a ' + con[excuteItem.type].name
-            }).then(() => {
-                return resp;
+        if (AdminTokenService.adminToken != '') 
+            return (new ExcuteItem(excuteItem)).save().then(resp => {
+                return activityController.create({
+                    userId: req.decoded._doc._id,
+                    title: 'Create a ' + con[excuteItem.type].name,
+                    type: con[excuteItem.type].name,
+                    notes: 'Admin' + ' created a ' + con[excuteItem.type].name
+                }).then(() => {
+                    return resp;
+                });
+            })
+
+        else
+            return (new ExcuteItem(excuteItem)).save().then(resp => {
+                return activityController.create({
+                    userId: req.decoded._doc._id,
+                    title: 'Create a ' + con[excuteItem.type].name,
+                    type: con[excuteItem.type].name,
+                    notes: req.decoded._doc.businessName + ' created a ' + con[excuteItem.type].name
+                }).then(() => {
+                    return resp;
+                });
             });
-        });
     }
 
     static getExcuteItems(req) {

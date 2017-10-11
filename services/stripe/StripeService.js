@@ -139,29 +139,32 @@ class Stripe {
             return new Promise( (resolve,reject) => {
                 stripe.charges.list({customer: user.stripeId, limit: 10}, (err, payments) => {
                     // console.log(payments);
-                    resolve(Promise.all(payments.data.map(payment => {
-                        let result = {};
-                        result.paymentDate = moment(new Date(payment.created * 1000)).format('ll');
+                    if (payments) {
+                        resolve(Promise.all(payments.data.map(payment => {
+                            let result = {};
+                            result.paymentDate = moment(new Date(payment.created * 1000)).format('ll');
 
-                        return new Promise((resolve, reject) => {
-                            stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
-                                // console.log("Got invoice: " + JSON.stringify(invoice));
+                            return new Promise((resolve, reject) => {
+                                stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
+                                    // console.log("Got invoice: " + JSON.stringify(invoice));
 
-                                if (invoice && invoice.lines.subscriptions && invoice.lines.subscriptions.length > 0) {
-                                    result.programName = invoice.lines.subscriptions[0].plan.name;
-                                    result.costProduct = invoice.lines.subscriptions[0].plan.amount / 100;
+                                    if (invoice && invoice.lines.subscriptions && invoice.lines.subscriptions.length > 0) {
+                                        result.programName = invoice.lines.subscriptions[0].plan.name;
+                                        result.costProduct = invoice.lines.subscriptions[0].plan.amount / 100;
 
-                                    result.discount = 0;
-                                    if (invoice.discount && invoice.discount.coupon) {
-                                        result.discount = '-' + (invoice.lines.subscriptions[0].amount - invoice.amount_due) / 100;
+                                        result.discount = 0;
+                                        if (invoice.discount && invoice.discount.coupon) {
+                                            result.discount = '-' + (invoice.lines.subscriptions[0].amount - invoice.amount_due) / 100;
+                                        }
+                                        result.amountCharges = payment.amount / 100;
                                     }
-                                    result.amountCharges = payment.amount / 100;
-                                }
-                                resolve(result);
+                                    resolve(result);
+                                });
                             });
-                        });
-                    })));
-
+                        })));
+                    } else {
+                        resolve([]);
+                    }
                 });
             });
         });

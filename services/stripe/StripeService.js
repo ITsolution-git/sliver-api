@@ -147,7 +147,7 @@ class Stripe {
                             stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
                                 // console.log("Got invoice: " + JSON.stringify(invoice));
 
-                                if (invoice.lines.subscriptions && invoice.lines.subscriptions.length > 0) {
+                                if (invoice && invoice.lines.subscriptions && invoice.lines.subscriptions.length > 0) {
                                     result.programName = invoice.lines.subscriptions[0].plan.name;
                                     result.costProduct = invoice.lines.subscriptions[0].plan.amount / 100;
 

@@ -250,9 +250,11 @@ class everydayReportService {
                                     let sum = 0;
                                     if (totalGoal[0].whatsHappening[i].units) {
                                     Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
+                                        if(revenues[index]) {
                                         if (revenues[index].name == element) 
                                             el = revenues[index].sellingPrice;
                                         sum = ((+totalGoal[0].whatsHappening[i].units[element] * el) + sum);
+                                        }
                                     })
                                     totalGoals.push(sum);
                                 }

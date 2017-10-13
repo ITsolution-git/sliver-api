@@ -491,7 +491,7 @@ class AuthController {
                 return user.createToken();
             })
             .then((user) => {
-                return Mailer.renderTemplateAndSend(user.email, {user: user.toJSON(), link: config.host + '#!/reset/' + user.token }, 'reset-password');
+                return Mailer.renderTemplateAndSend(user.email, {user: user.toJSON(), link: config.host + 'reset/' + user.token }, 'reset-password');
             })
             .then((res)=>{
                 return res;

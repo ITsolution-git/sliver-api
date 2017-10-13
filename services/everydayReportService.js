@@ -16,7 +16,6 @@ const EmailTemplate = require('email-templates').EmailTemplate;
 const path = require('path');
 const Activity = mongoose.model('Activity');
 
-
 let  local;
 
 let  activityTypes = [
@@ -33,7 +32,6 @@ let  activityTypes = [
 ];
 
 
-
 class everydayReportService {
     static everydayReportService() {
         console.log('Cron run');
@@ -41,31 +39,78 @@ class everydayReportService {
 
     static getActivity(userId) {
         let results = [];
-        let count = 0;
-        let types = activityTypes
-            .filter(function(type){ return type.show == true; })
-            .map(function(type){return type.name});
+        let quaters = [];
+        let startDate;
+        let goal = [];
+        let revenues = [];
 
-        return Activity.list({criteria: {userId:userId}}).then(function (list){
-            let activity = [];
-            for (let i=0; i<list.length; i++) {
-                let act = Moment(list[i].createdAt);
-                if (act.isBetween(Moment(), Moment(), 'day', []))
-                    activity.push = list[i];
-            }
-            types.forEach(function (element,index) {
-                for(let i=0; i<results.length; i++) {
-                    if(activity[i].type === types[element])
-                        count++;
-                }
-                // if (count != 0) {
-                //     let obj = {}
-                //     results.push();
-                //}
+        return everydayReportService.getMindset(userId).then(function (mindset){
+            startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
+            quaters.push(Moment(startDate).format('YYYY-MM-DD'));
+            quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
+            quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
+            quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
+            quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
+
+
+            return everydayReportService.getGoals(userId).then(function (goals){
+                goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
+                return everydayReportService.getRevenues(userId).then(function (revenue){
+                    if (revenue[0].revenueStreams!= undefined){
+                        let obj = revenue[0].revenueStreams.revenues;
+                        for (var key in obj)
+                        if (obj[key].deleted == false){
+                            revenues.push(obj[key]);
+                        }}
+                    return everydayReportService.getUserById(userId).then(function (user){
+                        for (let i = 1; i < quaters.length; i++) {
+                            let obj = [];
+                            for (let k = 0; k < revenues.length; k++){
+                                let count = 0;
+                                for (let j = 0; j < goal.length; j++) {
+                                    if (Moment(goal[j].dueDate).isBetween(quaters[i-1], quaters[i], 'day', '[]') && goal[j].title == revenues[k].id){
+                                        count += goal[j].saleUnit;
+                                    }
+                                }
+                                if (count > 0) obj.push({name: user.businessName, count: count, quater: i, revenue: revenues[k].name});
+                            }
+                            if (obj.length > 0) results.push(obj);
+                        }
+                        return results;
+                    })
+                    })
+                    
             })
-
+        })
+        // let activity = [];
+        // let types = activityTypes
+        //     .filter(function(type){ return type.show == true; })
+        //     .map(function(type){return type.name});
+        // return everydayReportService.getUserById(userId).then(function (user){
+        // return Activity.list({criteria: {userId:userId}}).then(function (list){
             
-        });
+        //     for (let i=0; i<list.length; i++) {
+        //         let act = Moment(list[i].createdAt);
+        //         if (act.isBetween(Moment().subtract(1, 'day'), Moment(), 'day', []))
+        //             activity.push(list[i]);
+        //     }
+        //     types.forEach(function (element,index) {
+        //         let count = 0;
+        //         for(let i=0; i<activity.length; i++) {
+        //             if(activity[i].type === element)
+        //                 count++;
+        //         }
+        //         if (count > 0) 
+        //             results.push({businessName: user.businessName, activity: element, count: count});
+        //         })
+        //         console.log(results);
+        //         return results;
+            // })
+        // })
+    } 
+
+    static getUserById(userId) {
+        return User.findOne({_id: userId}).exec();
     }
 
     static totalNumberOfAccounts() {
@@ -119,8 +164,6 @@ class everydayReportService {
         return Mindset.find({userId: userId}).exec();
     }
 
-
-
     static getAnnualGoals(userId) {
         let count = 0;
         let goals = [];
@@ -155,7 +198,7 @@ class everydayReportService {
                         return count;
                     })
                 })
-            })
+        })
     }
 
     static getQuaterlyGoals(userId) {
@@ -178,10 +221,10 @@ class everydayReportService {
                     return everydayReportService.getMindset(userId).then(function (mindset){
                         startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));
-                        quaters.push(Moment(quaters[0]).add(4, 'month').format('YYYY-MM-DD'));
-                        quaters.push(Moment(quaters[1]).add(4, 'month').format('YYYY-MM-DD'));
-                        quaters.push(Moment(quaters[2]).add(4, 'month').format('YYYY-MM-DD'));
-                        quaters.push(Moment(quaters[3]).add(4, 'month').format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
+                        quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
                         return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                             let el = 0;
                             let totalGoals = []; 
@@ -217,47 +260,78 @@ class everydayReportService {
         })
     }
 
+    static getUserNotes(userId) {
+        return everydayReportService.getUserById(userId).then(function (user){
+            if (user.extrainfo.textNotes != '') return {name: user.name + '' + user.lastName, businessName: user.businessName, notes: user.extrainfo.textNotes}
+        })
+    }
+
+    
+
     static getLocalVariables() {
-        // return everydayReportService.totalNumberOfAccounts().then(function (numberOfUsers){
-        //     return everydayReportService.numberOfNewAccounts().then(function (newUsers){
-        //         return everydayReportService.numberOfRenewals().then(function (numberOfRenewals){
-        //             return everydayReportService.numberOfDeleted().then(function (numberOfDeleted){
-        //                 return everydayReportService.numberOfAccountsInBuild().then(function (numberOfAccountsInBuild){
-        //                     return everydayReportService.numberOfAccountsInExecute().then(function (numberOfAccountsInExecute){
-        //                         return everydayReportService.getUserId().then(function (users){
-        //                                 let results = [];
-        //                                 for (let i = 0; i < users.length; i++) {
+        return everydayReportService.totalNumberOfAccounts().then(function (numberOfUsers){
+            return everydayReportService.numberOfNewAccounts().then(function (newUsers){
+                return everydayReportService.numberOfRenewals().then(function (numberOfRenewals){
+                    return everydayReportService.numberOfDeleted().then(function (numberOfDeleted){
+                        return everydayReportService.numberOfAccountsInBuild().then(function (numberOfAccountsInBuild){
+                            return everydayReportService.numberOfAccountsInExecute().then(function (numberOfAccountsInExecute){
+                                return everydayReportService.getUserId().then(function (users){
+                                        let results = [];
+                                        for (let i = 0; i < users.length; i++) {
+                                            results.push(everydayReportService.getAnnualGoals(users[i]._id));
+                                        }
+                                        return Promise.all(results).then(function(countsAnnual){
+                                            let results = [];
+                                            for (let i = 0; i < users.length; i++) {
+                                                results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
+                                            }
+                                            return Promise.all(results).then(function(countsQuaterly){
+                                                let results = [];
+                                                for (let i = 0; i < users.length; i++) {
+                                                    results.push(everydayReportService.getActivity(users[i]._id));
+                                                }
+                                                return Promise.all(results).then(function (clientActivity){
+                                                    let client = [];
+                                                    let res = [];
+                                                    for (let i = 0; i < clientActivity.length; i++) 
+                                                        clientActivity[i].forEach(function (element, index){
+                                                            client.push(element);
+                                                        })
+                                                    for (let i = 0; i < client.length; i++)
+                                                        client[i].forEach(function (element, index) {
+                                                            
+                                                            res.push(element);
+                                                        })
+                                                    let results = [];
+                                                    for (let i = 0; i < users.length; i++) {
+                                                        results.push(everydayReportService.getUserNotes(users[i]._id));
+                                                    }
+                                                    return Promise.all(results).then(function (notes){
+                                                        local = {
+                                                            numberOfUsers: numberOfUsers,
+                                                            newUsers: newUsers,
+                                                            numberOfRenewals: numberOfRenewals,
+                                                            numberOfDeleted: numberOfDeleted,
+                                                            numberOfAccountsInBuild: numberOfAccountsInBuild,
+                                                            numberOfAccountsInExecute: numberOfAccountsInExecute,
+                                                            annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
+                                                            quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0),
+                                                            clientActivity: res,
+                                                            notes: notes
+                                                        };
+                                                    everydayReportService.renderTemplate(local);
+                                                    })
+                                                })
+                                            })
+                                        })
+                                })
                                             
-        //                                     results.push(everydayReportService.getAnnualGoals(users[i]._id));
-        //                                 }
-        //                                 return Promise.all(results).then(function(countsAnnual){
-        //                                     let results = [];
-        //                                     for (let i = 0; i < users.length; i++) {
-        //                                         results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
-        //                                     }
-        //                                     return Promise.all(results).then(function(countsQuaterly){
-        //                                     local = {
-        //                                     numberOfUsers: numberOfUsers,
-        //                                     newUsers: newUsers,
-        //                                     numberOfRenewals: numberOfRenewals,
-        //                                     numberOfDeleted: numberOfDeleted,
-        //                                     numberOfAccountsInBuild: numberOfAccountsInBuild,
-        //                                     numberOfAccountsInExecute: numberOfAccountsInExecute,
-        //                                     annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
-        //                                     quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0)
-        //                                 };
-        //                                 everydayReportService.renderTemplate(local);
-        //                                 }) 
-        //                             })
-        //                         })
-                                            
-        //                     })
-        //                 })
-        //             })
-        //         });
-        //     });
-        // });
-        everydayReportService.getActivity('59d20b1a05b0b30b5097c805');
+                            })
+                        })
+                    })
+                });
+            });
+        });
     }
 
     static send(subject, htmlContent, textContent) {
@@ -302,7 +376,6 @@ class everydayReportService {
 
     static renderTemplate(local) {
         let template = new EmailTemplate(path.join(__dirname, '../emailtemplates', 'daily-report'));
-        console.log(local);
         // everydayReportService.getLocalVariables()
             // let speakersWithWebinar = speakers.filter(speaker => speaker.enable_webinar);
         // everydayReportService.totalNumberOfAccounts();
@@ -319,10 +392,7 @@ class everydayReportService {
                 return everydayReportService.send(results.subject, results.html, results.text);
             });
         }
-
     }
-
-
 }
 
 module.exports = everydayReportService;

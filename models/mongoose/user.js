@@ -1,5 +1,6 @@
 const mongoose = require('../../libs/mongoose');
 const User = require('./class/User');
+const Moment = require('moment');
 
 const HashPass = require('../../libs/class/HashPass');
 
@@ -49,6 +50,9 @@ let schema = new Schema({
     stripeSource : {
         type: String
     },
+    stripeSubscription : {
+        type: String
+    },
     // No Deprecation and use role
     // admin : {
     //     type : Number,
@@ -78,6 +82,10 @@ let schema = new Schema({
         type: Date,
         default: null
     },
+    lastLogin: {
+        type: Date,
+        default: new Date()
+    },
     couponId : {
         type: String,
         default:null
@@ -92,7 +100,7 @@ let schema = new Schema({
     },
     status: {
         type: String,
-        enum: ['active', 'deleted', 'inactive', 'confirmed'],
+        enum: ['active', 'archived', 'inactive', 'confirmed'],
         default: 'active'
     },
     partnerId: {

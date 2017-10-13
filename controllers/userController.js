@@ -80,6 +80,20 @@ class UserController {
             }));
         })
         .then(function(users){
+            return Promise.all(users.map(user=>{
+                return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
+
+                // if ((user.status == 'inactive' || user.status == 'deleted') && user.stripeSubscription != null) {
+                //     return StripeService.deleteSubscription(user.stripeSubscription).then(subscription => {
+                //         user.stripeSubscription = null;
+                //         return user.save();
+                //     });
+                // } else {
+                //     return user;
+                // }
+            }));
+        })
+        .then(function(users){
             return users.map(user=>{
                 return user.safe();
             });
@@ -135,15 +149,26 @@ class UserController {
     }
 
     static deleteUser(req) {
-        return User.load({_id: req.body._id})
+        return User.load({_id: req.params.id})
         .then(user => {
-            user.status = 'deleted';
-            return user.save();
+            return StripeService.toggleSubscription(req.params.id, false);
+        })
+        .then(user => { 
+                if (user.status != 'archived') {
+                    user.status = 'archived';
+                    return user.save();
+                }
+                else {
+                    return User.delete({_id: req.params.id});
+                }
         })
         .then(user=>{
-            return user.safe();
+            if (user.safe) {
+                return user.safe();
+            }
         })
     }
+
 
     static getFinishedSteps(req, _id) {
         let select = 'finishedSteps';

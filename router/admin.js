@@ -41,8 +41,9 @@ router.get('/', (req, res) => {
 });
 
 //Admin
-router.get('/auth/',  isAuth, (req, res) => runAction(authController.authToken, req, res));
+router.get('/auth/', isAuth, (req, res) => runAction(authController.authToken, req, res));
 router.post('/auth', signinValid, (req,res) => runAction(authController.signinAdmin,req,res));
+router.get('/auth/:id', isAuth, (req, res) => runAction(authController.adminAsUser, req, res));
 
 
 //Manage Users 
@@ -51,6 +52,7 @@ router.post('/users',isAuth, isAdmin, (req, res) => runAction(userController.cre
 router.get('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.getUser, req, res));
 router.delete('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.deleteUser, req, res));
 router.get('/users',isAuth, isAdmin, (req, res) => runAction(userController.getUsers, req, res));
+
 
 //Manage Products
 router.post('/products',isAuth, isAdmin, productValid, (req, res) => runAction(productController.create, req, res));
@@ -74,6 +76,7 @@ router.get('/financialTracker',isAuth, isAdmin, (req,res) => runAction(financial
 
 router.get('/payments/paymentsByUser/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.getPaymentsByUserID, req, res));
 router.post('/payments/charge/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.chargeUser, req, res));
+router.post('/payments/subscription/toggle/:user_id', isAuth, isAdmin, (req, res) => runAction(financialTrackerController.toggleSubscription, req, res));
 
 
 //Email templates

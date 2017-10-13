@@ -72,10 +72,12 @@ class Payment {
      * @returns {*}
      */
     calculate() {
-        let summ = null;
+        let summ = 0;
         this.products.forEach((item) => {
             summ += item.amount;
         });
+        console.log(JSON.stringify(this.products));
+        console.log("calculate: " + summ);
 
         return summ;
     }
@@ -87,8 +89,8 @@ class Payment {
     savePayment(mObj) {
         this.userId = mObj.user._id;
         this.status = mObj.charges ? 1 : 0;
-        this.paymentDate = mObj.charges.created * 1000;
-        this.amountCharges = mObj.charges ? mObj.charges.amount / 100 : Pay.calculate();
+        this.paymentDate = mObj.charges ? mObj.charges.created * 1000 : null;
+        this.amountCharges = mObj.charges ? mObj.charges.amount / 100 : this.calculate();
         this.amountSaved = mObj.customer.account_balance;
         this.save();
     }

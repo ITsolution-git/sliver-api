@@ -5,6 +5,7 @@ const config = require('../config');
 const stripe = require('../services/stripe');
 const jwt = require('jsonwebtoken');
 const StripeService = stripe.service;
+const AdminTokenService = require('../services/AdminTokenService.js');
 
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
@@ -18,7 +19,7 @@ let activityController = require('./activityController');
 let statementController = require('./statementController');
 const IdealClient = mongoose.model('IdealClient');
 const Statement = mongoose.model('Statement');
-const SlapMindset = mongoose.model('slapMindset');
+const SlapMindset = mongoose.model('slapMindset');  
 /**
  * @swagger
  * securityDefinitions:
@@ -165,10 +166,14 @@ class AuthController {
      *        examples:
      *          token: string
      */
-    static signin(req) {
+    static signin(req) { 
         return User.load({email: req.body.email}).then((user) => {
             if(!user){
                 throw new CustomError('Your Email or Password are incorrect. Please try again!', 'UNAUTH');
+            }
+
+            if(user.status === 'archived'){
+                throw new CustomError('User inactive anymore!', 'UNAUTH');
             }
 
             if (!user.comparePassword(req.body.password)) {
@@ -183,8 +188,18 @@ class AuthController {
         }).catch(err=>{
             throw err;
         });
-
     }
+
+    static adminAsUser(req) {
+        // console.log(req.params);
+        return User.load({_id: req.params.id}).then((user) => {
+            let token = jwt.sign({_id: user._id}, config.secret, {
+            expiresIn: "300d" 
+            });
+        return {token: token};
+        });
+    }
+
 
     static selectSLAPyear(req) {
 
@@ -254,7 +269,7 @@ class AuthController {
                 return mObj.payments.createPlanPayment(mObj.plan, coupon);
             })
             .then((payment) => {
-                mObj.payments.products.push(payment);
+                // mObj.payments.products.push(payment);
 
                 return Product.load({_id: req.body.buildId});
             })
@@ -275,8 +290,18 @@ class AuthController {
                         return mObj.user.updateStripeCustomer(customer, mObj.coupon)
                     });
             })
-            .then(() => {
-                return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
+            .then((customer) => {
+                return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
+                    mObj.customer.stripeSubscription = subscription.id;
+                    return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                })
+            })
+            .then((subscription) => {
+                if (mObj.payments.products.length > 0) {
+                    return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
+                } else {
+                    return null;
+                }
             })
             .then((charges) => {
                 mObj.charges = charges;
@@ -298,8 +323,8 @@ class AuthController {
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
 
-                    // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    // .then(res=>{
+                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                    .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Account Renewed', 
                                                 type: 'Milestone',  
@@ -310,20 +335,20 @@ class AuthController {
                                                     });
                                                     return { token: token, id: mObj.user._id };
                                                 });
-                    // });
+                    });
                 } else {
-                    return activityController.create({ userId: mObj.user._id,
+                    activityController.create({ userId: mObj.user._id,
                                             title: 'Account Created', 
                                             type: 'Milestone',  
                                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.',
                                             journey: {section: 'start', name: 'Account Created'}});
-                    // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    // .then(res=>{
-                    //     return activityController.create({ userId: mObj.user._id,
-                    //                             title: 'Auto Email Sent',
-                    //                             type: 'Communication',
-                    //                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
-                    // });
+                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                    .then(res=>{
+                        return activityController.create({ userId: mObj.user._id,
+                                                title: 'Auto Email Sent',
+                                                type: 'Communication',
+                                                notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
+                    });
                 }
                 activityController.create({ userId: mObj.user._id,
                                             title: 'T&C Signed',
@@ -453,7 +478,7 @@ class AuthController {
                 let token = jwt.sign(user, config.secret, {
                     expiresIn: "24h" // expires in 24 hours
                 });
-
+                    AdminTokenService.setToken(token);
                 return {token: token};
             })
     }
@@ -466,7 +491,7 @@ class AuthController {
                 return user.createToken();
             })
             .then((user) => {
-                return Mailer.renderTemplateAndSend(user.email, {user: user.toJSON(), link: config.host + '#!/reset/' + user.token }, 'reset-password');
+                return Mailer.renderTemplateAndSend(user.email, {user: user.toJSON(), link: config.host + 'reset/' + user.token }, 'reset-password');
             })
             .then((res)=>{
                 return res;

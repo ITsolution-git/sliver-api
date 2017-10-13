@@ -217,7 +217,8 @@ class everydayReportService {
                             if (obj[key].deleted == false){
                            
                             revenues.push(obj[key]);}
-                        }
+                            }
+                    else return;
                     return everydayReportService.getMindset(userId).then(function (mindset){
                         startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));

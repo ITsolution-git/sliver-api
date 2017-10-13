@@ -45,14 +45,14 @@ class everydayReportService {
         let revenues = [];
 
         return everydayReportService.getMindset(userId).then(function (mindset){
+            if (mindset[0]){
             startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
             quaters.push(Moment(startDate).format('YYYY-MM-DD'));
             quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
             quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
             quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
             quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
-
-
+            
             return everydayReportService.getGoals(userId).then(function (goals){
                 goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
                 return everydayReportService.getRevenues(userId).then(function (revenue){
@@ -80,9 +80,10 @@ class everydayReportService {
                         return results;
                     })
                     })
-                    
+                
             })
-        })
+         }
+         })
         // let activity = [];
         // let types = activityTypes
         //     .filter(function(type){ return type.show == true; })
@@ -235,12 +236,14 @@ class everydayReportService {
                             }
                     else return;
                     return everydayReportService.getMindset(userId).then(function (mindset){
+                        if (mindset[0]){
                         startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
+                       
                         return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                             let el = 0;
                             let totalGoals = []; 
@@ -279,7 +282,8 @@ class everydayReportService {
                             }
                             return count;
                     })
-                })
+                }
+            })
             })
         })
     }

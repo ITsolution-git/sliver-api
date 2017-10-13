@@ -173,6 +173,7 @@ class everydayReportService {
         return everydayReportService.getGoals(userId).then(function (goal){
             goals = goal.filter(gol => gol.type == 'sales' && gol.progress == 100);
                 return everydayReportService.getRevenues(userId).then(function (revenue){
+//			console.log(JSON.stringify(revenue[0].revenueStreams.revenues, null, 3));
                     if (revenue[0] != undefined) {
                         let obj = revenue[0].revenueStreams.revenues;
                         for (var key in obj) {
@@ -183,21 +184,30 @@ class everydayReportService {
                     } else {
                         return;
                     }
+
+//			console.log(JSON.stringify(revenues, null, 3));
                     
                     return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                         let el = 0;
-                            for (let i=0; i<4; i++) {
+			if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
+                            for (let i=0; i<totalGoal[0].whatsHappening.length; i++) {
+				if (totalGoal[0].whatsHappening[i].units) {
                                 Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
                                     for (let i=0; i<revenues.length; i++) {
                                         if (revenues[i].name == element) 
                                             el = revenues[i].sellingPrice;}
                                     totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
                                 })
+				}
                             }
+//				console.log(JSON.stringify(goals, null, 3));
                             for(let i=0; i<goals.length; i++) {
+				if (revenues[goals[i].title-1]) {
                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
+				}
                             }
                         if ((sum/totalGoals) * 100 >=75) count++;
+			}
 
                         return count;
                     })

@@ -56,12 +56,13 @@ class everydayReportService {
             return everydayReportService.getGoals(userId).then(function (goals){
                 goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
                 return everydayReportService.getRevenues(userId).then(function (revenue){
-                    if (revenue[0].revenueStreams!= undefined){
+                    if (revenue[0]!= undefined){
                         let obj = revenue[0].revenueStreams.revenues;
                         for (var key in obj)
                         if (obj[key].deleted == false){
                             revenues.push(obj[key]);
                         }}
+                        else return;
                     return everydayReportService.getUserById(userId).then(function (user){
                         for (let i = 1; i < quaters.length; i++) {
                             let obj = [];
@@ -243,9 +244,11 @@ class everydayReportService {
                         return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                             let el = 0;
                             let totalGoals = []; 
-                                for (let i=0; i<4; i++) {
+                            if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
+                                for (let i=0; i<totalGoal[0].whatsHappening.length; i++) {
                                     
                                     let sum = 0;
+                                    if (totalGoal[0].whatsHappening[i].units) {
                                     Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
                                         if (revenues[index].name == element) 
                                             el = revenues[index].sellingPrice;
@@ -253,21 +256,25 @@ class everydayReportService {
                                     })
                                     totalGoals.push(sum);
                                 }
-
+                            }
                                 for(let i=0; i<goals.length; i++) {
                                     let sum = 0;
                                     let totalSum = [];
                             
                                     for(let j=1; j<quaters.length; j++) {
+                                        
 
-                                        if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]'))
-                                            sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
-
+                                            if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]')){
+                                            if (revenues[goals[i].title-1]) 
+                                                sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
+                                            }
                                         totalSum.push(sum);
-                                    }
-
+                                    
                                     if ((totalSum[i]/totalGoals[i]) * 100 >=75) count++;
-                                    }
+                                    
+                                }
+                                }
+                            }
                             return count;
                     })
                 })

@@ -17,11 +17,35 @@
             <div>Total Number hitting quarterly goals by 75% or higher: <%= locals.quaterlyHitting %></div>
             <div>Total Number hitting annual goals by 75% or higher: <%= locals.annualHitting %></div>
             
+            <h1>Client Activity</h1>
+            <table>
+            <tr>
+                <th>Name</th>
+                <th>Activity Data</th>
+                <% for(var i=0; i<locals.clientActivity.length; i++) {%>
+                        <tr>
+                            <td><%= locals.clientActivity[i].name %></td>
+                            <td>Added <%= locals.clientActivity[i].count %> units to <%= locals.clientActivity[i].revenue %> for Q<%= locals.clientActivity[i].quater %></td>
+                        </tr>
+                <% } %>
+            </tr>
+            </table>
+            <h1>Client Interaction Notes</h1>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>User</th>
+                    <th>Note</th>
+                </tr>
+                <% for(var i=0; i<locals.notes.length; i++) {%>
+                <tr>
+                    <td><%= locals.notes[i].businessName %></td>
+                    <td><%= locals.notes[i].name %></td>
+                    <td><%= locals.notes[i].notes %></td>
+                </tr>
+                <% } %>
+                            
+            </table>
         </div>
-
-        <hr/>
-        
-        <%- include('../layout-main/footer') -%>
-        
     </div>
 </body>

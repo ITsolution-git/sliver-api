@@ -1,5 +1,6 @@
 const mongoose = require('../../libs/mongoose');
 const User = require('./class/User');
+const Moment = require('moment');
 
 const HashPass = require('../../libs/class/HashPass');
 
@@ -80,6 +81,10 @@ let schema = new Schema({
     build_date: {
         type: Date,
         default: null
+    },
+    lastLogin: {
+        type: Date,
+        default: new Date()
     },
     couponId : {
         type: String,

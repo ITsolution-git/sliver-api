@@ -305,22 +305,26 @@ class everydayReportService {
                             return everydayReportService.numberOfAccountsInExecute().then(function (numberOfAccountsInExecute){
                                 return everydayReportService.getUserId().then(function (users){
                                         let results = [];
+                                        if (users)
                                         for (let i = 0; i < users.length; i++) {
                                             results.push(everydayReportService.getAnnualGoals(users[i]._id));
                                         }
                                         return Promise.all(results).then(function(countsAnnual){
                                             let results = [];
+                                            if (countsAnnual)
                                             for (let i = 0; i < users.length; i++) {
                                                 results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
                                             }
                                             return Promise.all(results).then(function(countsQuaterly){
                                                 let results = [];
+                                                if (countsQuaterly)
                                                 for (let i = 0; i < users.length; i++) {
                                                     results.push(everydayReportService.getActivity(users[i]._id));
                                                 }
                                                 return Promise.all(results).then(function (clientActivity){
                                                     let client = [];
                                                     let res = [];
+                                                    if (clientActivity){
                                                     for (let i = 0; i < clientActivity.length; i++) 
                                                         clientActivity[i].forEach(function (element, index){
                                                             client.push(element);
@@ -334,7 +338,9 @@ class everydayReportService {
                                                     for (let i = 0; i < users.length; i++) {
                                                         results.push(everydayReportService.getUserNotes(users[i]._id));
                                                     }
+                                                }
                                                     return Promise.all(results).then(function (notes){
+                                                        // if (numberOfUsers && newUsers && numberOfRenewals && numberOfDeleted && numberOfAccountsInBuild && numberOfAccountsInExecute && countsAnnual && countsQuaterly && res && notes)
                                                         local = {
                                                             numberOfUsers: numberOfUsers,
                                                             newUsers: newUsers,

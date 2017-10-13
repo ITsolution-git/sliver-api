@@ -325,10 +325,13 @@ class everydayReportService {
                                                     let client = [];
                                                     let res = [];
                                                     if (clientActivity){
+							//console.log(JSON.stringify(clientActivity, null, 3));
                                                     for (let i = 0; i < clientActivity.length; i++) 
+							if (clientActivity[i]) {
                                                         clientActivity[i].forEach(function (element, index){
                                                             client.push(element);
                                                         })
+							}
                                                     for (let i = 0; i < client.length; i++)
                                                         client[i].forEach(function (element, index) {
                                                             
@@ -340,6 +343,7 @@ class everydayReportService {
                                                     }
                                                 }
                                                     return Promise.all(results).then(function (notes){
+							notes = notes.filter(note => note ? true : false);
                                                         // if (numberOfUsers && newUsers && numberOfRenewals && numberOfDeleted && numberOfAccountsInBuild && numberOfAccountsInExecute && countsAnnual && countsQuaterly && res && notes)
                                                         local = {
                                                             numberOfUsers: numberOfUsers,

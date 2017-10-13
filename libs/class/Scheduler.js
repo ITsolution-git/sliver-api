@@ -19,7 +19,7 @@ class Scheduler {
     }
 
     static runReportJob(){
-        return schedule.scheduleJob('0 1 07 * * *', () => {
+        return schedule.scheduleJob('0 1 7 * * *', () => {
             console.log('REPORT CRON STARTED');
             return EverydayReportService.getLocalVariables();
         });

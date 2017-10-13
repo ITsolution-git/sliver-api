@@ -323,8 +323,8 @@ class AuthController {
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
 
-                    // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    // .then(res=>{
+                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                    .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Account Renewed', 
                                                 type: 'Milestone',  
@@ -335,20 +335,20 @@ class AuthController {
                                                     });
                                                     return { token: token, id: mObj.user._id };
                                                 });
-                    // });
+                    });
                 } else {
-                    return activityController.create({ userId: mObj.user._id,
+                    activityController.create({ userId: mObj.user._id,
                                             title: 'Account Created', 
                                             type: 'Milestone',  
                                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.',
                                             journey: {section: 'start', name: 'Account Created'}});
-                    // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    // .then(res=>{
-                    //     return activityController.create({ userId: mObj.user._id,
-                    //                             title: 'Auto Email Sent',
-                    //                             type: 'Communication',
-                    //                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
-                    // });
+                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                    .then(res=>{
+                        return activityController.create({ userId: mObj.user._id,
+                                                title: 'Auto Email Sent',
+                                                type: 'Communication',
+                                                notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
+                    });
                 }
                 activityController.create({ userId: mObj.user._id,
                                             title: 'T&C Signed',

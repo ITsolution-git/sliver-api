@@ -122,7 +122,7 @@ class everydayReportService {
     }
 
     static numberOfRenewals() {
-        return User.count({role: '4'}).exec();
+        return User.count({role: '4', createdAt: Moment().format('YYYY-MM-DD'), isRenew: true}).exec();
     }
 
     static numberOfDeleted() {
@@ -336,12 +336,12 @@ class everydayReportService {
 
     static send(subject, htmlContent, textContent) {
         let smtpConfig = nodemailer.createTransport({
-            host: 'smtp.mail.ru', // host: config.AWS_SMTP.region,
+            host: config.AWS_SMTP.region,
             port: 465,
             secure: true,
             auth: {
-                user: 'fucking-flower@mail.ru', //user: config.AWS_SMTP.username,
-                pass: 'A440195667'  //pass: config.AWS_SMTP.password,
+                user: config.AWS_SMTP.username,
+                pass: config.AWS_SMTP.password,
             }
         });
         smtpConfig.verify(function (error, success) {
@@ -353,8 +353,8 @@ class everydayReportService {
         });
 
         let mailOptions = {
-            from:  '<fucking-flower@mail.ru>', // config.emailAddressAdmin
-            to: 'dpcarnage86@gmail.com', // email
+            from:  config.emailAddressSupport,
+            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

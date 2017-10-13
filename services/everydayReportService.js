@@ -211,7 +211,7 @@ class everydayReportService {
         return everydayReportService.getGoals(userId).then(function (goal){
             goals = goal.filter(gol => gol.type == 'sales' && gol.progress == 100);
                 return everydayReportService.getRevenues(userId).then(function (revenue){
-                    if (revenue[0].revenueStreams!= undefined){
+                    if (revenue[0] != undefined){
                         let obj = revenue[0].revenueStreams.revenues;
                         for (var key in obj)
                             if (obj[key].deleted == false){

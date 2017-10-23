@@ -73,7 +73,7 @@ class everydayReportService {
                                     }
                                 }
                                 if (count > 0) 
-                                obj.push({name: user.businessName, string: user.businessName + " Added " + count + " Units to " + revenues[k].name + " for Q" + i});
+                                obj.push({name: user.businessName, string: "Added " + count + " Units to " + revenues[k].name + " for Q" + i});
                                       
                             }
                             if (obj.length > 0) results.push(obj);

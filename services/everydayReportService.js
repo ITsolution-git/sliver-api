@@ -341,7 +341,7 @@ class everydayReportService {
                                                                 notes: notes,
                                                                 notLogged: notLog
                                                             };
-                                                    everydayReportService.renderTemplate(local);
+                                                            everydayReportService.renderTemplate(local);
                                                         })
                                                     })
                                                 })
@@ -359,12 +359,12 @@ class everydayReportService {
 
     static send(subject, htmlContent, textContent) {
         let smtpConfig = nodemailer.createTransport({
-            host: 'smtp.mail.ru',
+            host: config.AWS_SMTP.region,
             port: 465,
             secure: true,
             auth: {
-                user: 'fucking-flower@mail.ru',
-                pass: 'A440195667',
+                user: config.AWS_SMTP.username,
+                pass: config.AWS_SMTP.password,
             }
         });
         smtpConfig.verify(function (error, success) {
@@ -376,8 +376,8 @@ class everydayReportService {
         });
 
         let mailOptions = {
-            from:  'fucking-flower@mail.ru',
-            to: 'dpcarnage86@gmail.com', // email
+            from:  config.emailAddressSupport,
+            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

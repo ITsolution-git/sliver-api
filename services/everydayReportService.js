@@ -52,7 +52,7 @@ class everydayReportService {
                     quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
                         
-                return everydayReportService.getExecute(userId).then(function (goals){
+                return everydayReportService.getGoals(userId).then(function (goals){
                     goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
                     return everydayReportService.getRevenues(userId).then(function (revenue){
                         if (revenue[0]!= undefined){

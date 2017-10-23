@@ -31,7 +31,6 @@ let  activityTypes = [
     { id: "SLAPmanager", name: "SLAPmanager", show: true }
 ];
 
-
 class everydayReportService {
     static everydayReportService() {
         console.log('Cron run');
@@ -43,27 +42,27 @@ class everydayReportService {
         let startDate;
         let goal = [];
         let revenues = [];
-
-        return everydayReportService.getMindset(userId).then(function (mindset){
-            if (mindset[0]){
-            startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
-            quaters.push(Moment(startDate).format('YYYY-MM-DD'));
-            quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
-            quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
-            quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
-            quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
-            
-            return everydayReportService.getGoals(userId).then(function (goals){
-                goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
-                return everydayReportService.getRevenues(userId).then(function (revenue){
-                    if (revenue[0]!= undefined){
-                        let obj = revenue[0].revenueStreams.revenues;
-                        for (var key in obj)
-                        if (obj[key].deleted == false){
-                            revenues.push(obj[key]);
-                        }}
+        return everydayReportService.getUserById(userId).then(function (user){
+            return everydayReportService.getMindset(userId).then(function (mindset){
+                if (mindset[0]){
+                    startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
+                    quaters.push(Moment(startDate).format('YYYY-MM-DD'));
+                    quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
+                    quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
+                    quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
+                    quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
+                        
+                return everydayReportService.getExecute(userId).then(function (goals){
+                    goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
+                    return everydayReportService.getRevenues(userId).then(function (revenue){
+                        if (revenue[0]!= undefined){
+                            let obj = revenue[0].revenueStreams.revenues;
+                            for (var key in obj)
+                            if (obj[key].deleted == false){
+                                revenues.push(obj[key]);
+                            }}
                         else return;
-                    return everydayReportService.getUserById(userId).then(function (user){
+                        
                         for (let i = 1; i < quaters.length; i++) {
                             let obj = [];
                             for (let k = 0; k < revenues.length; k++){
@@ -73,43 +72,19 @@ class everydayReportService {
                                         count += goal[j].saleUnit;
                                     }
                                 }
-                                if (count > 0) obj.push({name: user.businessName, count: count, quater: i, revenue: revenues[k].name});
+                                if (count > 0) 
+                                obj.push({name: user.businessName, string: user.businessName + " Added " + count + " Units to " + revenues[k].name + " for Q" + i});
+                                      
                             }
                             if (obj.length > 0) results.push(obj);
                         }
                         return results;
                     })
-                    })
-                
+                })
+                }
             })
-         }
-         })
-        // let activity = [];
-        // let types = activityTypes
-        //     .filter(function(type){ return type.show == true; })
-        //     .map(function(type){return type.name});
-        // return everydayReportService.getUserById(userId).then(function (user){
-        // return Activity.list({criteria: {userId:userId}}).then(function (list){
-            
-        //     for (let i=0; i<list.length; i++) {
-        //         let act = Moment(list[i].createdAt);
-        //         if (act.isBetween(Moment().subtract(1, 'day'), Moment(), 'day', []))
-        //             activity.push(list[i]);
-        //     }
-        //     types.forEach(function (element,index) {
-        //         let count = 0;
-        //         for(let i=0; i<activity.length; i++) {
-        //             if(activity[i].type === element)
-        //                 count++;
-        //         }
-        //         if (count > 0) 
-        //             results.push({businessName: user.businessName, activity: element, count: count});
-        //         })
-        //         console.log(results);
-        //         return results;
-            // })
-        // })
-    } 
+        })
+    }
 
     static getUserById(userId) {
         return User.findOne({_id: userId}).exec();
@@ -120,7 +95,7 @@ class everydayReportService {
     }
 
     static numberOfNewAccounts() {
-        return User.count({role: '4', createdAt: Moment().tz('America/Los_Angeles').format('YYYY-MM-d')}).exec();
+        return User.count({role: '4', createdAt: Moment().format('YYYY-MM-DD')}).exec();
     }
 
     static numberOfRenewals() {
@@ -132,16 +107,20 @@ class everydayReportService {
     }
 
     static numberOfAccountsInBuild() {
-        return User.count({role: '4', status: 'active'}).where("finishedSteps <> '46'").exec();
+        return User.count({role: '4', status: 'active'}).where("finishedSteps < '46'").exec();
     }
 
     static numberOfAccountsInExecute() {
-        return User.count({role: '4', status: 'active'}).where("finishedSteps == '47'").exec();
+        return User.count({role: '4', status: 'active'}).where("finishedSteps >= '46'").exec();
     }
 
     // all sales of user
     static getGoals(userId) {
         return ExecuteItem.find({userId: userId, type: 'sales'}).exec();
+    }
+
+    static getExecute(userId) {
+        return ExecuteItem.find({userId: userId}).exec();
     }
     
     // all user goals 
@@ -158,10 +137,6 @@ class everydayReportService {
         return User.find({role: '4'}).exec();
     }
 
-    static getNoLogged() {
-        let dateDiff = Moment().tz('America/Los_Angeles').format('MMMM d, YYYY');
-    }
-
     static getMindset(userId) {
         return Mindset.find({userId: userId}).exec();
     }
@@ -175,7 +150,6 @@ class everydayReportService {
         return everydayReportService.getGoals(userId).then(function (goal){
             goals = goal.filter(gol => gol.type == 'sales' && gol.progress == 100);
                 return everydayReportService.getRevenues(userId).then(function (revenue){
-//			console.log(JSON.stringify(revenue[0].revenueStreams.revenues, null, 3));
                     if (revenue[0] != undefined) {
                         let obj = revenue[0].revenueStreams.revenues;
                         for (var key in obj) {
@@ -187,8 +161,6 @@ class everydayReportService {
                         return;
                     }
 
-//			console.log(JSON.stringify(revenues, null, 3));
-                    
                     return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                         let el = 0;
 			if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
@@ -202,15 +174,13 @@ class everydayReportService {
                                 })
 				}
                             }
-//				console.log(JSON.stringify(goals, null, 3));
                             for(let i=0; i<goals.length; i++) {
-				if (revenues[goals[i].title-1]) {
+				            if (revenues[goals[i].title-1]) {
                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
-				}
+				            }
                             }
                         if ((sum/totalGoals) * 100 >=75) count++;
 			}
-
                         return count;
                     })
                 })
@@ -225,14 +195,13 @@ class everydayReportService {
         let revenues = [];
         
         return everydayReportService.getGoals(userId).then(function (goal){
-            goals = goal.filter(gol => gol.type == 'sales' && gol.progress == 100);
+            goals = goal.filter(gol => gol.progress == 100);
                 return everydayReportService.getRevenues(userId).then(function (revenue){
                     if (revenue[0] != undefined){
                         let obj = revenue[0].revenueStreams.revenues;
                         for (var key in obj)
-                            if (obj[key].deleted == false){
-                           
-                            revenues.push(obj[key]);}
+                            if (obj[key].deleted == false)
+                            revenues.push(obj[key]);
                             }
                     else return;
                     return everydayReportService.getMindset(userId).then(function (mindset){
@@ -262,13 +231,12 @@ class everydayReportService {
                                     totalGoals.push(sum);
                                 }
                             }
-                                for(let i=0; i<goals.length; i++) {
+                                for(let i=0; i < goals.length; i++) {
                                     let sum = 0;
                                     let totalSum = [];
                             
                                     for(let j=1; j<quaters.length; j++) {
-                                        
-
+                                    
                                             if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]')){
                                             if (revenues[goals[i].title-1]) 
                                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
@@ -294,7 +262,13 @@ class everydayReportService {
         })
     }
 
-    
+    static getNotLogged(userId) {
+        return everydayReportService.getUserById(userId).then(function (user){
+            let dateEdge = Moment().subtract(2, 'week').format('YYYY-MM-DD');
+            if (Moment(user.lastLogin).isBefore(dateEdge))
+            return {name: user.lastName + " " + user.name, date: Moment(user.lastLogin).format('MMMM DD, YYYY')}
+        })
+    }
 
     static getLocalVariables() {
         return everydayReportService.totalNumberOfAccounts().then(function (numberOfUsers){
@@ -325,39 +299,50 @@ class everydayReportService {
                                                     let client = [];
                                                     let res = [];
                                                     if (clientActivity){
-							//console.log(JSON.stringify(clientActivity, null, 3));
                                                     for (let i = 0; i < clientActivity.length; i++) 
-							if (clientActivity[i]) {
+							                        if (clientActivity[i]) {
                                                         clientActivity[i].forEach(function (element, index){
                                                             client.push(element);
                                                         })
-							}
+							                        }
                                                     for (let i = 0; i < client.length; i++)
                                                         client[i].forEach(function (element, index) {
                                                             
                                                             res.push(element);
                                                         })
+                                                    }
                                                     let results = [];
+                                                    
                                                     for (let i = 0; i < users.length; i++) {
+                                                        if (users[i].extrainfo.textNotes)
                                                         results.push(everydayReportService.getUserNotes(users[i]._id));
                                                     }
-                                                }
                                                     return Promise.all(results).then(function (notes){
-							notes = notes.filter(note => note ? true : false);
-                                                        // if (numberOfUsers && newUsers && numberOfRenewals && numberOfDeleted && numberOfAccountsInBuild && numberOfAccountsInExecute && countsAnnual && countsQuaterly && res && notes)
-                                                        local = {
-                                                            numberOfUsers: numberOfUsers,
-                                                            newUsers: newUsers,
-                                                            numberOfRenewals: numberOfRenewals,
-                                                            numberOfDeleted: numberOfDeleted,
-                                                            numberOfAccountsInBuild: numberOfAccountsInBuild,
-                                                            numberOfAccountsInExecute: numberOfAccountsInExecute,
-                                                            annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
-                                                            quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0),
-                                                            clientActivity: res,
-                                                            notes: notes
-                                                        };
+                                                        let results = [];
+                                                        for (let i = 0; i < users.length; i++) {
+                                                            results.push(everydayReportService.getNotLogged(users[i]._id));
+                                                        }
+                                                        return Promise.all(results).then(function (notLogged){
+                                                            let notLog = [];
+                                                            for (let i = 0; i < notLogged.length; i++)
+                                                                if(notLogged[i] != undefined) 
+                                                                    notLog.push(notLogged[i]);
+                                                                    
+                                                            local = {
+                                                                numberOfUsers: numberOfUsers,
+                                                                newUsers: newUsers,
+                                                                numberOfRenewals: numberOfRenewals,
+                                                                numberOfDeleted: numberOfDeleted,
+                                                                numberOfAccountsInBuild: numberOfAccountsInBuild,
+                                                                numberOfAccountsInExecute: numberOfAccountsInExecute,
+                                                                annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
+                                                                quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0),
+                                                                clientActivity: res,
+                                                                notes: notes,
+                                                                notLogged: notLog
+                                                            };
                                                     everydayReportService.renderTemplate(local);
+                                                        })
                                                     })
                                                 })
                                             })
@@ -374,12 +359,12 @@ class everydayReportService {
 
     static send(subject, htmlContent, textContent) {
         let smtpConfig = nodemailer.createTransport({
-            host: config.AWS_SMTP.region,
+            host: 'smtp.mail.ru',
             port: 465,
             secure: true,
             auth: {
-                user: config.AWS_SMTP.username,
-                pass: config.AWS_SMTP.password,
+                user: 'fucking-flower@mail.ru',
+                pass: 'A440195667',
             }
         });
         smtpConfig.verify(function (error, success) {
@@ -391,8 +376,8 @@ class everydayReportService {
         });
 
         let mailOptions = {
-            from:  config.emailAddressSupport,
-            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            from:  'fucking-flower@mail.ru',
+            to: 'dpcarnage86@gmail.com', // email
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body
@@ -414,10 +399,6 @@ class everydayReportService {
 
     static renderTemplate(local) {
         let template = new EmailTemplate(path.join(__dirname, '../emailtemplates', 'daily-report'));
-        // everydayReportService.getLocalVariables()
-            // let speakersWithWebinar = speakers.filter(speaker => speaker.enable_webinar);
-        // everydayReportService.totalNumberOfAccounts();
-        //console.log(Moment().tz('America/Los_Angeles').format('YYYY-MM-d'));
         if(!template){
             // TODO create promise to send errors back;
             return new Promise((resolve, reject) => {
@@ -426,7 +407,6 @@ class everydayReportService {
         } else {
             return template.render(local)
             .then(function (results) {
-                //console.log(results);
                 return everydayReportService.send(results.subject, results.html, results.text);
             });
         }

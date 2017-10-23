@@ -25,7 +25,7 @@
                 <% for(var i=0; i<locals.clientActivity.length; i++) {%>
                         <tr>
                             <td><%= locals.clientActivity[i].name %></td>
-                            <td>Added <%= locals.clientActivity[i].count %> units to <%= locals.clientActivity[i].revenue %> for Q<%= locals.clientActivity[i].quater %></td>
+                            <td>Added <%= locals.clientActivity[i].string %></td>
                         </tr>
                 <% } %>
             </tr>
@@ -46,6 +46,21 @@
                 <% } %>
                             
             </table>
+
+            <h1>Eveyone who has not logged in for over 2 weeks as of today: <%= locals.notLogged.length %></h1>
+                <table>
+                    <tr>
+                        <th>Account</th>
+                        <th>Date</th>
+                    </tr>
+                    <% for(var i=0; i<locals.notLogged.length; i++) {%>
+                    <tr>
+                        <td><%= locals.notLogged[i].name %></td>
+                        <td><%= locals.notLogged[i].date %></td>
+                    </tr>
+                    <% } %>
+                </table>
+            
         </div>
     </div>
 </body>

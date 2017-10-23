@@ -179,11 +179,11 @@ class AuthController {
             if (!user.comparePassword(req.body.password)) {
                 throw new CustomError('The password you entered is incorrect.  Please remember they are case sensitive and try again!', 'UNAUTH');
             }
-
             let token = jwt.sign({_id: user._id}, config.secret, {
                 expiresIn: "300d" // expires in 24 hours
             });
-
+            user.lastLogin = new Date();
+            user.save();
             return {token: token};
         }).catch(err=>{
             throw err;
@@ -191,7 +191,7 @@ class AuthController {
     }
 
     static adminAsUser(req) {
-        // console.log(req.params);
+
         return User.load({_id: req.params.id}).then((user) => {
             let token = jwt.sign({_id: user._id}, config.secret, {
             expiresIn: "300d" 

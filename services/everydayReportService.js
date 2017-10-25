@@ -107,11 +107,11 @@ class everydayReportService {
     }
 
     static numberOfAccountsInBuild() {
-        return User.count({role: '4', status: 'active'}).where("finishedSteps < '46'").exec();
+        return User.count({role: '4', status: 'active', finishedSteps: {$gte: 0, $lte: 45}}).exec();
     }
 
     static numberOfAccountsInExecute() {
-        return User.count({role: '4', status: 'active'}).where("finishedSteps >= '46'").exec();
+        return User.count({role: '4', status: 'active', finishedSteps: 46}).exec();
     }
 
     // all sales of user
@@ -256,11 +256,34 @@ class everydayReportService {
         })
     }
 
-    static getUserNotes(userId) {
-        return everydayReportService.getUserById(userId).then(function (user){
-            if (user.extrainfo.textNotes != '') return {name: user.name + '' + user.lastName, businessName: user.businessName, notes: user.extrainfo.textNotes}
-        })
+    static getSlapexpert(userId) {
+        return Activity.find({userId: userId, type: 'slapexpert'}).exec();
     }
+
+    static getUserNotes(userId) {
+
+        let results = [];
+        let obj = [];
+        let userNote = [];
+            return everydayReportService.getUserById(userId).then(function (user){
+                return everydayReportService.getSlapexpert(userId).then(function (notes) {
+                    if (notes)
+                        if (Moment(notes.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD')) 
+                            notes.forEach(function (element, index){
+                                results.push(everydayReportService.getUserById(element.updatedBy))
+                                userNote.push(element);
+                            })
+
+                            Promise.all(results).then(function (admin) {
+                                for (let i=0; i < admin.length; i++) {
+                                    if (admin[i].businessName && userNote[i].notes)
+                                        obj.push({admin: admin[i].businessName, user: user.lastName + " " + user.name, note: userNote[i].notes}); 
+                                }
+                            })
+                            return obj;
+                })
+            })
+    }   
 
     static getNotLogged(userId) {
         return everydayReportService.getUserById(userId).then(function (user){
@@ -285,15 +308,25 @@ class everydayReportService {
                                         }
                                         return Promise.all(results).then(function(countsAnnual){
                                             let results = [];
-                                            if (countsAnnual)
-                                            for (let i = 0; i < users.length; i++) {
-                                                results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
+                                            let annual = 0;
+                                            if (countsAnnual){
+                                                for (let i = 0; i < countsAnnual.length; i++)
+                                                    if (countsAnnual[i] > 0)
+                                                        annual+=countsAnnual[i];
+                                                for (let i = 0; i < users.length; i++) {
+                                                    results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
+                                                }
                                             }
                                             return Promise.all(results).then(function(countsQuaterly){
                                                 let results = [];
-                                                if (countsQuaterly)
-                                                for (let i = 0; i < users.length; i++) {
-                                                    results.push(everydayReportService.getActivity(users[i]._id));
+                                                let quater = 0;
+                                                if (countsQuaterly){
+                                                    for (let i = 0; i < countsQuaterly.length; i++)
+                                                        if (countsQuaterly[i] > 0)
+                                                            quater+=countsAnnual[i];
+                                                    for (let i = 0; i < users.length; i++) {
+                                                        results.push(everydayReportService.getActivity(users[i]._id));
+                                                    }
                                                 }
                                                 return Promise.all(results).then(function (clientActivity){
                                                     let client = [];
@@ -314,7 +347,6 @@ class everydayReportService {
                                                     let results = [];
                                                     
                                                     for (let i = 0; i < users.length; i++) {
-                                                        if (users[i].extrainfo.textNotes)
                                                         results.push(everydayReportService.getUserNotes(users[i]._id));
                                                     }
                                                     return Promise.all(results).then(function (notes){
@@ -326,8 +358,17 @@ class everydayReportService {
                                                             let notLog = [];
                                                             for (let i = 0; i < notLogged.length; i++)
                                                                 if(notLogged[i] != undefined) 
-                                                                    notLog.push(notLogged[i]);
-                                                                    
+                                                                    notLog.push(notLogged[i])
+
+                                                            let no = [];
+                                                        
+                                                            notes.forEach(function (element,index) {
+                                                                if(element.length > 0)
+                                                                 element.forEach(function (el) {
+                                                                    no.push(el);
+                                                                 })
+                                                            })
+
                                                             local = {
                                                                 numberOfUsers: numberOfUsers,
                                                                 newUsers: newUsers,
@@ -335,13 +376,13 @@ class everydayReportService {
                                                                 numberOfDeleted: numberOfDeleted,
                                                                 numberOfAccountsInBuild: numberOfAccountsInBuild,
                                                                 numberOfAccountsInExecute: numberOfAccountsInExecute,
-                                                                annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
-                                                                quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0),
+                                                                annualHitting: annual,
+                                                                quaterlyHitting: quater,
                                                                 clientActivity: res,
-                                                                notes: notes,
+                                                                notes: no,
                                                                 notLogged: notLog
                                                             };
-                                                            everydayReportService.renderTemplate(local);
+                                                        everydayReportService.renderTemplate(local);
                                                         })
                                                     })
                                                 })
@@ -360,8 +401,13 @@ class everydayReportService {
     static send(subject, htmlContent, textContent) {
         let smtpConfig = nodemailer.createTransport({
             host: config.AWS_SMTP.region,
+            //host: 'smtp.mail.ru',
             port: 465,
             secure: true,
+            // auth : {
+            //     user: 'fucking-flower@mail.ru',
+            //     pass: 'A440195667',
+            // }   
             auth: {
                 user: config.AWS_SMTP.username,
                 pass: config.AWS_SMTP.password,
@@ -377,7 +423,9 @@ class everydayReportService {
 
         let mailOptions = {
             from:  config.emailAddressSupport,
+            // from: 'fucking-flower@mail.ru',
             to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            // to: 'dpcarnage86@gmail.com',
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

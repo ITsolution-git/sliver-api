@@ -44,17 +44,21 @@ class everydayReportService {
         let act = [];
         return everydayReportService.getUserById(userId).then(function (user) {
             return everydayReportService.getUserActions(userId).then(function (activity) {
+                if(activity){
                 act = activity.filter(act => Moment(act.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment()));
                 activityTypes.forEach(function (element) {
-                    let count = 0;
-                    for (let i = 0; i < act.length; i++) {
-                        if (act[i].type == element.name)
-                            count++;
-                    }
-                    if (count > 0)
-                    result.push({name: user.businessName, string: "Added " + count +" "+ element.name});
+                        let count = 0;
+                        for (let i = 0; i < act.length; i++) {
+                            if (act[i].type == element.name)
+                                if (element.name == 'Milestone') result.push({name: user.businessName, string: act[i].notes})
+                                else count++;
+                        }
+                        if (count > 0)
+                        result.push({name: user.businessName, string: "Added " + count +" "+ element.name});
+                    
                 })
                 return result;
+                }
             })
         })
     }
@@ -460,9 +464,9 @@ class everydayReportService {
 
         let mailOptions = {
             from:  config.emailAddressSupport,
-            //from: 'fucking-flower@mail.ru',
-            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
-            //to: 'dpcarnage86@gmail.com',
+            // from: 'fucking-flower@mail.ru',
+            //to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            to: 'dpcarnage86@gmail.com',
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

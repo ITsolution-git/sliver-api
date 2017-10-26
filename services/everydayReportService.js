@@ -214,7 +214,6 @@ class everydayReportService {
         let count = 0;
         let goals = [];
         let quaters = [];
-        let startDate = [];
         let revenues = [];
         
         return everydayReportService.getGoals(userId).then(function (goal){
@@ -229,7 +228,7 @@ class everydayReportService {
                     else return;
                     return everydayReportService.getMindset(userId).then(function (mindset){
                         if (mindset[0]){
-                        startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
+                        let startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
@@ -259,7 +258,6 @@ class everydayReportService {
                                     let totalSum = [];
                             
                                     for(let j=1; j<quaters.length; j++) {
-                                    
                                             if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]')){
                                             if (revenues[goals[i].title-1]) 
                                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
@@ -291,7 +289,7 @@ class everydayReportService {
             return everydayReportService.getUserById(userId).then(function (user){
                 return everydayReportService.getSlapexpert(userId).then(function (notes) {
                     if (notes)
-                        if (Moment(notes.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD')) 
+                        if (Moment(notes.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment())) 
                             notes.forEach(function (element, index){
                                 results.push(everydayReportService.getUserById(element.updatedBy))
                                 userNote.push(element);

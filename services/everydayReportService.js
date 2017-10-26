@@ -22,7 +22,6 @@ let  activityTypes = [
     { id: "Milestone", name: "Milestone", show: true },
     { id: "ActionItem", name: "ActionItem", show: true },
     { id: "Pause & Reflect", name: "Pause & Reflect", show: true },
-    { id: "Sales", name: "Sales", show: true },
     { id: "Communication", name: "Communication", show: true },
     { id: "SLAPexpert", name: "SLAPexpert", show: true },
     { id: "SLAPassistant", name: "SLAPassistant", show: true },
@@ -34,6 +33,30 @@ let  activityTypes = [
 class everydayReportService {
     static everydayReportService() {
         console.log('Cron run');
+    }
+
+    static getUserActions(userId) {
+        return Activity.find({userId: userId}).exec();
+    }
+
+    static getActivityByUser(userId) {
+        let result = [];
+        let act = [];
+        return everydayReportService.getUserById(userId).then(function (user) {
+            return everydayReportService.getUserActions(userId).then(function (activity) {
+                act = activity.filter(act => Moment(act.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment()));
+                activityTypes.forEach(function (element) {
+                    let count = 0;
+                    for (let i = 0; i < act.length; i++) {
+                        if (act[i].type == element.name)
+                            count++;
+                    }
+                    if (count > 0)
+                    result.push({name: user.businessName, string: "Added " + count +" "+ element.name});
+                })
+                return result;
+            })
+        })
     }
 
     static getActivity(userId) {
@@ -95,11 +118,11 @@ class everydayReportService {
     }
 
     static numberOfNewAccounts() {
-        return User.count({role: '4', createdAt: Moment().format('YYYY-MM-DD')}).exec();
+        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}}).exec();
     }
 
     static numberOfRenewals() {
-        return User.count({role: '4', createdAt: Moment().format('YYYY-MM-DD'), isRenew: true}).exec();
+        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}, isRenew: true}).exec();
     }
 
     static numberOfDeleted() {
@@ -369,21 +392,36 @@ class everydayReportService {
                                                                     no.push(el);
                                                                  })
                                                             })
+                                                            let results = [];
+                                                            for (let i = 0; i < users.length; i++) {
+                                                                results.push(everydayReportService.getActivityByUser(users[i]._id));
+                                                            }
 
-                                                            local = {
-                                                                numberOfUsers: numberOfUsers,
-                                                                newUsers: newUsers,
-                                                                numberOfRenewals: numberOfRenewals,
-                                                                numberOfDeleted: numberOfDeleted,
-                                                                numberOfAccountsInBuild: numberOfAccountsInBuild,
-                                                                numberOfAccountsInExecute: numberOfAccountsInExecute,
-                                                                annualHitting: annual,
-                                                                quaterlyHitting: quater,
-                                                                clientActivity: res,
-                                                                notes: no,
-                                                                notLogged: notLog
-                                                            };
+                                                            return Promise.all(results).then(function (actions){                                                           
+                                                                let act = [];
+                                                                if (actions) {
+                                                                for (let i=0; i<actions.length; i++)
+                                                                     if (actions[i].length > 0)
+                                                                        actions[i].forEach(function (element) {
+                                                                            act.push(element);
+                                                                        })
+                                                                    }
+                                                                local = {
+                                                                    numberOfUsers: numberOfUsers,
+                                                                    newUsers: newUsers,
+                                                                    numberOfRenewals: numberOfRenewals,
+                                                                    numberOfDeleted: numberOfDeleted,
+                                                                    numberOfAccountsInBuild: numberOfAccountsInBuild,
+                                                                    numberOfAccountsInExecute: numberOfAccountsInExecute,
+                                                                    annualHitting: annual,
+                                                                    quaterlyHitting: quater,
+                                                                    clientActivity: res,
+                                                                    notes: no,
+                                                                    notLogged: notLog,
+                                                                    act: act,
+                                                                };
                                                         everydayReportService.renderTemplate(local);
+                                                            })
                                                         })
                                                     })
                                                 })
@@ -405,10 +443,10 @@ class everydayReportService {
             //host: 'smtp.mail.ru',
             port: 465,
             secure: true,
-            //auth : {
+            // auth : {
             //    user: 'fucking-flower@mail.ru',
             //    pass: 'A440195667',
-            //}   
+            // }   
             auth: {
                 user: config.AWS_SMTP.username,
                 pass: config.AWS_SMTP.password,

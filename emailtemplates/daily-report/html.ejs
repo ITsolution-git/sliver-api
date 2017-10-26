@@ -34,6 +34,12 @@
                         <td> <%= locals.notes[i].user %>, <%= locals.notes[i].note %></td>
                     </tr>
                     <% } %>
+                <% for(var i=0; i<locals.act.length; i++) {%>
+                    <tr>
+                        <td><%= locals.act[i].name %></td>
+                        <td><%= locals.act[i].string %></td>
+                    </tr>
+                    <% } %>
             </tr>
             </table>
             <!-- <h1>Client Interaction Notes</h1>

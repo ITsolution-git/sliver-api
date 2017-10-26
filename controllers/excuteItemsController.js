@@ -22,7 +22,7 @@ class ExcuteItemController {
         // if(ExcuteItem.dateUntil) {
         //     ExcuteItem.dateUntil = new Date(ExcuteItem.dateUntil);
         // }
-        if (AdminTokenService.adminToken != '') 
+        if (AdminTokenService.getToken() != undefined) 
             return (new ExcuteItem(excuteItem)).save().then(resp => {
                 return activityController.create({
                     userId: req.decoded._doc._id,

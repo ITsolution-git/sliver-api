@@ -22,7 +22,6 @@ let  activityTypes = [
     { id: "Milestone", name: "Milestone", show: true },
     { id: "ActionItem", name: "ActionItem", show: true },
     { id: "Pause & Reflect", name: "Pause & Reflect", show: true },
-    { id: "Sales", name: "Sales", show: true },
     { id: "Communication", name: "Communication", show: true },
     { id: "SLAPexpert", name: "SLAPexpert", show: true },
     { id: "SLAPassistant", name: "SLAPassistant", show: true },
@@ -34,6 +33,34 @@ let  activityTypes = [
 class everydayReportService {
     static everydayReportService() {
         console.log('Cron run');
+    }
+
+    static getUserActions(userId) {
+        return Activity.find({userId: userId}).exec();
+    }
+
+    static getActivityByUser(userId) {
+        let result = [];
+        let act = [];
+        return everydayReportService.getUserById(userId).then(function (user) {
+            return everydayReportService.getUserActions(userId).then(function (activity) {
+                if(activity){
+                act = activity.filter(act => Moment(act.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment()));
+                activityTypes.forEach(function (element) {
+                        let count = 0;
+                        for (let i = 0; i < act.length; i++) {
+                            if (act[i].type == element.name)
+                                if (element.name == 'Milestone') result.push({name: user.businessName, string: act[i].notes})
+                                else count++;
+                        }
+                        if (count > 0)
+                        result.push({name: user.businessName, string: "Added " + count +" "+ element.name});
+                    
+                })
+                return result;
+                }
+            })
+        })
     }
 
     static getActivity(userId) {
@@ -53,7 +80,7 @@ class everydayReportService {
                     quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
                         
                 return everydayReportService.getGoals(userId).then(function (goals){
-                    goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
+                    goal = goals.filter(gol => Moment(gol.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment()));
                     return everydayReportService.getRevenues(userId).then(function (revenue){
                         if (revenue[0]!= undefined){
                             let obj = revenue[0].revenueStreams.revenues;
@@ -95,11 +122,11 @@ class everydayReportService {
     }
 
     static numberOfNewAccounts() {
-        return User.count({role: '4', createdAt: Moment().format('YYYY-MM-DD')}).exec();
+        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}}).exec();
     }
 
     static numberOfRenewals() {
-        return User.count({role: '4', createdAt: Moment().format('YYYY-MM-DD'), isRenew: true}).exec();
+        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}, isRenew: true}).exec();
     }
 
     static numberOfDeleted() {
@@ -107,11 +134,11 @@ class everydayReportService {
     }
 
     static numberOfAccountsInBuild() {
-        return User.count({role: '4', status: 'active'}).where("finishedSteps < '46'").exec();
+        return User.count({role: '4', status: 'active', finishedSteps: {$gte: 0, $lte: 45}}).exec();
     }
 
     static numberOfAccountsInExecute() {
-        return User.count({role: '4', status: 'active'}).where("finishedSteps >= '46'").exec();
+        return User.count({role: '4', status: 'active', finishedSteps: 46}).exec();
     }
 
     // all sales of user
@@ -163,24 +190,24 @@ class everydayReportService {
 
                     return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                         let el = 0;
-			if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
+			            if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
                             for (let i=0; i<totalGoal[0].whatsHappening.length; i++) {
-				if (totalGoal[0].whatsHappening[i].units) {
-                                Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
-                                    for (let i=0; i<revenues.length; i++) {
-                                        if (revenues[i].name == element) 
-                                            el = revenues[i].sellingPrice;}
-                                    totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
-                                })
-				}
+				                if (totalGoal[0].whatsHappening[i].units) {
+                                    Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
+                                        for (let i=0; i<revenues.length; i++) {
+                                            if (revenues[i].name == element) 
+                                                el = revenues[i].sellingPrice;}
+                                        totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
+                                    })
+				                }
                             }
                             for(let i=0; i<goals.length; i++) {
 				            if (revenues[goals[i].title-1]) {
                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
 				            }
                             }
-                        if ((sum/totalGoals) * 100 >=75) count++;
-			}
+                            if ((sum/totalGoals) * 100 >=75) count++;
+			            }
                         return count;
                     })
                 })
@@ -191,7 +218,6 @@ class everydayReportService {
         let count = 0;
         let goals = [];
         let quaters = [];
-        let startDate = [];
         let revenues = [];
         
         return everydayReportService.getGoals(userId).then(function (goal){
@@ -206,7 +232,7 @@ class everydayReportService {
                     else return;
                     return everydayReportService.getMindset(userId).then(function (mindset){
                         if (mindset[0]){
-                        startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
+                        let startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
@@ -236,7 +262,6 @@ class everydayReportService {
                                     let totalSum = [];
                             
                                     for(let j=1; j<quaters.length; j++) {
-                                    
                                             if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]')){
                                             if (revenues[goals[i].title-1]) 
                                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
@@ -244,8 +269,8 @@ class everydayReportService {
                                         totalSum.push(sum);
                                     
                                     if ((totalSum[i]/totalGoals[i]) * 100 >=75) count++;
-                                    
-                                }
+                                    }
+
                                 }
                             }
                             return count;
@@ -256,11 +281,34 @@ class everydayReportService {
         })
     }
 
-    static getUserNotes(userId) {
-        return everydayReportService.getUserById(userId).then(function (user){
-            if (user.extrainfo.textNotes != '') return {name: user.name + '' + user.lastName, businessName: user.businessName, notes: user.extrainfo.textNotes}
-        })
+    static getSlapexpert(userId) {
+        return Activity.find({userId: userId, type: 'slapexpert'}).exec();
     }
+
+    static getUserNotes(userId) {
+
+        let results = [];
+        let obj = [];
+        let userNote = [];
+            return everydayReportService.getUserById(userId).then(function (user){
+                return everydayReportService.getSlapexpert(userId).then(function (notes) {
+                    if (notes)
+                        if (Moment(notes.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment())) 
+                            notes.forEach(function (element, index){
+                                results.push(everydayReportService.getUserById(element.updatedBy))
+                                userNote.push(element);
+                            })
+
+                            Promise.all(results).then(function (admin) {
+                                for (let i=0; i < admin.length; i++) {
+                                    if (admin[i].businessName && userNote[i].notes)
+                                        obj.push({admin: admin[i].businessName, user: user.lastName + " " + user.name, note: userNote[i].notes}); 
+                                }
+                            })
+                            return obj;
+                })
+            })
+    }   
 
     static getNotLogged(userId) {
         return everydayReportService.getUserById(userId).then(function (user){
@@ -285,15 +333,26 @@ class everydayReportService {
                                         }
                                         return Promise.all(results).then(function(countsAnnual){
                                             let results = [];
-                                            if (countsAnnual)
-                                            for (let i = 0; i < users.length; i++) {
-                                                results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
+                                            let annual = 0;
+                                            if (countsAnnual){
+                                                for (let i = 0; i < countsAnnual.length; i++)
+                                                    if (countsAnnual[i] > 0)
+                                                        annual+=countsAnnual[i];
+                                                for (let i = 0; i < users.length; i++) {
+                                                    results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
+                                                }
                                             }
+
                                             return Promise.all(results).then(function(countsQuaterly){
                                                 let results = [];
-                                                if (countsQuaterly)
-                                                for (let i = 0; i < users.length; i++) {
-                                                    results.push(everydayReportService.getActivity(users[i]._id));
+                                                let quater = 0;
+                                                if (countsQuaterly){
+                                                    for (let i = 0; i < countsQuaterly.length; i++)
+                                                        if (countsQuaterly[i] > 0)
+                                                            quater+=countsQuaterly[i];
+                                                    for (let i = 0; i < users.length; i++) {
+                                                        results.push(everydayReportService.getActivity(users[i]._id));
+                                                    }
                                                 }
                                                 return Promise.all(results).then(function (clientActivity){
                                                     let client = [];
@@ -314,7 +373,6 @@ class everydayReportService {
                                                     let results = [];
                                                     
                                                     for (let i = 0; i < users.length; i++) {
-                                                        if (users[i].extrainfo.textNotes)
                                                         results.push(everydayReportService.getUserNotes(users[i]._id));
                                                     }
                                                     return Promise.all(results).then(function (notes){
@@ -326,22 +384,46 @@ class everydayReportService {
                                                             let notLog = [];
                                                             for (let i = 0; i < notLogged.length; i++)
                                                                 if(notLogged[i] != undefined) 
-                                                                    notLog.push(notLogged[i]);
-                                                                    
-                                                            local = {
-                                                                numberOfUsers: numberOfUsers,
-                                                                newUsers: newUsers,
-                                                                numberOfRenewals: numberOfRenewals,
-                                                                numberOfDeleted: numberOfDeleted,
-                                                                numberOfAccountsInBuild: numberOfAccountsInBuild,
-                                                                numberOfAccountsInExecute: numberOfAccountsInExecute,
-                                                                annualHitting: countsAnnual.reduce((acc, cur) => acc + cur, 0),
-                                                                quaterlyHitting: countsQuaterly.reduce((acc, cur) => acc + cur, 0),
-                                                                clientActivity: res,
-                                                                notes: notes,
-                                                                notLogged: notLog
-                                                            };
-                                                            everydayReportService.renderTemplate(local);
+                                                                    notLog.push(notLogged[i])
+
+                                                            let no = [];
+                                                        
+                                                            notes.forEach(function (element,index) {
+                                                                if(element.length > 0)
+                                                                 element.forEach(function (el) {
+                                                                    no.push(el);
+                                                                 })
+                                                            })
+                                                            let results = [];
+                                                            for (let i = 0; i < users.length; i++) {
+                                                                results.push(everydayReportService.getActivityByUser(users[i]._id));
+                                                            }
+
+                                                            return Promise.all(results).then(function (actions){                                                           
+                                                                let act = [];
+                                                                if (actions) {
+                                                                for (let i=0; i<actions.length; i++)
+                                                                     if (actions[i].length > 0)
+                                                                        actions[i].forEach(function (element) {
+                                                                            act.push(element);
+                                                                        })
+                                                                    }
+                                                                local = {
+                                                                    numberOfUsers: numberOfUsers,
+                                                                    newUsers: newUsers,
+                                                                    numberOfRenewals: numberOfRenewals,
+                                                                    numberOfDeleted: numberOfDeleted,
+                                                                    numberOfAccountsInBuild: numberOfAccountsInBuild,
+                                                                    numberOfAccountsInExecute: numberOfAccountsInExecute,
+                                                                    annualHitting: annual,
+                                                                    quaterlyHitting: quater,
+                                                                    clientActivity: res,
+                                                                    notes: no,
+                                                                    notLogged: notLog,
+                                                                    act: act,
+                                                                };
+                                                        everydayReportService.renderTemplate(local);
+                                                            })
                                                         })
                                                     })
                                                 })
@@ -360,8 +442,13 @@ class everydayReportService {
     static send(subject, htmlContent, textContent) {
         let smtpConfig = nodemailer.createTransport({
             host: config.AWS_SMTP.region,
+            //host: 'smtp.mail.ru',
             port: 465,
             secure: true,
+            // auth : {
+            //    user: 'fucking-flower@mail.ru',
+            //    pass: 'A440195667',
+            // }   
             auth: {
                 user: config.AWS_SMTP.username,
                 pass: config.AWS_SMTP.password,
@@ -377,7 +464,9 @@ class everydayReportService {
 
         let mailOptions = {
             from:  config.emailAddressSupport,
-            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            // from: 'fucking-flower@mail.ru',
+            //to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            to: 'dpcarnage86@gmail.com',
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

@@ -28,9 +28,15 @@
                             <td>Added <%= locals.clientActivity[i].string %></td>
                         </tr>
                 <% } %>
+                <% for(var i=0; i<locals.notes.length; i++) {%>
+                    <tr>
+                        <td><%= locals.notes[i].admin %></td>
+                        <td> <%= locals.notes[i].user %>, <%= locals.notes[i].note %></td>
+                    </tr>
+                    <% } %>
             </tr>
             </table>
-            <h1>Client Interaction Notes</h1>
+            <!-- <h1>Client Interaction Notes</h1>
             <table>
                 <tr>
                     <th>Name</th>
@@ -45,7 +51,7 @@
                 </tr>
                 <% } %>
                             
-            </table>
+            </table> -->
 
             <h1>Eveyone who has not logged in for over 2 weeks as of today: <%= locals.notLogged.length %></h1>
                 <table>

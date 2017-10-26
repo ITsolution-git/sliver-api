@@ -53,7 +53,7 @@ class everydayReportService {
                     quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
                         
                 return everydayReportService.getGoals(userId).then(function (goals){
-                    goal = goals.filter(gol => Moment(gol.createdAt).format('YYYY-MM-DD') == Moment().format('YYYY-MM-DD'));
+                    goal = goals.filter(gol => Moment(gol.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment()));
                     return everydayReportService.getRevenues(userId).then(function (revenue){
                         if (revenue[0]!= undefined){
                             let obj = revenue[0].revenueStreams.revenues;
@@ -163,24 +163,24 @@ class everydayReportService {
 
                     return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                         let el = 0;
-			if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
+			            if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
                             for (let i=0; i<totalGoal[0].whatsHappening.length; i++) {
-				if (totalGoal[0].whatsHappening[i].units) {
-                                Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
-                                    for (let i=0; i<revenues.length; i++) {
-                                        if (revenues[i].name == element) 
-                                            el = revenues[i].sellingPrice;}
-                                    totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
-                                })
-				}
+				                if (totalGoal[0].whatsHappening[i].units) {
+                                    Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
+                                        for (let i=0; i<revenues.length; i++) {
+                                            if (revenues[i].name == element) 
+                                                el = revenues[i].sellingPrice;}
+                                        totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
+                                    })
+				                }
                             }
                             for(let i=0; i<goals.length; i++) {
 				            if (revenues[goals[i].title-1]) {
                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
 				            }
                             }
-                        if ((sum/totalGoals) * 100 >=75) count++;
-			}
+                            if ((sum/totalGoals) * 100 >=75) count++;
+			            }
                         return count;
                     })
                 })
@@ -244,8 +244,8 @@ class everydayReportService {
                                         totalSum.push(sum);
                                     
                                     if ((totalSum[i]/totalGoals[i]) * 100 >=75) count++;
-                                    
-                                }
+                                    }
+
                                 }
                             }
                             return count;
@@ -317,13 +317,14 @@ class everydayReportService {
                                                     results.push(everydayReportService.getQuaterlyGoals(users[i]._id));
                                                 }
                                             }
+
                                             return Promise.all(results).then(function(countsQuaterly){
                                                 let results = [];
                                                 let quater = 0;
                                                 if (countsQuaterly){
                                                     for (let i = 0; i < countsQuaterly.length; i++)
                                                         if (countsQuaterly[i] > 0)
-                                                            quater+=countsAnnual[i];
+                                                            quater+=countsQuaterly[i];
                                                     for (let i = 0; i < users.length; i++) {
                                                         results.push(everydayReportService.getActivity(users[i]._id));
                                                     }
@@ -404,10 +405,10 @@ class everydayReportService {
             //host: 'smtp.mail.ru',
             port: 465,
             secure: true,
-            // auth : {
-            //     user: 'fucking-flower@mail.ru',
-            //     pass: 'A440195667',
-            // }   
+            //auth : {
+            //    user: 'fucking-flower@mail.ru',
+            //    pass: 'A440195667',
+            //}   
             auth: {
                 user: config.AWS_SMTP.username,
                 pass: config.AWS_SMTP.password,
@@ -423,9 +424,9 @@ class everydayReportService {
 
         let mailOptions = {
             from:  config.emailAddressSupport,
-            // from: 'fucking-flower@mail.ru',
+            //from: 'fucking-flower@mail.ru',
             to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
-            // to: 'dpcarnage86@gmail.com',
+            //to: 'dpcarnage86@gmail.com',
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

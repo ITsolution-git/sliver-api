@@ -4,8 +4,9 @@ module.exports = function(app) {
     const admin = require('./admin');
     const config = require('../config');
 
-    // schedule.run();
+    // schedule.runPayments();
     schedule.runZoomJob();
+    schedule.updateSubscriptions();
 
     if (config.reports.adminDailyReport) {
         schedule.runReportJob();

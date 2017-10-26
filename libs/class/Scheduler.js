@@ -2,19 +2,29 @@ const schedule = require('node-schedule');
 const PaymentTime = require('../jobs/PaymentTime');
 const zoomController = require('../../controllers/zoomController');
 const EverydayReportService = require('../../services/everydayReportService');
+const Stripe = require('../../services/stripe/StripeService');
 
 class Scheduler {
 
-    static run() {
+    static runPayments() {
         return schedule.scheduleJob({hour: 1, minute: 30}, () => {
             return PaymentTime.payment();
+        });
+    }
+
+    static updateSubscriptions() {
+        return schedule.scheduleJob('10 41 15 * * *', () => {
+            console.log('CRON: checking subscriptions');
+            Stripe.updateSubscriptions().then(() => {
+                console.log("Checking completed");
+            });
         });
     }
 
     static runZoomJob(){
         return schedule.scheduleJob('00 00 12 * * *', () => {
             console.log('ZOOM CRON STARTED');
-           return zoomController.getWebinars();
+            return zoomController.getWebinars();
         });
     }
 

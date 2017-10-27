@@ -1,5 +1,6 @@
 const mongoose = require('./../libs/mongoose');
 const User = mongoose.model('User');
+const config = require('../config');
 const Mailer = require('../libs/class/Mailer');
 const slapMindset = mongoose.model('slapMindset');
 const IdealClient = mongoose.model('IdealClient');
@@ -8,6 +9,9 @@ const YearGoal = mongoose.model('YearGoal');
 const ActionPlan = mongoose.model('ActionPlan');
 var Grid = require('gridfs-stream');
 const stripe = require('../services/stripe');
+const stripeS = require('stripe')(config.stripe_key);
+const Product = mongoose.model('Product');
+const Coupon = mongoose.model('Coupon');
 const StripeService = stripe.service;
 var conn = mongoose.connection;
 Grid.mongo = mongoose.mongo;
@@ -81,6 +85,25 @@ class UserController {
         })
         .then(function(users){
             return Promise.all(users.map(user=>{
+                let stripes = stripeS.subscriptions.retrieve(req.body.stripeSubscription);
+                var item_id = stripes.items;
+                if (req.body.planId != user.planId) {
+                        return Product.load({_id: req.body.planId}).then(product => {
+                            return Coupon.load({_id: req.body.couponId}).then(coupon => {
+                                return stripeS.subscriptions.update(req.body.stripeSubscription, {
+                                    items: [{
+                                      id: item_id,
+                                      plan: product.productName,
+                                    }],
+                                  }).then(subscription => {
+                                            user.stripeSubscription = subscription.id;
+                                            user.planId = req.body.planId;
+                                            return user.save();
+                                    })
+                                  })
+                            })
+                        }
+                else 
                 return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
 
                 // if ((user.status == 'inactive' || user.status == 'deleted') && user.stripeSubscription != null) {

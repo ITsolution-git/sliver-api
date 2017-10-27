@@ -115,11 +115,12 @@ class Stripe {
         });
     }
     
-    static createCharges(customer,amount) {
+    static createCharges(customer,amount, programName) {
         return new Promise((resolve,reject) => {
             stripe.charges.create({
                 amount: amount * 100,
                 currency: 'usd',
+                description: programName,
                 source: customer.default_source ? customer.default_source : customer.stripeSource,
                 customer: customer.stripeId ? customer.stripeId : customer.id
             }, (err, result) => {
@@ -140,7 +141,7 @@ class Stripe {
     static getPayments(userId) {
         return User.load({_id: userId}).then(user => {
             return new Promise( (resolve,reject) => {
-                stripe.charges.list({customer: user.stripeId, limit: 10}, (err, payments) => {
+                stripe.charges.list({customer: user.stripeId, limit: 20}, (err, payments) => {
                     // console.log(payments);
                     if (payments) {
                         resolve(Promise.all(payments.data.map(payment => {
@@ -161,6 +162,7 @@ class Stripe {
                                             result.discount = '-' + (invoice.lines.subscriptions[0].amount - invoice.amount_due) / 100;
                                         }
                                     } else {
+                                        result.programName = payment.description;
                                         result.costProduct = result.amountCharges;
                                     }
                                     resolve(result);

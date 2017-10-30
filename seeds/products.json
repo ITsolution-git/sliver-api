@@ -121,8 +121,8 @@
     "typeProduct" : 3,
     "buildType" : 2,
     "status" : 1,
-    "productName" : "Missing 1:1 Meeting",
-    "productDescription" : "Missing 1:1 Meeting",
+    "productName" : "Missed 1:1 Call",
+    "productDescription" : "Missed 1:1 Call",
     "costProduct" : 25,
     "createdAt" : "2017-04-17T16:17:21.556Z",
     "__v" : 0
@@ -133,8 +133,8 @@
     "typeProduct" : 3,
     "buildType" : 2,
     "status" : 1,
-    "productName" : "Missing Group Meeting",
-    "productDescription" : "Missing Group Meeting",
+    "productName" : "Missed Group Call",
+    "productDescription" : "Missed Group Call",
     "costProduct" : 250,
     "createdAt" : "2017-04-17T16:17:21.556Z",
     "__v" : 0

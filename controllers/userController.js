@@ -85,26 +85,31 @@ class UserController {
         })
         .then(function(users){
             return Promise.all(users.map(user=>{
-                let stripes = stripeS.subscriptions.retrieve(req.body.stripeSubscription);
-                var item_id = stripes.items;
-                if (req.body.planId != user.planId) {
-                        return Product.load({_id: req.body.planId}).then(product => {
-                            return Coupon.load({_id: req.body.couponId}).then(coupon => {
-                                return stripeS.subscriptions.update(req.body.stripeSubscription, {
-                                    items: [{
-                                      id: item_id,
-                                      plan: product.productName,
-                                    }],
-                                  }).then(subscription => {
-                                            user.stripeSubscription = subscription.id;
-                                            user.planId = req.body.planId;
-                                            return user.save();
+                stripeS.subscriptions.retrieve(user.stripeSubscription, (err, subscription) => {
+                    if (err) {
+                        console.log(err);
+                        StripeService.createCustomer()
+                        return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
+                    } else {
+                        var item_id;
+                        if (subscription && subscription.plan)
+                            if (req.body.planId != user.planId) {
+                                return Product.load({_id: req.body.planId}).then(product => {
+                                    return Coupon.load({_id: req.body.couponId}).then(coupon => {
+                                        stripeS.plans.retrieve(product.productName, (err, plan) => {
+                                            subscription.plan = plan;
+                                            user.planId = product._id;
+                                            user.save();
+                                        })
+
                                     })
-                                  })
-                            })
+                                })
+                            }
                         }
-                else 
-                return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
+                    })
+                })
+            )}
+        )}
 
                 // if ((user.status == 'inactive' || user.status == 'deleted') && user.stripeSubscription != null) {
                 //     return StripeService.deleteSubscription(user.stripeSubscription).then(subscription => {
@@ -113,15 +118,8 @@ class UserController {
                 //     });
                 // } else {
                 //     return user;
-                // }
-            }));
-        })
-        .then(function(users){
-            return users.map(user=>{
-                return user.safe();
-            });
-        });
-    }
+                   // }
+
 
     static updateMe(req) {
         var bizName;

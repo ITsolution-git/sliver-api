@@ -45,6 +45,9 @@ let schema = new Schema({
     },
     buildType : {
         type: Number
+    },
+    programName: {
+        type: String,
     }
 });
 

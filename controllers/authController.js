@@ -277,6 +277,10 @@ class AuthController {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
                 }
+                if (build.buildType === 1) {
+                    mObj.buildPlan = mObj.payments.createBuildPayment(build);
+
+                }
                 if (req.body.isRenew)
                     return StripeService.getCustomerById(mObj.user.stripeId)
                     .then((customer) => {
@@ -295,7 +299,14 @@ class AuthController {
                     return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
                         mObj.customer.stripeSubscription = subscription.id;
                         return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
-                })
+                    }).then((subscription) => {
+                        if (mObj.buildPlan) {
+                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, mObj.coupon).then(subscription => {
+                                mObj.customer.stripeBuildSubscription = subscription.id;
+                                return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                            })
+                        } else return subscription;
+                    })
                 } else {
                     return StripeService.subscription.retrieve(mObj.user.stripeSubscription).then(subscription => {
                         let date = subscription.current_repiod_end;
@@ -303,8 +314,24 @@ class AuthController {
                             mObj.customer.stripeSubscription = subscription.id;
                             subscription.current_repiod_start = date;
                             return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                        })
+                    }).then((subscription) => {
+                        if (mObj.user.stripeBuildSubscription){
+                            StripeService.subscription.retrieve(mObj.user.stripeSubscription).then(subscription => {
+                                let date = subscription.current_repiod_end;
+                                if (mObj.buildPlan){
+                                    return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, mObj.coupon).then(subscription => {
+                                        mObj.customer.stripeBuildSubscription = subscription.id;
+                                        return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                                    })
+                                }
+                                else {
+                                    mObj.customer.stripeBuildSubscription = null;
+                                    return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                                }
+                            })
+                        }
                     })
-                })
             }    
             })
             .then((subscription) => {

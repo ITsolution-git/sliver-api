@@ -266,6 +266,23 @@ class Stripe {
     static deleteCoupon(couponId){
         return new Promise((resolve, reject) => stripe.coupons.del(couponId, (err) => err ? reject(err) : resolve()))
     }
+
+    static createPlan (planData){
+        return new Promise((resolve, reject) => {
+            let plan = {
+                amount: +planData.costProduct * 100,
+                interval: "month",
+                name: planData.productName,
+                currency: "usd",
+                id: planData.productName,
+            }
+         
+            stripe.plans.create(plan, (err, plan) => err ? reject(err) : resolve(plan));
+        })
+    }
+    static deletePlan(planId) {
+        return new Promise((resolve, reject) => stripe.plans.del(planId, (err) => err ? reject(err) : resolve()))
+    }
 }
 
 module.exports = Stripe;

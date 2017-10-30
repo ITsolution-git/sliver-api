@@ -139,8 +139,10 @@ class Stripe {
     }
 
     static getPayments(userId) {
+        console.log(userId);
         return User.load({_id: userId}).then(user => {
             return new Promise( (resolve,reject) => {
+                if (user.stripeId){
                 stripe.charges.list({customer: user.stripeId, limit: 10}, (err, payments) => {
                     // console.log(payments);
                     if (payments) {
@@ -173,6 +175,7 @@ class Stripe {
                         resolve([]);
                     }
                 });
+            } else {resolve([]);}
             });
         });
     }

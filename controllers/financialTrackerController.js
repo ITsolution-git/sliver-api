@@ -50,6 +50,10 @@ class FinancialTrackerController {
     }
 
     static getStripePaymentsByUser(req) {
+        return StripeService.getPayments(req.params.user_id);
+    }
+
+    static getStripePayments(req) {
         return StripeService.getPayments(req.decoded._doc._id);
     }
     

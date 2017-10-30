@@ -291,10 +291,21 @@ class AuthController {
                     });
             })
             .then((customer) => {
-                return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
-                    mObj.customer.stripeSubscription = subscription.id;
-                    return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                if (!req.body.isRenew){
+                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
+                        mObj.customer.stripeSubscription = subscription.id;
+                        return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                 })
+                } else {
+                    return StripeService.subscription.retrieve(mObj.user.stripeSubscription).then(subscription => {
+                        let date = subscription.current_repiod_end;
+                        return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
+                            mObj.customer.stripeSubscription = subscription.id;
+                            subscription.current_repiod_start = date;
+                            return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                    })
+                }
+                
             })
             .then((subscription) => {
                 if (mObj.payments.products.length > 0) {
@@ -323,8 +334,8 @@ class AuthController {
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
 
-                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    .then(res=>{
+                   // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                   // .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Account Renewed', 
                                                 type: 'Milestone',  
@@ -335,20 +346,20 @@ class AuthController {
                                                     });
                                                     return { token: token, id: mObj.user._id };
                                                 });
-                    });
+               //     });
                 } else {
                     activityController.create({ userId: mObj.user._id,
                                             title: 'Account Created', 
                                             type: 'Milestone',  
                                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.',
                                             journey: {section: 'start', name: 'Account Created'}});
-                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    .then(res=>{
+                   // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                   // .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Auto Email Sent',
                                                 type: 'Communication',
                                                 notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
-                    });
+                   // });
                 }
                 activityController.create({ userId: mObj.user._id,
                                             title: 'T&C Signed',

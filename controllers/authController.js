@@ -304,8 +304,8 @@ class AuthController {
                             subscription.current_repiod_start = date;
                             return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                     })
-                }
-                
+                })
+            }    
             })
             .then((subscription) => {
                 if (mObj.payments.products.length > 0) {

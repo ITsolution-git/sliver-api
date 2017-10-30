@@ -1,10 +1,19 @@
 const mongoose = require('./../libs/mongoose');
 const Product = mongoose.model('Product');
-
+const stripe = require('../services/stripe');
+const StripeService = stripe.service;
 class ProductController {
 
     static create(req) {
-        return (new Product(req.body)).save();
+
+        return (new Product(req.body)).save().then((product) => {
+            if(product.typeProduct !== 2){
+                return StripeService.createPlan(product).then(() => {
+                    return product;
+                });
+            }
+            else return product;
+        });
     }
 
     static getProducts() {
@@ -20,7 +29,13 @@ class ProductController {
     }
 
     static deleteProduct(req) {
-        return Product.findByIdAndRemove({_id: req.params.id});
+        return Product.findByIdAndRemove({ _id: req.params.id }).then(product => {
+            if (product.typeProduct !== 2)
+                return StripeService.deletePlan(product.productName).then(() => {
+                    return product;
+            })
+            else return product;
+        });
     }
 
     static getPlans() {

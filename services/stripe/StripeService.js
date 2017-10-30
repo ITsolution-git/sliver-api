@@ -114,6 +114,35 @@ class Stripe {
             }
         });
     }
+    static toggleBuildSubscription(userId, enable) {
+        return User.load({ _id: userId }).then(user => {
+            if (!enable) {
+                if (user.stripeBuildSubscription != null) {
+                    return Stripe.deleteSubscription(user.stripeBuildSubscription).then((confirmation) => {
+                        user.stripeBuildSubscription = null;
+                        return user.save();
+                    });
+                } else {
+                    return user;
+                }
+            } else {
+                if (user.stripeBuildSubscription == null) {
+                    return Product.load({ _id: user.buildId }).then(product => {
+                        return Coupon.load({ _id: user.couponId }).then(coupon => {
+                            if (product.buildType === 1)
+                            return Stripe.createSubscription(user, product.productName, coupon).then(subscription => {
+                                user.stripeBuildSubscription = subscription.id;
+                                return user.save();
+                            })
+                            else return user.save();
+                        })
+                    });
+                } else {
+                    return user;
+                }
+            }
+        });
+    }
     
     static createCharges(customer,amount, programName) {
         return new Promise((resolve,reject) => {
@@ -215,11 +244,32 @@ class Stripe {
                                             Stripe.deleteSubscription(user.stripeSubscription).then(confirmation => {
                                                 console.log("Canceled subscription of user " + user.name + " " + user.lastName);
                                                 user.stripeSubscription = null;
-                                                user.save().then(cb);
+                                                return user.save();
                                             }, err => {
                                                 console.log(err);
                                                 cb();
+                                            }).then((user) => {
+                                                if (user.stripeBuildSubscription) {
+                                                    return Stripe.toggleBuildSubscription(user._id, false);
+                                                    // Stripe.deleteSubscription(user.stripeBuildSubscription).then(confirmation => {
+                                                    //     console.log("Canceled subscription of user " + user.name + " " + user.lastName);
+                                                    //     user.stripeBuildSubscription = null;
+                                                    //     return user.save();
+                                                    // }) 
+                                                } else return user;
+                                            }).then((user) => {
+                                                return User.find({ awaitCreationSubscription: true, renewFrom: user._id.toString() }).exec().then(user =>{
+                                                    return Stripe.toggleSubscription(user._id, true).then((user)=>{
+                                                        if(user.buildId){
+                                                            return Stripe.toggleBuildSubscription(user._id, true).then(user =>{
+                                                                return User.findByIdAndUpdate(user._id, { awaitCreationSubscription: false }).then(cb);
+                                                            });
+                                                        }
+                                                        else return User.findByIdAndUpdate(user._id, { awaitCreationSubscription: false}).then(cb);
+                                                    })
+                                                })
                                             });
+                                            
                                         } else {
                                             return cb();
                                         }
@@ -268,6 +318,24 @@ class Stripe {
 
     static deleteCoupon(couponId){
         return new Promise((resolve, reject) => stripe.coupons.del(couponId, (err) => err ? reject(err) : resolve()))
+    }
+
+    static createPlan (planData){
+        return new Promise((resolve, reject) => {
+            let plan = {
+                amount: +planData.costProduct * 100,
+                interval: "month",
+                name: planData.productName,
+                currency: "usd",
+                id: planData.productName,
+                interval_count: planData.billingFrequency
+            }
+         
+            stripe.plans.create(plan, (err, plan) => err ? reject(err) : resolve(plan));
+        })
+    }
+    static deletePlan(planId) {
+        return new Promise((resolve, reject) => stripe.plans.del(planId, (err) => err ? reject(err) : resolve()))
     }
 }
 

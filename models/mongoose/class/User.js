@@ -39,6 +39,7 @@ class User extends mongoose.Model {
                 stripeId: customer.id,
                 stripeSource: customer.default_source,
                 stripeSubscription: customer.stripeSubscription,
+                stripeBuildSubscription: customer.stripeBuildSubscription,
                 couponId: coupon ? coupon._id : null
             }
         });

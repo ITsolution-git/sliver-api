@@ -53,6 +53,12 @@ let schema = new Schema({
     stripeSubscription : {
         type: String
     },
+    stripeBuildSubscription: {
+        type: String
+    },
+    awaitCreationSubscription: {
+        type: Boolean
+    },
     // No Deprecation and use role
     // admin : {
     //     type : Number,

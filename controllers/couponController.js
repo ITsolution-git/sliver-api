@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Coupon = mongoose.model('Coupon');
-
+const stripe = require('../services/stripe');
+const StripeService = stripe.service;
+const moment = require('moment');
 class CouponController {
     
     static create(req) {
@@ -13,8 +15,10 @@ class CouponController {
         if(coupon.dateUntil) {
             coupon.dateUntil = new Date(coupon.dateUntil);
         }
-        
-        return (new Coupon(coupon)).save();
+        return StripeService.createCoupon(coupon).then((couponStripe)=>{
+            return (new Coupon(coupon)).save()
+        })
+
     }
 
     static getCoupons() {
@@ -30,7 +34,12 @@ class CouponController {
     }
 
     static remove(req) {
-        return Coupon.findOneAndRemove({_id: req.body._id});
+        return Coupon.findOneAndRemove({_id: req.body._id})
+        .then(coupon => {
+            return StripeService.deleteCoupon(coupon.code).then(()=>{
+                return coupon;
+            })
+        });
     }
     
     static isValidCode(req) {

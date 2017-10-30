@@ -239,6 +239,36 @@ class Stripe {
             });
         });
     }
+
+    static createCoupon(couponData){   
+        return new Promise((resolve, reject) => {
+            let duration = ['once', 'forever', 'repeating'];
+            let coupon = {
+                id: couponData.code,
+                duration: duration[couponData.duration-1]
+            };
+            if (coupon.duration === 'repeating'){
+                coupon.duration_in_months = coupon.durationLimited;
+            }
+            if (couponData.dateUntil){
+                coupon.redeem_by = new Date(couponData.dateUntil).getTime() / 1000;
+            }
+            if (couponData.redemption){
+                coupon.max_redemptions = +couponData.redemption                
+            }
+            if (couponData.typeCoupon) 
+                coupon.percent_off = +couponData.amount ;
+            else {
+                coupon.currency = 'USD';
+                coupon.amount_off = +couponData.amount * 100;
+            }
+            stripe.coupons.create(coupon,(err, coupon)=> err ? reject(err): resolve(coupon));
+        })
+    }
+
+    static deleteCoupon(couponId){
+        return new Promise((resolve, reject) => stripe.coupons.del(couponId, (err) => err ? reject(err) : resolve()))
+    }
 }
 
 module.exports = Stripe;

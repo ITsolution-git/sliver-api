@@ -309,7 +309,7 @@ class AuthController {
                     })
                 } else {
                     return User.find({ email: mObj.user.email}).then(users => {
-                        if (users.every((user) => !user.stripeBuildSubscription)){
+                        if (users.every((user) => !user.stripeSubscription)){
                             return StripeService.toggleSubscription(mObj.user._id, true).then(()=>{
                                 if (mObj.buildPlan){
                                     return StripeService.toggleBuildSubscription(mObj.user._id,true);

@@ -36,7 +36,40 @@ stripe.customers.list({ limit: 100 }).then((list) => {
         }).concat(customers);
     })
 }).then(customers => {
-    return stripe.customers.list({ limit: 10, starting_after: customers[99].stripeId }).then((list) => {
+    return stripe.customers.list({ limit: 100, starting_after: customers[99].stripeId }).then((list) => {
+        return list.data.map((elem) => {
+            return {
+                email: elem.email,
+                stripeId: elem.id,
+                stripeSource: elem.default_card,
+                subscriptions: elem.subscriptions
+            }
+        }).concat(customers);
+    })
+}).then(customers => {
+    return stripe.customers.list({ limit: 100, starting_after: customers[99].stripeId }).then((list) => {
+        return list.data.map((elem) => {
+            return {
+                email: elem.email,
+                stripeId: elem.id,
+                stripeSource: elem.default_card,
+                subscriptions: elem.subscriptions
+            }
+        }).concat(customers);
+    })
+}).then(customers => {
+    return stripe.customers.list({ limit: 100, starting_after: customers[99].stripeId }).then((list) => {
+        return list.data.map((elem) => {
+            return {
+                email: elem.email,
+                stripeId: elem.id,
+                stripeSource: elem.default_card,
+                subscriptions: elem.subscriptions
+            }
+        }).concat(customers);
+    })
+}).then(customers => {
+    return stripe.customers.list({ limit: 100, starting_after: customers[99].stripeId }).then((list) => {
         return list.data.map((elem) => {
             return {
                 email: elem.email,
@@ -49,7 +82,14 @@ stripe.customers.list({ limit: 100 }).then((list) => {
 }).then((result) => {
     console.log('here');
     return Promise.each(result, (elem) => {
-        return User.findOneAndUpdate({ email: elem.email }, { stripeId: elem.stripeId, stripeSource: elem.stripeSource, stripeSubscription:elem.subscriptions.data[0]._id });
+        if (elem.subscriptions.data.length > 1) {
+            console.log(JSON.stringify(elem.subscriptions.data, null, 3));
+        }
+        return User.findOneAndUpdate({email: elem.email}, {
+            stripeId: elem.stripeId,
+            stripeSource: elem.stripeSource,
+            stripeSubscription: elem.subscriptions.data.length ? elem.subscriptions.data[0].id : null
+        });
     })
 
 }) 

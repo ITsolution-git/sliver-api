@@ -13,7 +13,7 @@ class Scheduler {
     }
 
     static updateSubscriptions() {
-        return schedule.scheduleJob('10 41 15 * * *', () => {
+        return schedule.scheduleJob('5 45 19 * * *', () => {
             console.log('CRON: checking subscriptions');
             Stripe.updateSubscriptions().then(() => {
                 console.log("Checking completed");

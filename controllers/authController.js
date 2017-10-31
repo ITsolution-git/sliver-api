@@ -311,7 +311,7 @@ class AuthController {
                     return true;
                 }    
             })
-            .then((subscription) => {
+            .then(() => {
                 if (mObj.payments.products.length > 0) {
                     return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
                 } else {

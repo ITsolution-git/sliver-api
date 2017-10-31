@@ -214,10 +214,10 @@ class Stripe {
             User.find({role: '4'}).exec().then(users => {
                 users = users.filter(user => user.stripeSubscription);
                 console.log(users.length + " users with active subscriptions");
-                async.each(users, (user, cb) => {
+                async.eachSeries(users, (user, cb) => {
                     console.log("Checking user " + user.name + " " + user.lastName);
                     Mindset.find({userId: user._id}).exec().then(mindsets => {
-                        if (mindsets && mindsets.length > 0) {
+                        if (mindsets && mindsets.length > 0 && mindsets[0].slapStartDate) {
                             let mindset = mindsets[0];
 
 
@@ -241,7 +241,7 @@ class Stripe {
                                         // if day of subscription creation already in the past - cancel subscription
                                         if (moment.unix(subscription.created).date() <= moment().date()) {
                                             console.log("Canceling subscription...");
-                                            Stripe.deleteSubscription(user.stripeSubscription).then(confirmation => {
+                                            return Stripe.deleteSubscription(user.stripeSubscription).then(confirmation => {
                                                 console.log("Canceled subscription of user " + user.name + " " + user.lastName);
                                                 user.stripeSubscription = null;
                                                 return user.save();
@@ -258,15 +258,19 @@ class Stripe {
                                                     // }) 
                                                 } else return user;
                                             }).then((user) => {
-                                                return User.find({ awaitCreationSubscription: true, renewFrom: user._id.toString() }).exec().then(user =>{
-                                                    return Stripe.toggleSubscription(user._id, true).then((user)=>{
-                                                        if(user.buildId){
-                                                            return Stripe.toggleBuildSubscription(user._id, true).then(user =>{
-                                                                return User.findByIdAndUpdate(user._id, { awaitCreationSubscription: false }).then(cb);
-                                                            });
-                                                        }
-                                                        else return User.findByIdAndUpdate(user._id, { awaitCreationSubscription: false}).then(cb);
-                                                    })
+                                                return User.findOne({ awaitCreationSubscription: true, renewFrom: user._id.toString() }).exec().then(user =>{
+                                                    if (user) {
+                                                        return Stripe.toggleSubscription(user._id, true).then((user) => {
+                                                            if (user.buildId) {
+                                                                return Stripe.toggleBuildSubscription(user._id, true).then(user => {
+                                                                    return User.findByIdAndUpdate(user._id, {awaitCreationSubscription: false}).then(cb);
+                                                                });
+                                                            }
+                                                            else return User.findByIdAndUpdate(user._id, {awaitCreationSubscription: false}).then(cb);
+                                                        })
+                                                    } else {
+                                                        return cb();
+                                                    }
                                                 })
                                             });
                                             

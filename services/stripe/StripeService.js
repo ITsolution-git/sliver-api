@@ -181,6 +181,8 @@ class Stripe {
                             result.amountCharges = payment.amount / 100;
                             result.discount = 0;
 
+                            result.status = payment.paid ? 1 : 0;
+
                             return new Promise((resolve, reject) => {
                                 stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
                                     // console.log("Got invoice: " + JSON.stringify(invoice));

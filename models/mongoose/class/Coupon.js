@@ -60,7 +60,22 @@ class Coupon {
      */
     expirationDate() {
         const todayMoment = new moment();
+
+        if(this.dateFrom === null && this.dateUntil === null){
+            return true;
+        }
+
+        if(this.dateFrom === null && todayMoment.isBefore(this.dateUntil)){
+            return true;
+        }
+
+        if(this.dateUntil === null && todayMoment.isAfter(this.dateFrom)){
+            return true;
+        }
+
+
         return todayMoment.isBetween(this.dateFrom, this.dateUntil);
+
     }
 
     /**

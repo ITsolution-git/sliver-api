@@ -50,6 +50,10 @@ class FinancialTrackerController {
     }
 
     static getStripePaymentsByUser(req) {
+        return StripeService.getPayments(req.params.user_id);
+    }
+
+    static getStripePayments(req) {
         return StripeService.getPayments(req.decoded._doc._id);
     }
     
@@ -60,7 +64,7 @@ class FinancialTrackerController {
             Pay.products.push(Pay.createExtraPayment(req.body));
             user = u;
 
-            return StripeService.createCharges(user, Pay.calculate())
+            return StripeService.createCharges(user, Pay.calculate(), req.body.productName)
             .then((res) => {
                 return res;
             })

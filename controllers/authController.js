@@ -179,11 +179,11 @@ class AuthController {
             if (!user.comparePassword(req.body.password)) {
                 throw new CustomError('The password you entered is incorrect.  Please remember they are case sensitive and try again!', 'UNAUTH');
             }
-
             let token = jwt.sign({_id: user._id}, config.secret, {
                 expiresIn: "300d" // expires in 24 hours
             });
-
+            user.lastLogin = new Date();
+            user.save();
             return {token: token};
         }).catch(err=>{
             throw err;
@@ -191,7 +191,7 @@ class AuthController {
     }
 
     static adminAsUser(req) {
-        // console.log(req.params);
+
         return User.load({_id: req.params.id}).then((user) => {
             let token = jwt.sign({_id: user._id}, config.secret, {
             expiresIn: "300d" 
@@ -277,6 +277,10 @@ class AuthController {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
                 }
+                if (build.buildType === 1) {
+                    mObj.buildPlan = mObj.payments.createBuildPayment(build);
+
+                }
                 if (req.body.isRenew)
                     return StripeService.getCustomerById(mObj.user.stripeId)
                     .then((customer) => {
@@ -291,12 +295,34 @@ class AuthController {
                     });
             })
             .then((customer) => {
-                return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
-                    mObj.customer.stripeSubscription = subscription.id;
-                    return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
-                })
+                if (!req.body.isRenew){
+                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
+                        mObj.customer.stripeSubscription = subscription.id;
+                        return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                    }).then((subscription) => {
+                        if (mObj.buildPlan) {
+                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, mObj.coupon).then(subscription => {
+                                mObj.customer.stripeBuildSubscription = subscription.id;
+                                return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
+                            })
+                        } else return subscription;
+                    })
+                } else {
+                    return User.find({ email: mObj.user.email}).then(users => {
+                        if (users.every((user) => !user.stripeBuildSubscription)){
+                            return StripeService.toggleSubscription(mObj.user._id, true).then(()=>{
+                                if (mObj.buildPlan){
+                                    return StripeService.toggleBuildSubscription(mObj.user._id,true);
+                                }
+                            })
+                            .then(() => {
+                                return User.findOneAndUpdate({_id: mObj.user._id}, {awaitCreationSubscription: false});
+                            });
+                        } else return true;
+                    });
+                }    
             })
-            .then((subscription) => {
+            .then(() => {
                 if (mObj.payments.products.length > 0) {
                     return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
                 } else {
@@ -323,8 +349,8 @@ class AuthController {
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
 
-                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    .then(res=>{
+                   // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                   // .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Account Renewed', 
                                                 type: 'Milestone',  
@@ -335,20 +361,20 @@ class AuthController {
                                                     });
                                                     return { token: token, id: mObj.user._id };
                                                 });
-                    });
+               //     });
                 } else {
                     activityController.create({ userId: mObj.user._id,
                                             title: 'Account Created', 
                                             type: 'Milestone',  
                                             notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.',
                                             journey: {section: 'start', name: 'Account Created'}});
-                    return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
-                    .then(res=>{
+                   // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
+                   // .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Auto Email Sent',
                                                 type: 'Communication',
                                                 notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
-                    });
+                   // });
                 }
                 activityController.create({ userId: mObj.user._id,
                                             title: 'T&C Signed',
@@ -395,7 +421,7 @@ class AuthController {
                 req.body.stripeId = user.stripeId;
                 req.body.stripeSource = user.stripeSource;
                 req.body.createdAt = new Date();
-                
+                req.body.awaitCreationSubscription = true;
                 delete req.body.planDate;
                 delete req.body.code;
                 delete req.body.check;

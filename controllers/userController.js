@@ -83,34 +83,29 @@ class UserController {
                 return user.save();
             }));
         })
-        .then(function(users){
-            return Promise.all(users.map(user=>{
-                stripeS.subscriptions.retrieve(user.stripeSubscription, (err, subscription) => {
-                    if (err) {
-                        console.log(err);
-                        StripeService.createCustomer()
-                        return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
-                    } else {
-                        var item_id;
-                        if (subscription && subscription.plan)
+        .then(function(){ 
+            return User.load({_id: req.body._id}).then(function(user){              
+                return stripeS.subscriptions.retrieve(user.stripeSubscription).then((subscription) => {
+                        if (subscription)
                             if (req.body.planId != user.planId) {
                                 return Product.load({_id: req.body.planId}).then(product => {
                                     return Coupon.load({_id: req.body.couponId}).then(coupon => {
-                                        stripeS.plans.retrieve(product.productName, (err, plan) => {
-                                            subscription.plan = plan;
-                                            user.planId = product._id;
-                                            user.save();
+                                        return stripeS.plans.retrieve(product.productName, (err, plan) => {
+                                            return stripeS.subscriptionItems.update(subscription.items.data[0].id, {plan: product.productName}).then((transfer) => {
+                                                user.planId = product._id;
+                                                return user.save();
+                                            })
                                         })
-
                                     })
                                 })
                             }
-                        }
-                    })
-                })
-            )}
-        )}
-
+                        }).catch((e) => {
+                            console.log(e);
+                            return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
+                        })
+            })
+        })
+    }
                 // if ((user.status == 'inactive' || user.status == 'deleted') && user.stripeSubscription != null) {
                 //     return StripeService.deleteSubscription(user.stripeSubscription).then(subscription => {
                 //         user.stripeSubscription = null;

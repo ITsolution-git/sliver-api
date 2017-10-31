@@ -316,6 +316,7 @@ class AuthController {
                                 }
                             })
                             .then(() => {
+                                mObj.user.awaitCreationSubscription = false;
                                 return User.findOneAndUpdate({_id: mObj.user._id}, {awaitCreationSubscription: false});
                             });
                         } else return true;

@@ -258,7 +258,7 @@ class Stripe {
                                                     // }) 
                                                 } else return user;
                                             }).then((user) => {
-                                                return User.findOne({ awaitCreationSubscription: true, renewFrom: user._id.toString() }).exec().then(user =>{
+                                                return User.findOne({ awaitCreationSubscription: true, email: user.email }).exec().then(user =>{
                                                     if (user) {
                                                         return Stripe.toggleSubscription(user._id, true).then((user) => {
                                                             if (user.buildId) {

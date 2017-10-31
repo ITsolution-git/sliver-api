@@ -308,7 +308,15 @@ class AuthController {
                         } else return subscription;
                     })
                 } else {
-                    return true;
+                    return User.find({ email: mObj.user.email}).then(users => {
+                        if (users.every((user) => !user.stripeBuildSubscription)){
+                            return StripeService.toggleSubscription(mObj.user._id, true).then(()=>{
+                                if (mObj.buildPlan){
+                                    return StripeService.toggleBuildSubscription(mObj.user._id,true);
+                                }
+                            });
+                        } else return true;
+                    });
                 }    
             })
             .then(() => {

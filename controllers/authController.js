@@ -314,6 +314,9 @@ class AuthController {
                                 if (mObj.buildPlan){
                                     return StripeService.toggleBuildSubscription(mObj.user._id,true);
                                 }
+                            })
+                            .then(() => {
+                                return User.findOneAndUpdate({_id: mObj.user._id}, {awaitCreationSubscription: false});
                             });
                         } else return true;
                     });

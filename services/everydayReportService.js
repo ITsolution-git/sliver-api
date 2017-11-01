@@ -465,8 +465,7 @@ class everydayReportService {
         let mailOptions = {
             from:  config.emailAddressSupport,
             // from: 'fucking-flower@mail.ru',
-            //to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
-            to: 'dpcarnage86@gmail.com',
+            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

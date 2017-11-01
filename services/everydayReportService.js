@@ -23,7 +23,6 @@ let  activityTypes = [
     { id: "ActionItem", name: "ActionItem", show: true },
     { id: "Pause & Reflect", name: "Pause & Reflect", show: true },
     { id: "Communication", name: "Communication", show: true },
-    { id: "SLAPexpert", name: "SLAPexpert", show: true },
     { id: "SLAPassistant", name: "SLAPassistant", show: true },
     { id: "SLAPworld", name: "SLAPworld", show: true },
     { id: "SLAPschool", name: "SLAPschool", show: true },
@@ -282,7 +281,7 @@ class everydayReportService {
     }
 
     static getSlapexpert(userId) {
-        return Activity.find({userId: userId, type: 'slapexpert'}).exec();
+        return Activity.find({userId: userId, type: 'SLAPexpert'}).exec();
     }
 
     static getUserNotes(userId) {

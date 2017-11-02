@@ -12,7 +12,7 @@ const User = mongoose.model('User');
 const Product = mongoose.model('Product');
 const Coupon = mongoose.model('Coupon');
 const Payment = mongoose.model('Payment');
-
+const Partner = mongoose.model('Partner');
 let userController = require('./userController');
 let idealClientController = require('./idealClientController');
 let activityController = require('./activityController');
@@ -265,8 +265,17 @@ class AuthController {
                 if (coupon) {
                     mObj.coupon = coupon;
                 }
-
-                return mObj.payments.createPlanPayment(mObj.plan, coupon);
+            
+                return Partner.findOne({promocode: coupon._id}).then(partner => {
+                    if(partner) {
+                        mObj.user.partnerId = partner._id;
+                        return mObj.user.save();
+                    }
+                    else return coupon;
+                
+                }).then(()=>{
+                    return mObj.payments.createPlanPayment(mObj.plan, coupon);
+                })
             })
             .then((payment) => {
                 // mObj.payments.products.push(payment);
@@ -279,7 +288,6 @@ class AuthController {
                 }
                 if (build.buildType === 1) {
                     mObj.buildPlan = mObj.payments.createBuildPayment(build);
-
                 }
                 if (req.body.isRenew)
                     return StripeService.getCustomerById(mObj.user.stripeId)

@@ -149,10 +149,10 @@ schema.pre('save', function(next) {
     let _this = this;
     if ((this.isModified('businessName') || this.isModified('email'))
         && (this.role != 4)) {
-        return this.constructor.list({criteria: {$or :[{businessName: this.businessName}, {email: this.email}]}})
+        return this.constructor.list({criteria: {email: this.email}})
         .then(function(users){
             if (users.length != 0)
-                next(new Error('There\'s a user with same email or business name.'));
+                next(new Error('There\'s a user with same email.'));
             else {
                 return _this.updatePassword(next);   
             }

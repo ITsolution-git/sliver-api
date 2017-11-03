@@ -15,8 +15,11 @@ class expertReportController {
         let report = req.body;
         report.totalHours = 0;
         report.totalMissedMeetings = 0;
-        return expertReportController.getUsersAssignedToExpert(req.body.expertId)
-        .then(users => {
+        return User.findById(req.body.expertId)
+        .then(expert => report.expertName = `${expert.name} ${expert.lastName}`)
+        .then(() => {
+            return expertReportController.getUsersAssignedToExpert(req.body.expertId)
+        }).then(users => {
             report.countAssignedUsers = users.length;
             return expertReportController.getUsersByPlan(users).then(usersByPlan => {
                 report.countAssignedUsersByPlan = usersByPlan;
@@ -36,6 +39,7 @@ class expertReportController {
                 return report;
             })
         })
+        
     }
 
     static getUsersAssignedToExpert(expertId) {

@@ -20,7 +20,7 @@ let activityController = require('../controllers/activityController');
 let emailTemplatesController = require('../controllers/emailTemplatesController');
 let reportController = require('../controllers/reportController');
 let partnerReportController = require('../controllers/partnerReportController');
-
+let partnerController = require('../controllers/partnerController');
 //TODO: I am going to add JOI validation.~~~
 
 const runAction =  (action, req, res) => {
@@ -96,4 +96,10 @@ router.put('/report/:id',isAuth, isAdmin, (req, res) => runAction(reportControll
 router.delete('/report/:id',isAuth, isAdmin, (req,res) => runAction(reportController.remove,req,res));
 router.post('/partner-report', isAuth, isAdmin, (req,res) => runAction(partnerReportController.create, req, res));
 
+//Manage Partners 
+router.post('/partner', isAuth, isAdmin, (req, res) => runAction(partnerController.create, req, res));
+router.get('/partner', isAuth, isAdmin, (req, res) => runAction(partnerController.getPartners, req, res));
+router.get('/partner/:id', isAuth, isAdmin, (req, res) => runAction(partnerController.getPartner, req, res));
+router.put('/partner/:id', isAuth, isAdmin, (req, res) => runAction(partnerController.update, req, res));
+router.delete('/partner/:id', isAuth, isAdmin, (req, res) => runAction(partnerController.remove, req, res));
 module.exports = router;

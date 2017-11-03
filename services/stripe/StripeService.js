@@ -167,12 +167,17 @@ class Stripe {
         })
     }
 
-    static getPayments(userId) {
-        console.log(userId);
+    static getPayments(userId, count) {
+        let limit = 10;
+
+        if(count > 0 ){
+            limit = count;
+        }
+
         return User.load({_id: userId}).then(user => {
             return new Promise( (resolve,reject) => {
                 if (user.stripeId){
-                stripe.charges.list({customer: user.stripeId, limit: 10}, (err, payments) => {
+                stripe.charges.list({customer: user.stripeId, limit: limit}, (err, payments) => {
                     // console.log(payments);
                     if (payments) {
                         resolve(Promise.all(payments.data.map(payment => {

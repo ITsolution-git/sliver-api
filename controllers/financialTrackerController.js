@@ -54,7 +54,7 @@ class FinancialTrackerController {
     }
 
     static getStripePayments(req) {
-        return StripeService.getPayments(req.decoded._doc._id);
+        return StripeService.getPayments(req.decoded._doc._id, req.params.count);
     }
     
     static chargeUser(req) {

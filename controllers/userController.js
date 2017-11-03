@@ -58,7 +58,7 @@ class UserController {
         return User.load({_id: req.body._id}).then(function(user){
             bizName = user._doc.businessName;
             userObj = user;
-            return User.list({criteria: {businessName: bizName}});
+            return User.list({criteria: {email: userObj._doc.email}});
         })
         .then(function(users){
             return Promise.all( users.map(function(user){
@@ -83,27 +83,29 @@ class UserController {
                 return user.save();
             }));
         })
-        .then(function(){ 
-            return User.load({_id: req.body._id}).then(function(user){              
-                return stripeS.subscriptions.retrieve(user.stripeSubscription).then((subscription) => {
-                        if (subscription)
-                            if (req.body.planId != user.planId) {
-                                return Product.load({_id: req.body.planId}).then(product => {
-                                    return Coupon.load({_id: req.body.couponId}).then(coupon => {
-                                        return stripeS.plans.retrieve(product.productName, (err, plan) => {
-                                            return stripeS.subscriptionItems.update(subscription.items.data[0].id, {plan: product.productName}).then((transfer) => {
-                                                user.planId = product._id;
-                                                return user.save();
+        .then(function(){
+            if (req.body.role == 4){
+                return User.load({_id: req.body._id}).then(function(user){              
+                    return stripeS.subscriptions.retrieve(user.stripeSubscription).then((subscription) => {
+                            if (subscription)
+                                if (req.body.planId != user.planId) {
+                                    return Product.load({_id: req.body.planId}).then(product => {
+                                        return Coupon.load({_id: req.body.couponId}).then(coupon => {
+                                            return stripeS.plans.retrieve(product.productName, (err, plan) => {
+                                                return stripeS.subscriptionItems.update(subscription.items.data[0].id, {plan: product.productName}).then((transfer) => {
+                                                    user.planId = product._id;
+                                                    return user.save();
+                                                })
                                             })
                                         })
                                     })
-                                })
-                            }
-                        }).catch((e) => {
-                            console.log(e);
-                            return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
-                        })
-            })
+                                }
+                            }).catch((e) => {
+                                console.log(e);
+                                return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
+                            })
+                })
+            }
         })
     }
                 // if ((user.status == 'inactive' || user.status == 'deleted') && user.stripeSubscription != null) {

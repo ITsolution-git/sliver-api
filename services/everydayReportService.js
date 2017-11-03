@@ -282,7 +282,7 @@ class everydayReportService {
     }
 
     static getSlapexpert(userId) {
-        return Activity.find({userId: userId, type: 'slapexpert'}).exec();
+        return Activity.find({userId: userId, type: 'SLAPexpert'}).exec();
     }
 
     static getUserNotes(userId) {
@@ -465,7 +465,8 @@ class everydayReportService {
         let mailOptions = {
             from:  config.emailAddressSupport,
             // from: 'fucking-flower@mail.ru',
-            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            //to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            to: 'dpcarnage86@gmail.com',
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

@@ -3,6 +3,8 @@ const PaymentTime = require('../jobs/PaymentTime');
 const zoomController = require('../../controllers/zoomController');
 const EverydayReportService = require('../../services/everydayReportService');
 const Stripe = require('../../services/stripe/StripeService');
+const ExpertReport = require('../../services/expertReportService');
+const PartnerReport = require('../../services/partnerReportService');
 
 class Scheduler {
 
@@ -19,6 +21,24 @@ class Scheduler {
                 console.log("Checking completed");
             });
         });
+    }
+
+    static runExpertReport() {
+        return schedule.scheduleJob('0 1 8 * * *', () => {
+            console.log('CRON: everyday expert report');
+            ExpertReport.create().then(() => {
+                console.log('Expert report created');
+            })
+        })
+    }
+
+    static runPartnerReport() {
+        return schedule.scheduleJob('0 3 8 * * *', () => {
+            console.log('CRON: everyday partner report');
+            PartnerReport.create().then(() => {
+                console.log('Partner report created');
+            })
+        })
     }
 
     static runZoomJob(){

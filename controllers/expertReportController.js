@@ -8,24 +8,64 @@ const Promise = require('bluebird');
 const ActionPlan = mongoose.model('ActionPlan');
 const Activity = mongoose.model('Activity');
 const Payment = mongoose.model('Payment');
+const ExpertReport = mongoose.model('ExpertReport');
 
 class expertReportController {
+
+    static unique(arr) {
+        var obj = {};
+      
+        for (var i = 0; i < arr.length; i++) {
+          var str = arr[i];
+          obj[str] = true; 
+        }
+      
+        return Object.keys(obj); 
+      }
 
     static create(req) {
         let report = req.body;
         report.totalHours = 0;
         report.totalMissedMeetings = 0;
+        let assignedUsersByPlan = {};
+        report.countAssignedUsersByPlan = {};
         return User.findById(req.body.expertId)
         .then(expert => report.expertName = `${expert.name} ${expert.lastName}`)
         .then(() => {
-            return expertReportController.getUsersAssignedToExpert(req.body.expertId)
-        }).then(users => {
-            report.countAssignedUsers = users.length;
-            return expertReportController.getUsersByPlan(users).then(usersByPlan => {
-                report.countAssignedUsersByPlan = usersByPlan;
-                return users;
+            return ExpertReport.find({expertId: req.body.expertId, createdAt: {$gte: req.body.from, $lte: req.body.to}})
+            .then(reports => {
+                if(reports[0]){
+                let assignedUsers = [];
+                let assignedUsersByPlan = {};
+                let obj = {};
+                    for (let i = 0; i < reports.length; i++) 
+                        reports[i].assignedUsers.forEach(element => {
+                            assignedUsers.push(element._id);
+                        })
+                Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
+                    assignedUsersByPlan[element] = [];
+                    report.countAssignedUsersByPlan[element] = 0;
+                })
+                for (let i = 0; i <reports.length; i++)
+                    Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
+                        if (reports[i].assignedUsersByPlan[element]) {
+                        assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
+                })
+                
+                Object.keys(assignedUsersByPlan).forEach(element => {
+                    let el = [];
+                    if (element) {
+                            el = expertReportController.unique(assignedUsersByPlan[element]);
+                            if (el != '')
+                                report.countAssignedUsersByPlan[element] = el.length;
+                    }
+                })
+                report.countAssignedUsers = expertReportController.unique(assignedUsers).length;
+                return expertReportController.unique(assignedUsers);
+                }
             })
         }).then(users => {
+            if (users)
             return expertReportController.getCountHours(users, req.body.from, req.body.to).then(hours => {
                 for (let i = 0; i < hours.length; i++)
                     report.totalHours += +hours[i];
@@ -33,6 +73,7 @@ class expertReportController {
                 return users;
             })
         }).then(users => {
+            if (users)
             return expertReportController.getCountOfMissedMeetings(users, req.body.from, req.body.to).then(count => {
                 for (let i = 0; i < count.length; i++)
                 report.totalMissedMeetings += count[i].length;
@@ -42,27 +83,10 @@ class expertReportController {
         
     }
 
-    static getUsersAssignedToExpert(expertId) {
-        return User.find({expertId: expertId, stripeSubscription: {$ne: null}});         
-    }
-
-    static getUsersByPlan(users) {
-        let obj = {}; 
-        return Product.find({typeProduct: 1})
-        .then(products => {
-            products.map(product => obj[product.productName] = 0);
-            for (let i = 0; i < products.length; i++) {
-                for (let j = 0; j < users.length; j++) {
-                    if (products[i]._id == users[j].planId) 
-                        obj[products[i].productName]++;
-                }
-            } return obj;
-        })
-    }
 
     static getCountHours(users, from, to) {
         return Promise.map(users, element => {
-            return Activity.find({userId: element._id, type: 'SLAPexpert', createdAt: {$gte: Moment(from), $lte: Moment(to)}})
+            return Activity.find({userId: element, type: 'SLAPexpert', 'extra.date': {$gte: from, $lte: to}})
             .then(interactions => {
                 let sum = 0;
                 interactions.map(int => {
@@ -75,14 +99,12 @@ class expertReportController {
 
     static getCountOfMissedMeetings(users, from, to) {
         return  Promise.map(users, element => {
-            return Payment.find({userId: element._id, status: 1,
+            return Payment.find({userId: element, status: 1,
             paymentDate:  {$gte: Moment(from), $lte: Moment(to)}, $or:[{'products.name': 'Missing 1:1 Call'}, {'products.name': 'Missing Group Call'}]})
         }).then(payment => {
             return payment;
         })
     }
-
-
 
 }
 

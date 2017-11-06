@@ -24,7 +24,7 @@ class Scheduler {
     }
 
     static runExpertReport() {
-        return schedule.scheduleJob('0 1 8 * * *', () => {
+        return schedule.scheduleJob('30 30 18 * * *', () => {
             console.log('CRON: everyday expert report');
             ExpertReport.create().then(() => {
                 console.log('Expert report created');
@@ -33,7 +33,7 @@ class Scheduler {
     }
 
     static runPartnerReport() {
-        return schedule.scheduleJob('0 3 8 * * *', () => {
+        return schedule.scheduleJob('30 13 17 * * *', () => {
             console.log('CRON: everyday partner report');
             PartnerReport.create().then(() => {
                 console.log('Partner report created');

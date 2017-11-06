@@ -69,6 +69,7 @@ class expertReportController {
         }).then(users => {
             if (users)
             return expertReportController.getCountHours(users, from, to).then(hours => {
+                console.log("hours " + hours);
                 for (let i = 0; i < hours.length; i++)
                     report.totalHours += +hours[i];
                 report.totalHours = report.totalHours/60;
@@ -78,7 +79,7 @@ class expertReportController {
             if (users)
             return expertReportController.getCountOfMissedMeetings(users, from, to).then(count => {
                 for (let i = 0; i < count.length; i++)
-                report.totalMissedMeetings += count[i].length;
+                    report.totalMissedMeetings += count[i].length;
                 return report;
             })
         })
@@ -88,12 +89,13 @@ class expertReportController {
 
     static getCountHours(users, from, to) {
         return Promise.map(users, element => {
-            return Activity.find({userId: element, type: 'SLAPexpert', 'extra.date': {$gte: from, $lte: to}})
-            .then(interactions => {
+            console.log({$gte: from.toISOString(), $lte: to.toISOString()});
+            return Activity.find({userId: element, type: 'SLAPexpert', 'extra.date': {$gte: from.toISOString(), $lte: to.toISOString()}}).then(interactions => {
+                console.log(interactions);
                 let sum = 0;
-                interactions.map(int => {
+                interactions.forEach(int => {
                     sum += +int.extra.callLength;
-                })
+                });
                 return sum;
             })
         })

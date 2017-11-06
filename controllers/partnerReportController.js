@@ -56,7 +56,7 @@ class partnerReportController {
                         report.totalIncome += +reports[i].totalIncome;
                         report.totalShareToPartner += +reports[i].totalShareToPartner;
                         Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
-                            if (reports[i].assignedUsersByPlan[element]) {
+                            if (reports[i].assignedUsersByPlan[element].length > 0) {
                                 assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
                         })
                     }   
@@ -75,24 +75,24 @@ class partnerReportController {
                 
                     let userPayments = [];
 
-                for (let i = 0; i < report.countAssignedUsers; i++)
-                    userPayments.push(StripeService.getPayments(assignedUsers[0], 50));
-                return userPayments;
-            }
-        }).then(userPayments => {
-                if (userPayments)
-                return Promise.all(userPayments)
-        }).then(payments => {
-                if (payments){
-                    payments[0].forEach(element => {
-                        if (Moment(element.paymentDate).isBetween(from, to)) 
-                            report.sum += +element.amountCharges; 
-                    })
-                return report; 
-                }
-            })  
-        })  
-    } 
+                        for (let i = 0; i < report.countAssignedUsers; i++)
+                            userPayments.push(StripeService.getPayments(assignedUsers[i], 50));
+                        return Promise.all(userPayments);
+                    }
+                }).then(users => {
+                    console.log(JSON.stringify(users,null, 2));
+                    if (users) {
+                        users.forEach(userPayments => {
+                            userPayments.forEach(element => {
+                                if (Moment(element.paymentDate).isBetween(from, to))
+                                    report.sum += +element.amountCharges;
+                            })
+                        });
+                        return report;
+                    }
+                })
+            })
+    }
 
 
 }

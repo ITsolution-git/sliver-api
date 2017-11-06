@@ -23,10 +23,9 @@ class expertReportService {
                 .then(users => {
                     report.assignedUsers = users;
                     return expertReportService.getUsersByPlan(users)
-                .then((usersByPlan) => {
+                }).then((usersByPlan) => {
                     report.assignedUsersByPlan = usersByPlan;
                     return (new ExpertReport(report)).save();
-                })
                 })
                 })
         })

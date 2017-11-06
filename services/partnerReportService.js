@@ -14,28 +14,31 @@ const PartnerReport = mongoose.model('PartnerReport');
 class PartnerReportService {
 
     static create() {
+        let report = {};
         return Partner.find()
         .then(partners => {
-            if (partners) 
+            if (partners){
                 Promise.map(partners, element => {
-                    let report = {};
+                    report = {};
                     report.totalShareToPartner = 0;
+                    report.assignedUsers = [];
+                    report.assignedUsersByPlan = {};
                     report.partnerId = element._id;
+                    report.totalIncome = 0;
                     return PartnerReportService.getUsersAssignedToPartner(element._id)
                 .then(users => {
                     report.assignedUsers = users;
                     return PartnerReportService.getUsersByPlan(users)
-                .then((usersByPlan) => {
+                }).then(usersByPlan => {
                     report.assignedUsersByPlan = usersByPlan;
                     return PartnerReportService.getTotalIncome(usersByPlan)
-                .then(income => {
+                }).then(income => {
                     report.totalIncome = income;
                     report.totalShareToPartner += +income/100 * +element.revenue_percent;
                     return (new PartnerReport(report)).save();
                 })
-                })
-                })
-                })
+            })
+            }
         })
     }
 

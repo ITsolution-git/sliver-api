@@ -8,6 +8,8 @@ const ExecuteItem = mongoose.model('ExcuteItem');
 const YearGoal = mongoose.model('YearGoal');
 const Promise = require('bluebird');
 const ActionPlan = mongoose.model('ActionPlan');
+const stripe = require('../services/stripe');
+const StripeService = stripe.service;
 
 class partnerReportController {
 
@@ -25,12 +27,12 @@ class partnerReportController {
     static create(req){
         let report = req.body;
         let assignedUsersByPlan = {};
+        report.sum = 0;
         report.countAssignedUsersByPlan = {};
         return PartnerReport.find({partnerId: req.body.partnerId,
         createdAt: {$gte: req.body.from, $lte: req.body.to}
-        })
-        .then(reports => {
-            if(reports[0]){
+        }).then(reports => {
+            if(reports && reports[0]){
                 let assignedUsers = [];
                 let assignedUsersByPlan = {};
                 let obj = {};
@@ -38,6 +40,7 @@ class partnerReportController {
                         reports[i].assignedUsers.forEach(element => {
                             assignedUsers.push(element._id);
                         })
+                    
                 Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
                     assignedUsersByPlan[element] = [];
                     report.countAssignedUsersByPlan[element] = 0;
@@ -49,9 +52,9 @@ class partnerReportController {
                     report.totalShareToPartner += +reports[i].totalShareToPartner;
                     Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
                         if (reports[i].assignedUsersByPlan[element]) {
-                        assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
-                })
-            }
+                            assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
+                    })
+                }
                 
                 Object.keys(assignedUsersByPlan).forEach(element => {
                     let el = [];
@@ -59,16 +62,31 @@ class partnerReportController {
                             el = partnerReportController.unique(assignedUsersByPlan[element]);
                             if (el != '') {
                                 report.countAssignedUsersByPlan[element] = el.length;
-                                console.log(el.length);                            }
+                            }
                     }
                 })
                 
                 report.countAssignedUsers = partnerReportController.unique(assignedUsers).length;
-                return report;
-                }
                 
-            })
+                
+                let userPayments = [];
+
+                for (let i = 0; i < report.countAssignedUsers; i++)
+                userPayments.push(StripeService.getPayments(assignedUsers[0], 50));
+                return userPayments;
+            }
+        }).then(userPayments => {
+                return Promise.all(userPayments)
+        }).then(payments => {
+                payments[0].forEach(element => {
+                    if (Moment(element.paymentDate).isBetween(Moment(req.body.from), Moment(req.body.to))) {
+                    report.sum += +element.amountCharges; }
+                })
+                return report; 
+            })    
     }
+
+
 }
 
 

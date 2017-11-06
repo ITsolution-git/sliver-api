@@ -442,13 +442,8 @@ class everydayReportService {
     static send(subject, htmlContent, textContent) {
         let smtpConfig = nodemailer.createTransport({
             host: config.AWS_SMTP.region,
-            //host: 'smtp.mail.ru',
             port: 465,
             secure: true,
-            // auth : {
-            //    user: 'fucking-flower@mail.ru',
-            //    pass: 'A440195667',
-            // }   
             auth: {
                 user: config.AWS_SMTP.username,
                 pass: config.AWS_SMTP.password,

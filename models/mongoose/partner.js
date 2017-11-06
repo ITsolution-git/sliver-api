@@ -24,19 +24,19 @@ const schema = new Schema({
     additional_email: {
         type: String,
         unique: true,
-        required: true
+        required: false
     },
     phone: {
         type: String,
         required: true
     },
     revenue_percent: {
-        type: String,
+        type: Number,
         required: true
     },
     partnership_overview: {
         type: String,
-        required: true
+        required: false
     }, 
     promocode: {
         type: String,

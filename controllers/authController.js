@@ -244,12 +244,10 @@ class AuthController {
         return AuthController.signUpSaveUser(req)
         .then((user) => {
                     mObj.user = user;
-                    console.log(user);
                     return Product.load({_id: req.body.planId});
             })
             .then((plan) => {
                 mObj.plan = plan;
-
                 if (req.body.code) {
                     return new Promise((resolve) => {
                         Coupon.isValidCode(req.body.code, plan._id)
@@ -264,9 +262,8 @@ class AuthController {
             .then((coupon) => {
                 if (coupon) {
                     mObj.coupon = coupon;
-                }
-            
-                return Partner.findOne({promocode: coupon._id}).then(partner => {
+                } 
+                return Partner.findOne({promocode: coupon ? coupon._id : null}).then(partner => {
                     if(partner) {
                         mObj.user.partnerId = partner._id;
                         return mObj.user.save();
@@ -276,17 +273,16 @@ class AuthController {
                 }).then(()=>{
                     return mObj.payments.createPlanPayment(mObj.plan, coupon);
                 })
-            })
-            .then((payment) => {
-                // mObj.payments.products.push(payment);
 
+            }).then((payment) => {
+                // mObj.payments.products.push(payment);
                 return Product.load({_id: req.body.buildId});
             })
             .then((build) => {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
                 }
-                if (build.buildType === 1) {
+                if (build && build.buildType === 1) {
                     mObj.buildPlan = mObj.payments.createBuildPayment(build);
                 }
                 if (req.body.isRenew)

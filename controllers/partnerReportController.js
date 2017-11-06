@@ -78,13 +78,16 @@ class partnerReportController {
                 return userPayments;
             }
         }).then(userPayments => {
+                if (userPayments)
                 return Promise.all(userPayments)
         }).then(payments => {
-                payments[0].forEach(element => {
-                    if (Moment(element.paymentDate).isBetween(Moment(req.body.from), Moment(req.body.to))) {
-                    report.sum += +element.amountCharges; }
-                })
+                if (payments){
+                    payments[0].forEach(element => {
+                        if (Moment(element.paymentDate).isBetween(Moment(req.body.from), Moment(req.body.to))) 
+                            report.sum += +element.amountCharges; 
+                    })
                 return report; 
+                }
             })  
         })  
     } 

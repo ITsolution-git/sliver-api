@@ -23,6 +23,7 @@ let  activityTypes = [
     { id: "ActionItem", name: "ActionItem", show: true },
     { id: "Pause & Reflect", name: "Pause & Reflect", show: true },
     { id: "Communication", name: "Communication", show: true },
+    { id: "SLAPexpert", name: "SLAPexpert", show: true },
     { id: "SLAPassistant", name: "SLAPassistant", show: true },
     { id: "SLAPworld", name: "SLAPworld", show: true },
     { id: "SLAPschool", name: "SLAPschool", show: true },
@@ -441,13 +442,8 @@ class everydayReportService {
     static send(subject, htmlContent, textContent) {
         let smtpConfig = nodemailer.createTransport({
             host: config.AWS_SMTP.region,
-            //host: 'smtp.mail.ru',
             port: 465,
             secure: true,
-            // auth : {
-            //    user: 'fucking-flower@mail.ru',
-            //    pass: 'A440195667',
-            // }   
             auth: {
                 user: config.AWS_SMTP.username,
                 pass: config.AWS_SMTP.password,
@@ -463,9 +459,7 @@ class everydayReportService {
 
         let mailOptions = {
             from:  config.emailAddressSupport,
-            // from: 'fucking-flower@mail.ru',
             to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
-            //to: 'dpcarnage86@gmail.com',
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

@@ -28,11 +28,13 @@ class expertReportController {
         report.totalHours = 0;
         report.totalMissedMeetings = 0;
         let assignedUsersByPlan = {};
+        let from = Moment(req.body.from);
+        let to = Moment(req.body.to).add(1, 'day');
         report.countAssignedUsersByPlan = {};
         return User.findById(req.body.expertId)
         .then(expert => report.expertName = `${expert.name} ${expert.lastName}`)
         .then(() => {
-            return ExpertReport.find({expertId: req.body.expertId, createdAt: {$gte: req.body.from, $lte: req.body.to}})
+            return ExpertReport.find({expertId: req.body.expertId, createdAt: {$gte: from, $lte: to}})
             .then(reports => {
                 if(reports[0]){
                 let assignedUsers = [];
@@ -66,7 +68,7 @@ class expertReportController {
             })
         }).then(users => {
             if (users)
-            return expertReportController.getCountHours(users, req.body.from, req.body.to).then(hours => {
+            return expertReportController.getCountHours(users, from, to).then(hours => {
                 for (let i = 0; i < hours.length; i++)
                     report.totalHours += +hours[i];
                 report.totalHours = report.totalHours/60;
@@ -74,7 +76,7 @@ class expertReportController {
             })
         }).then(users => {
             if (users)
-            return expertReportController.getCountOfMissedMeetings(users, req.body.from, req.body.to).then(count => {
+            return expertReportController.getCountOfMissedMeetings(users, from, to).then(count => {
                 for (let i = 0; i < count.length; i++)
                 report.totalMissedMeetings += count[i].length;
                 return report;
@@ -100,7 +102,7 @@ class expertReportController {
     static getCountOfMissedMeetings(users, from, to) {
         return  Promise.map(users, element => {
             return Payment.find({userId: element, status: 1,
-            paymentDate:  {$gte: Moment(from), $lte: Moment(to)}, $or:[{'products.name': 'Missing 1:1 Call'}, {'products.name': 'Missing Group Call'}]})
+            paymentDate:  {$gte: from, $lte: to}, $or:[{'products.name': 'Missing 1:1 Call'}, {'products.name': 'Missing Group Call'}]})
         }).then(payment => {
             return payment;
         })

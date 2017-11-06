@@ -29,11 +29,13 @@ class partnerReportController {
         let assignedUsersByPlan = {};
         report.sum = 0;
         report.countAssignedUsersByPlan = {};
+        let from = Moment(req.body.from);
+        let to = Moment(req.body.to).add(1, 'day');
         return Partner.findById(req.body.partnerId)
         .then(partner => report.partnerName = `${partner.name} ${partner.lastName}`)
         .then(() =>{
             return PartnerReport.find({partnerId: req.body.partnerId,
-            createdAt: {$gte: req.body.from, $lte: req.body.to}
+            createdAt: {$gte: from, $lte: to}
             }).then(reports => {
                 if(reports && reports[0]){
                     let assignedUsers = [];
@@ -83,7 +85,7 @@ class partnerReportController {
         }).then(payments => {
                 if (payments){
                     payments[0].forEach(element => {
-                        if (Moment(element.paymentDate).isBetween(Moment(req.body.from), Moment(req.body.to))) 
+                        if (Moment(element.paymentDate).isBetween(from, to)) 
                             report.sum += +element.amountCharges; 
                     })
                 return report; 

@@ -29,50 +29,52 @@ class partnerReportController {
         let assignedUsersByPlan = {};
         report.sum = 0;
         report.countAssignedUsersByPlan = {};
-        return PartnerReport.find({partnerId: req.body.partnerId,
-        createdAt: {$gte: req.body.from, $lte: req.body.to}
-        }).then(reports => {
-            if(reports && reports[0]){
-                let assignedUsers = [];
-                let assignedUsersByPlan = {};
-                let obj = {};
-                    for (let i = 0; i < reports.length; i++) 
-                        reports[i].assignedUsers.forEach(element => {
+        return Partner.findById(req.body.partnerId)
+        .then(partner => report.partnerName = `${partner.name} ${partner.lastName}`)
+        .then(() =>{
+            return PartnerReport.find({partnerId: req.body.partnerId,
+            createdAt: {$gte: req.body.from, $lte: req.body.to}
+            }).then(reports => {
+                if(reports && reports[0]){
+                    let assignedUsers = [];
+                    let assignedUsersByPlan = {};
+                    let obj = {};
+                        for (let i = 0; i < reports.length; i++) 
+                            reports[i].assignedUsers.forEach(element => {
                             assignedUsers.push(element._id);
                         })
                     
-                Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
-                    assignedUsersByPlan[element] = [];
-                    report.countAssignedUsersByPlan[element] = 0;
-                })
-                report.totalIncome = 0;
-                report.totalShareToPartner = 0;
-                for (let i = 0; i <reports.length; i++) {
-                    report.totalIncome += +reports[i].totalIncome;
-                    report.totalShareToPartner += +reports[i].totalShareToPartner;
-                    Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
-                        if (reports[i].assignedUsersByPlan[element]) {
-                            assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
+                    Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
+                        assignedUsersByPlan[element] = [];
+                        report.countAssignedUsersByPlan[element] = 0;
                     })
-                }
-                
-                Object.keys(assignedUsersByPlan).forEach(element => {
+                    report.totalIncome = 0;
+                    report.totalShareToPartner = 0;
+                    for (let i = 0; i <reports.length; i++) {
+                        report.totalIncome += +reports[i].totalIncome;
+                        report.totalShareToPartner += +reports[i].totalShareToPartner;
+                        Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
+                            if (reports[i].assignedUsersByPlan[element]) {
+                                assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
+                        })
+                    }   
+
+                    Object.keys(assignedUsersByPlan).forEach(element => {
                     let el = [];
                     if (element) {
-                            el = partnerReportController.unique(assignedUsersByPlan[element]);
-                            if (el != '') {
-                                report.countAssignedUsersByPlan[element] = el.length;
-                            }
+                        el = partnerReportController.unique(assignedUsersByPlan[element]);
+                        if (el != '') {
+                            report.countAssignedUsersByPlan[element] = el.length;
+                        }
                     }
-                })
+                    })
                 
-                report.countAssignedUsers = partnerReportController.unique(assignedUsers).length;
+                    report.countAssignedUsers = partnerReportController.unique(assignedUsers).length;
                 
-                
-                let userPayments = [];
+                    let userPayments = [];
 
                 for (let i = 0; i < report.countAssignedUsers; i++)
-                userPayments.push(StripeService.getPayments(assignedUsers[0], 50));
+                    userPayments.push(StripeService.getPayments(assignedUsers[0], 50));
                 return userPayments;
             }
         }).then(userPayments => {
@@ -83,8 +85,9 @@ class partnerReportController {
                     report.sum += +element.amountCharges; }
                 })
                 return report; 
-            })    
-    }
+            })  
+        })  
+    } 
 
 
 }

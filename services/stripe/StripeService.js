@@ -167,16 +167,35 @@ class Stripe {
         })
     }
 
-    static getPayments(userId, count) {
+    static getPayments(userId, count, invoices, from, to) {
         let limit = 10;
 
-        if(count > 0 ){
+        if(count >= 0 ){
             limit = count;
         }
 
         return User.load({_id: userId}).then(user => {
             return new Promise( (resolve,reject) => {
                 if (user.stripeId){
+                    if (invoices && from && to) {
+                        stripe.charges.list({customer: user.stripeId, created: {gte: from, lte: to}}, (err, payments) => {
+                            // console.log(payments);
+                            if (payments) {
+                                return Promise.all(payments.data.map(payment => {
+                                    let result = {};
+                                    result.paymentDate = moment(new Date(payment.created * 1000)).format('ll');
+                                    result.amountCharges = payment.amount / 100;
+                                    result.discount = 0;
+        
+                                    return payment.paid ? result : [];
+                                }))
+                                .then(userPayments => {
+                                    resolve(userPayments);
+                                })
+                            } 
+                        }) 
+                    }
+                else 
                 stripe.charges.list({customer: user.stripeId, limit: limit}, (err, payments) => {
                     // console.log(payments);
                     if (payments) {

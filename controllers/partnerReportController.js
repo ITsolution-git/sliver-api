@@ -76,15 +76,13 @@ class partnerReportController {
                     let userPayments = [];
 
                         for (let i = 0; i < report.countAssignedUsers; i++)
-                            userPayments.push(StripeService.getPayments(assignedUsers[i], 50));
+                            userPayments.push(StripeService.getPayments(assignedUsers[i], 50, true, from.format('X'), to.format('X')));
                         return Promise.all(userPayments);
                     }
                 }).then(users => {
-                    console.log(JSON.stringify(users,null, 2));
                     if (users) {
                         users.forEach(userPayments => {
                             userPayments.forEach(element => {
-                                if (Moment(element.paymentDate).isBetween(from, to))
                                     report.sum += +element.amountCharges;
                             })
                         });

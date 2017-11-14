@@ -31,9 +31,13 @@ class partnerReportController {
         report.countAssignedUsersByPlan = {};
         let from = Moment(req.body.from);
         let to = Moment(req.body.to).add(1, 'day');
+        let revenue_percent = 0;
         return Partner.findById(req.body.partnerId)
-        .then(partner => report.partnerName = `${partner.name} ${partner.lastName}`)
-        .then(() =>{
+        .then(partner => {
+            report.partnerName = `${partner.name} ${partner.lastName}`;
+            revenue_percent = partner.revenue_percent;
+        })
+        .then(() => {
             return PartnerReport.find({partnerId: req.body.partnerId,
             createdAt: {$gte: from, $lte: to}
             }).then(reports => {
@@ -41,11 +45,19 @@ class partnerReportController {
                     let assignedUsers = [];
                     let assignedUsersByPlan = {};
                     let obj = {};
-                        for (let i = 0; i < reports.length; i++) 
-                            reports[i].assignedUsers.forEach(element => {
+                    let used = {};
+                    let filtered = [];
+                    for (let i = 0; i < reports.length; i++) {
+                        reports[i].assignedUsers.forEach(element => {
                             assignedUsers.push(element._id);
-                        })
-                    
+                        }) 
+                        filtered = reports[i].assignedUsers.filter(function(el) {
+                            return obj._id in used ? 0:(used[el._id]=1);
+                        }) 
+                    }
+
+                    report.slapsters = filtered;
+
                     Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
                         assignedUsersByPlan[element] = [];
                         report.countAssignedUsersByPlan[element] = 0;
@@ -53,8 +65,8 @@ class partnerReportController {
                     report.totalIncome = 0;
                     report.totalShareToPartner = 0;
                     for (let i = 0; i <reports.length; i++) {
-                        report.totalIncome += +reports[i].totalIncome;
-                        report.totalShareToPartner += +reports[i].totalShareToPartner;
+                       // report.totalIncome += +reports[i].totalIncome;
+                       // report.totalShareToPartner += +reports[i].totalShareToPartner;
                         Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
                             if (reports[i].assignedUsersByPlan[element].length > 0) {
                                 assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
@@ -62,17 +74,17 @@ class partnerReportController {
                     }   
 
                     Object.keys(assignedUsersByPlan).forEach(element => {
-                    let el = [];
-                    if (element) {
-                        el = partnerReportController.unique(assignedUsersByPlan[element]);
-                        if (el != '') {
-                            report.countAssignedUsersByPlan[element] = el.length;
+                        let el = [];
+                        if (element) {
+                            el = partnerReportController.unique(assignedUsersByPlan[element]);
+                            if (el != '') {
+                                report.countAssignedUsersByPlan[element] = el.length;
+                            }
                         }
-                    }
                     })
                 
                     report.countAssignedUsers = partnerReportController.unique(assignedUsers).length;
-                
+
                     let userPayments = [];
 
                         for (let i = 0; i < report.countAssignedUsers; i++)
@@ -84,6 +96,10 @@ class partnerReportController {
                         users.forEach(userPayments => {
                             userPayments.forEach(element => {
                                     report.sum += +element.amountCharges;
+                                    if (element.status) {
+                                        report.totalIncome += +element.amountCharges - element.discount;
+                                        report.totalShareToPartner += report.totalIncome * (revenue_percent / 100); 
+                                    }
                             })
                         });
                         return report;

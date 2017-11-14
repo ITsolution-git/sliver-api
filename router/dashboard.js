@@ -157,7 +157,7 @@ router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getW
 //Video api
 router.get('/video/:videoName', videoController.getVideo);
 
-router.post('/stripe/charge-error', chargeErrorController.sendEmailNotification );
+router.post('/stripe/charge-error', (req, res) => runAction(chargeErrorController.sendEmailNotification, req, res) );
 const stripe = require('stripe')(config.stripe_key);
 
 router.get('/stripe/list', (req, res) => {

@@ -7,9 +7,10 @@ class chargeErrorController {
 
     static sendEmailNotification(req) {
         let email = req.body.receipt_email;
-        activity.updatedBy = req.decoded ? req.decoded._doc._id : null;
+
         return User.findOne({email:email}).then((user)=>{
-            Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: user }, 'card-decline')
+            if (!user) return;
+            return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: user }, 'card-decline')
             .then(() => {
                 return user;
             })

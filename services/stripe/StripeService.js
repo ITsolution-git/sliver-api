@@ -187,8 +187,8 @@ class Stripe {
                                         result.paymentDate = moment(new Date(payment.created * 1000)).format('ll');
                                         result.amountCharges = payment.amount / 100;
                                         result.discount = 0;
-                                        
-                                        return payment.paid ? result : []; 
+                                        result.status = payment.paid ? 1 : 0;
+                                        return result; 
                                     }
                                 }))
                                 .then(userPayments => {

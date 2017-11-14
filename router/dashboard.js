@@ -27,6 +27,7 @@ let activityController = require('../controllers/activityController');
 let excuteController = require('../controllers/excuteController');
 let zoomController = require('../controllers/zoomController');
 let videoController = require('../controllers/videoController');
+let chargeErrorController = require('../controllers/chargeErrorController');
 const runAction = (action, req, res) => {
     action(req, res)
         .then((data) => {
@@ -156,6 +157,7 @@ router.get('/zoom/webinars', isAuth, (req, res) => runAction(zoomController.getW
 //Video api
 router.get('/video/:videoName', videoController.getVideo);
 
+router.post('/stripe/charge-error', chargeErrorController.sendEmailNotification );
 const stripe = require('stripe')(config.stripe_key);
 
 router.get('/stripe/list', (req, res) => {

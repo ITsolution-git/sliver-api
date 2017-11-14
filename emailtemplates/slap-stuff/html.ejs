@@ -1,0 +1,22 @@
+<body>
+    <div class="container">
+        <%- include('../layout-main/header') -%>
+            <div class="content">
+                <div>
+                     -SLAPster Business Name : <%= user.business_name %>
+                </div>
+                <div>
+                     -SLAPster First Name & Last Name: <%=user.first_name %> <%= user.last_name %>
+                </div>
+                <div>
+                     -Mailing Address : <%= user.mailing_address %>
+                </div>
+                <div>
+                     -Phone Number : <%=user.phone_number %>
+                </div>
+                 
+            </div>
+            <hr/>
+            <%- include('../layout-main/footer') -%>
+    </div>
+</body>

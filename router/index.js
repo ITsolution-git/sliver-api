@@ -9,6 +9,7 @@ module.exports = function(app) {
     schedule.updateSubscriptions();
     schedule.runExpertReport();
     schedule.runPartnerReport();
+    schedule.runUserCredentialsJob();
 
     if (config.reports.adminDailyReport) {
         schedule.runReportJob();

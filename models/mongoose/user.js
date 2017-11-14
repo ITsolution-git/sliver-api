@@ -90,7 +90,6 @@ let schema = new Schema({
     },
     lastLogin: {
         type: Date,
-        default: new Date()
     },
     couponId : {
         type: String,

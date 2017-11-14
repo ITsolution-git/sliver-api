@@ -5,6 +5,7 @@ const EverydayReportService = require('../../services/everydayReportService');
 const Stripe = require('../../services/stripe/StripeService');
 const ExpertReport = require('../../services/expertReportService');
 const PartnerReport = require('../../services/partnerReportService');
+const UserReport = require('../../services/userReportService');
 
 class Scheduler {
 
@@ -53,6 +54,13 @@ class Scheduler {
             console.log('REPORT CRON STARTED');
             return EverydayReportService.getLocalVariables();
         });
+    }
+
+    static runUserCredentialsJob(){
+        return schedule.scheduleJob('0 10 7 * * *', () => {
+            console.log('USER CRON STARTED');
+            return UserReport.create();
+        })
     }
 
 }

@@ -72,7 +72,7 @@ class everydayReportService {
         return everydayReportService.getUserById(userId).then(function (user){
             return everydayReportService.getMindset(userId).then(function (mindset){
                 if (mindset[0]){
-                    startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
+                    startDate = Moment({year: mindset[0].slapStartDate.year, month: mindset[0].slapStartDate.month-1}).format('YYYY-MM-DD');
                     quaters.push(Moment(startDate).format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
@@ -118,11 +118,11 @@ class everydayReportService {
     }
 
     static totalNumberOfAccounts() {
-        return User.count({role: '4'}).exec();
+        return User.count({role: '4', status: 'active', stripeSubscription: {$gte: ''}}).exec();
     }
 
     static numberOfNewAccounts() {
-        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}}).exec();
+        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}, stripeSubscription: {$gte: ''}}).exec();
     }
 
     static numberOfRenewals() {
@@ -134,11 +134,11 @@ class everydayReportService {
     }
 
     static numberOfAccountsInBuild() {
-        return User.count({role: '4', status: 'active', finishedSteps: {$gte: 0, $lte: 45}}).exec();
+        return User.count({role: '4', status: 'active', finishedSteps: {$ne: 46}, stripeSubscription: {$gte: ''}}).exec();
     }
 
     static numberOfAccountsInExecute() {
-        return User.count({role: '4', status: 'active', finishedSteps: 46}).exec();
+        return User.count({role: '4', status: 'active', finishedSteps: 46, stripeSubscription: {$gte: ''}}).exec();
     }
 
     // all sales of user
@@ -160,8 +160,8 @@ class everydayReportService {
         return YearGoal.find({userId: userId}).exec();
     }
 
-    static getUserId() {
-        return User.find({role: '4'}).exec();
+    static getUser() {
+        return User.find({role: '4', status: 'active', stripeSubscription: {$gte: ''}}).exec();
     }
 
     static getMindset(userId) {
@@ -206,7 +206,8 @@ class everydayReportService {
                                 sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
 				            }
                             }
-                            if ((sum/totalGoals) * 100 >=75) count++;
+                            if (totalGoals > 0)
+                                if ((sum/totalGoals) * 100 >=75) count++;
 			            }
                         return count;
                     })
@@ -231,14 +232,14 @@ class everydayReportService {
                             }
                     else return;
                     return everydayReportService.getMindset(userId).then(function (mindset){
-                        if (mindset[0]){
-                        let startDate = Moment(mindset[0].slapStartDate).format('YYYY-MM-DD');
-                        quaters.push(Moment(startDate).format('YYYY-MM-DD'));
+                        if (mindset[0]){    
+                           
+                        let startDate = Moment({year: mindset[0].slapStartDate.year, month: mindset[0].slapStartDate.month-1}).format('YYYY-MM-DD');
+                        quaters.push(Moment(startDate));
                         quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
                         quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
-                       
                         return everydayReportService.getTotalGoals(userId).then(function (totalGoal){
                             let el = 0;
                             let totalGoals = []; 
@@ -253,25 +254,25 @@ class everydayReportService {
                                             el = revenues[index].sellingPrice;
                                         sum = ((+totalGoal[0].whatsHappening[i].units[element] * el) + sum);
                                         }
-                                    })
-                                    totalGoals.push(sum);
+                                    totalGoals.push(sum);})
                                 }
                             }
-                                for(let i=0; i < goals.length; i++) {
-                                    let sum = 0;
-                                    let totalSum = [];
-                            
-                                    for(let j=1; j<quaters.length; j++) {
-                                            if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]')){
-                                            if (revenues[goals[i].title-1]) 
-                                                sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
-                                            }
-                                        totalSum.push(sum);
-                                    
-                                    if ((totalSum[i]/totalGoals[i]) * 100 >=75) count++;
-                                    }
 
+                            let totalSum = [];
+
+                            for(let j=1; j<quaters.length; j++) {
+                                let sum = 0;
+                                for(let i=0; i < goals.length; i++) {
+                                   
+                                    if(Moment(goals[i].dueDate).isBetween(quaters[j-1], quaters[j], 'day', '[]') && revenues[goals[i].title-1])
+                                        sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum; 
                                 }
+                                totalSum.push(sum);
+                            }
+                                for (let i=0; i<totalGoals.length; i++)
+                                    if (totalGoals[i] && totalGoals[i] > 0 && totalSum[i] > 0) {
+                                        if ((totalSum[i]/totalGoals[i]) * 100 >=75) count++; }
+
                             }
                             return count;
                     })
@@ -310,12 +311,17 @@ class everydayReportService {
             })
     }   
 
-    static getNotLogged(userId) {
-        return everydayReportService.getUserById(userId).then(function (user){
-            let dateEdge = Moment().subtract(2, 'week').format('YYYY-MM-DD');
-            if (Moment(user.lastLogin).isBefore(dateEdge))
-            return {name: user.lastName + " " + user.name, date: Moment(user.lastLogin).format('MMMM DD, YYYY')}
-        })
+    static getNotLogged(user) {
+        let dateEdge = Moment().subtract(14, 'day').format('YYYY-MM-DD');
+        if (user) {
+            if (user.lastLogin) {
+                if (Moment(user.lastLogin).isBefore(dateEdge)) {
+                    return {name: user.lastName + " " + user.name, date: Moment(user.lastLogin).format('MMMM DD, YYYY')} 
+                }
+                else return false; 
+            }
+            else return {name: user.lastName + " " + user.name, date: 'Ever'}
+        }
     }
 
     static getLocalVariables() {
@@ -325,7 +331,7 @@ class everydayReportService {
                     return everydayReportService.numberOfDeleted().then(function (numberOfDeleted){
                         return everydayReportService.numberOfAccountsInBuild().then(function (numberOfAccountsInBuild){
                             return everydayReportService.numberOfAccountsInExecute().then(function (numberOfAccountsInExecute){
-                                return everydayReportService.getUserId().then(function (users){
+                                return everydayReportService.getUser().then(function (users){
                                         let results = [];
                                         if (users)
                                         for (let i = 0; i < users.length; i++) {
@@ -378,12 +384,12 @@ class everydayReportService {
                                                     return Promise.all(results).then(function (notes){
                                                         let results = [];
                                                         for (let i = 0; i < users.length; i++) {
-                                                            results.push(everydayReportService.getNotLogged(users[i]._id));
+                                                            results.push(everydayReportService.getNotLogged(users[i]));
                                                         }
                                                         return Promise.all(results).then(function (notLogged){
                                                             let notLog = [];
                                                             for (let i = 0; i < notLogged.length; i++)
-                                                                if(notLogged[i] != undefined) 
+                                                                if(notLogged[i] != false) 
                                                                     notLog.push(notLogged[i])
 
                                                             let no = [];

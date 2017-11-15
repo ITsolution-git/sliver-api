@@ -9,9 +9,9 @@ class ExcuteItemController {
     
     static create(req) {
         var con = {
-            action: { name:'ActionItem'},
-            reflextion: { name:'Pause & Reflect'} ,
-            sales: { name:'Sales'} 
+            action: { id: "ActionItem", name: "Action Item" },
+            reflextion: { id: "Pause & Reflect", name: "Pause & Reflect"},
+            sales: { id: 'Sales', name:'Sales'} 
         }
         let excuteItem = req.body;
         excuteItem.userId = req.decoded._doc._id;
@@ -27,7 +27,7 @@ class ExcuteItemController {
                 return activityController.create({
                     userId: req.decoded._doc._id,
                     title: 'Create a ' + con[excuteItem.type].name,
-                    type: con[excuteItem.type].name,
+                    type: con[excuteItem.type].id,
                     notes: 'Admin' + ' created a ' + con[excuteItem.type].name
                 }).then(() => {
                     return resp;
@@ -39,7 +39,7 @@ class ExcuteItemController {
                 return activityController.create({
                     userId: req.decoded._doc._id,
                     title: 'Create a ' + con[excuteItem.type].name,
-                    type: con[excuteItem.type].name,
+                    type: con[excuteItem.type].id,
                     notes: req.decoded._doc.businessName + ' created a ' + con[excuteItem.type].name
                 }).then(() => {
                     return resp;

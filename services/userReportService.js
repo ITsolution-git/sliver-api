@@ -22,7 +22,7 @@ class userReportService {
     static notLogged(users) {
         return Promise.map(users, user => {
             if (user.lastLogin && Moment(user.lastLogin).isBefore(Moment().subtract(14, 'day')))
-                return Mailer.renderTemplateAndSend('dpcarnage86@gmail.com', {user: user}, 'user-report')
+                return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user}, 'user-report')
         })
     }
 
@@ -38,11 +38,11 @@ class userReportService {
                     quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
                     if (Moment({day: 1}).isSame(quaters[1], 'day'))
-                        return Mailer.renderTemplateAndSend('dpcarnage86@gmail.com', {user: user}, 'SLAPbuddy')
+                        return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user}, 'SLAPbuddy')
                     else if (Moment({day: 1}).isSame(quaters[3], 'day'))
-                        return Mailer.renderTemplateAndSend('dpcarnage86@gmail.com', {user: user}, 'user-starts-q4')
+                        return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user}, 'user-starts-q4')
                     else if ((Moment({day: 1}).isSame(Moment(quaters[3]).add(1, 'month'), 'day')))
-                        return Mailer.renderTemplateAndSend('dpcarnage86@gmail.com', {user: user}, 'renewal-needs')
+                        return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user}, 'renewal-needs')
                 }
                 return false;
             })

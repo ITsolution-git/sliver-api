@@ -4,6 +4,9 @@ const User = mongoose.model('User');
 const Coupon = mongoose.model('Coupon');
 const Product = mongoose.model('Product');
 const stripe = require('../services/stripe');
+const config = require('../config');
+const Mailer = require('../libs/class/Mailer');
+
 const StripeService = stripe.service;
 class FinancialTrackerController {
 
@@ -92,6 +95,11 @@ class FinancialTrackerController {
                     "Create a ticket for Pat to follow up with the client to solve payment issue.\n" +
                     "Kind regards,\n SLAPcenter Admin";
                 return Mailer.send(null, subject, content);
+            }
+            else if (user.expertId) {
+                return User.findById(user.expertId).then(expert => {
+                    return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user, plan: req.body.productName, expert: expert}, 'user-charged')
+                })
             }
         })
         .then(() => {

@@ -379,7 +379,8 @@ class AuthController {
                     let sendMail = [
                         Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'finish-slap'),
                         Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-slap-expert-call'),
-                        Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-slap-manager-call')
+                        Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-slap-manager-call'),
+                        Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-onboarding-call')
                     ]
                     return Promise.all(sendMail)
                         .then(()=>{

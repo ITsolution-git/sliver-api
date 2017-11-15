@@ -286,7 +286,7 @@ class AuthController {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
                 }
-                if (build.buildType === 1) {
+                if (build && build.buildType === 1) {
                     mObj.buildPlan = mObj.payments.createBuildPayment(build);
                 }
                 if (req.body.isRenew)

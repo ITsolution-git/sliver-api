@@ -349,7 +349,7 @@ class AuthController {
                 }
                 if (req.body.isRenew) {
                     activityController.create({ userId: mObj.user._id,
-                                                title: 'Auto Email Sent', 
+                                                title: 'Auto Email', 
                                                 type: 'Communication',  
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
@@ -384,7 +384,7 @@ class AuthController {
                     return Promise.all(sendMail)
                         .then(()=>{
                         return activityController.create({ userId: mObj.user._id,
-                                                title: 'Auto Email Sent',
+                                                title: 'Auto Email',
                                                 type: 'Communication',
                                                 notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
                    // });

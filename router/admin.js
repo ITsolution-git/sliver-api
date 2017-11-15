@@ -54,6 +54,7 @@ router.post('/users',isAuth, isAdmin, (req, res) => runAction(userController.cre
 router.get('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.getUser, req, res));
 router.delete('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.deleteUser, req, res));
 router.get('/users',isAuth, isAdmin, (req, res) => runAction(userController.getUsers, req, res));
+router.get('/activate-user/:id',isAuth, isAdmin, (req, res) => runAction(userController.activateUser, req, res));
 
 
 //Manage Products
@@ -97,6 +98,7 @@ router.put('/report/:id',isAuth, isAdmin, (req, res) => runAction(reportControll
 router.delete('/report/:id',isAuth, isAdmin, (req,res) => runAction(reportController.remove,req,res));
 router.post('/partner-report', isAuth, isAdmin, (req,res) => runAction(partnerReportController.create, req, res));
 router.post('/expert-report', isAuth, isAdmin, (req,res) => runAction(expertReportController.create, req, res));
+
 
 //Manage Partners 
 router.post('/partner', isAuth, isAdmin, (req, res) => runAction(partnerController.create, req, res));

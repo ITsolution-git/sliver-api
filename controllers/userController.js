@@ -187,6 +187,23 @@ class UserController {
         })
     }
 
+    static activateUser(req) {
+        console.log(req);
+        return User.load({_id: req.decoded.id})
+        .then(user => {
+            return StripeService.toggleSubscription(req.params.id, false);
+        })
+        .then(user => { 
+            user.status = 'active';
+            return user.save();
+        })
+        .then(user=>{
+            if (user.safe) {
+                return user.safe();
+            }
+        })
+    }
+
 
     static getFinishedSteps(req, _id) {
         let select = 'finishedSteps';

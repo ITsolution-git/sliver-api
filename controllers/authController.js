@@ -266,14 +266,14 @@ class AuthController {
                     mObj.coupon = coupon;
                 }
             
-                return Partner.findOne({promocode: coupon._id}).then(partner => {
-                    if(partner) {
+                return Partner.findOne({ promocode: coupon ? coupon._id : null }).then(partner => {
+                    if (partner) {
                         mObj.user.partnerId = partner._id;
                         return mObj.user.save();
                     }
                     else return coupon;
-                
-                }).then(()=>{
+
+                }).then(() => {
                     return mObj.payments.createPlanPayment(mObj.plan, coupon);
                 })
             })

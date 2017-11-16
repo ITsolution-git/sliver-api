@@ -6,7 +6,7 @@ const User = mongoose.model('User');
 class chargeErrorController {
 
     static sendEmailNotification(req) {
-        let email = req.body.receipt_email;
+        let email = req.body.data.object.receipt_email;
 
         return User.findOne({email:email}).then((user)=>{
             if (!user) return;

@@ -37,11 +37,11 @@ class userReportService {
                     quaters.push(Moment(quaters[1]).add(3, 'month').format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
-                    if (Moment({day: 1}).isSame(quaters[1], 'day'))
+                    if (Moment().isSame(quaters[1], 'day'))
                         return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user}, 'SLAPbuddy')
-                    else if (Moment({day: 1}).isSame(quaters[3], 'day'))
+                    else if (Moment().isSame(quaters[3], 'day'))
                         return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user}, 'user-starts-q4')
-                    else if ((Moment({day: 1}).isSame(Moment(quaters[3]).add(1, 'month'), 'day')))
+                    else if ((Moment().isSame(Moment(quaters[3]).add(1, 'month'), 'day')))
                         return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user}, 'renewal-needs')
                 }
                 return false;

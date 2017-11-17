@@ -32,18 +32,23 @@ class expertReportController {
         let to = Moment(req.body.to).add(1, 'day');
         report.countAssignedUsersByPlan = {};
         return User.findById(req.body.expertId)
-        .then(expert => report.expertName = `${expert.name} ${expert.lastName}`)
+        .then(expert => 
+            report.expertName = `${expert.name} ${expert.lastName}`
+        )
         .then(() => {
             return ExpertReport.find({expertId: req.body.expertId, createdAt: {$gte: from, $lte: to}})
             .then(reports => {
                 if(reports[0]){
                 let assignedUsers = [];
+                let UsersBussinessName = [];
                 let assignedUsersByPlan = {};
                 let obj = {};
                     for (let i = 0; i < reports.length; i++) 
                         reports[i].assignedUsers.forEach(element => {
                             assignedUsers.push(element._id);
+                            UsersBussinessName.push(element.businessName);
                         })
+                    report.UsersBussinessName = UsersBussinessName;
                 Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
                     assignedUsersByPlan[element] = [];
                     report.countAssignedUsersByPlan[element] = 0;

@@ -153,7 +153,7 @@ class partnerReportController {
                         }
                         if (totalGoals > 0)
                             user.annualGoal = sum/totalGoals * 100;
-                        else user.annualGoal = 'Not Exist';
+                        else user.annualGoal = 'Not Exist!';
 			        }
                 return user; })
             })

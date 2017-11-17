@@ -10,10 +10,12 @@ class chargeErrorController {
 
         return User.findOne({email:email}).then((user)=>{
             if (!user) return;
-            return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: user }, 'card-decline')
-            .then(() => {
-                return user;
-            })
+            if(user.role !=6){
+                return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: user }, 'card-decline')
+                .then(() => {
+                    return user;
+                })
+            }
         })
         
     }

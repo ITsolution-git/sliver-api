@@ -96,7 +96,7 @@ class FinancialTrackerController {
                     "Kind regards,\n SLAPcenter Admin";
                 return Mailer.send(null, subject, content);
             }
-            else if (user.expertId) {
+            else if (user.expertId && user.role != 6) {
                 return User.findById(user.expertId).then(expert => {
                     return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: user, plan: req.body.productName, expert: expert}, 'user-charged')
                 })

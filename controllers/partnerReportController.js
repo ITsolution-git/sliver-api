@@ -67,7 +67,7 @@ class partnerReportController {
         let sum = 0;
         
         return Promise.map(users, user => {
-            if (user.currentQuater == 'Not Started!') {user.quaterlyGoal = 'Not Exist!'; return user};
+            if (user.currentQuater == 'Not Started!') {user.quaterlyGoal = 'N/A'; return user};
             return ExecuteItem.find({userId: user._id, type: 'sales', progress: 100})
             .then(goal => {
                 goals = goal;
@@ -104,7 +104,7 @@ class partnerReportController {
                 }
                     if (totalGoals > 0)
                         user.quaterlyGoal = sum/totalGoals * 100;
-                    else user.quaterlyGoal = 'Not Exist!';
+                    else user.quaterlyGoal = 0;
                     
                     return user; 
             })
@@ -119,6 +119,7 @@ class partnerReportController {
         let revenues = [];
         let sum = 0;
         return Promise.map(users, user => {
+            if (user.currentQuater == 'Not Started!') {user.annualGoal = 'N/A'; return user};
             return ExecuteItem.find({userId: user._id, type: 'sales', progress: 100})
             .then(goals => {
                 return YearGoal.find({userId: user._id})
@@ -151,10 +152,11 @@ class partnerReportController {
                             sum = (+goals[i].saleUnit * revenues[goals[i].title-1].sellingPrice) + sum;
 				        }
                         }
-                        if (totalGoals > 0)
-                            user.annualGoal = sum/totalGoals * 100;
-                        else user.annualGoal = 'Not Exist!';
-			        }
+
+                    }
+                    if (totalGoals > 0)
+                    user.annualGoal = sum/totalGoals * 100;
+                else user.annualGoal = 0;
                 return user; })
             })
             })

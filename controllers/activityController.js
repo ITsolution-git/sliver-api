@@ -19,7 +19,7 @@ class ActivityController {
     }
 
     static update(req) {
-       return Activity.findOnqeAndUpdate(req.body);
+       return Activity.findOneAndUpdate(req.body);
     }
 
     static remove(req) {

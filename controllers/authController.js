@@ -276,8 +276,8 @@ class AuthController {
                 }).then(() => {
                     return mObj.payments.createPlanPayment(mObj.plan, coupon);
                 })
-            })
-            .then((payment) => {
+
+            }).then((payment) => {
                 // mObj.payments.products.push(payment);
 
                 return Product.load({_id: req.body.buildId});
@@ -286,7 +286,7 @@ class AuthController {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
                 }
-                if (build && build.buildType === 1) {
+                if (build.buildType === 1) {
                     mObj.buildPlan = mObj.payments.createBuildPayment(build);
                 }
                 if (req.body.isRenew)
@@ -353,7 +353,7 @@ class AuthController {
                 }
                 if (req.body.isRenew) {
                     activityController.create({ userId: mObj.user._id,
-                                                title: 'Auto Email Sent', 
+                                                title: 'Auto Email',
                                                 type: 'Communication',  
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
@@ -379,11 +379,20 @@ class AuthController {
                                             journey: {section: 'start', name: 'Account Created'}});
                    // return Mailer.renderTemplateAndSend(mObj.user.email, {user: mObj.user.toJSON(), isRenew: true }, 'welcome-slapster')
                    // .then(res=>{
+                    let sendMail = [
+                        Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'finish-slap'),
+                        Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-slap-expert-call'),
+                        Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-slap-manager-call'),
+                        Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-onboarding-call')
+                    ]
+                    return Promise.all(sendMail)
+                        .then(()=>{
                         return activityController.create({ userId: mObj.user._id,
-                                                title: 'Auto Email Sent',
+                                                title: 'Auto Email',
                                                 type: 'Communication',
                                                 notes: mObj.user.businessName + ' created an account with ' + mObj.plan.productName + '.'});
                    // });
+                        });
                 }
                 activityController.create({ userId: mObj.user._id,
                                             title: 'T&C Signed',

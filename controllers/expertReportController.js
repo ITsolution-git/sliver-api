@@ -8,66 +8,99 @@ const Promise = require('bluebird');
 const ActionPlan = mongoose.model('ActionPlan');
 const Activity = mongoose.model('Activity');
 const Payment = mongoose.model('Payment');
+const ExpertReport = mongoose.model('ExpertReport');
 
 class expertReportController {
+
+    static unique(arr) {
+        var obj = {};
+      
+        for (var i = 0; i < arr.length; i++) {
+          var str = arr[i];
+          obj[str] = true; 
+        }
+      
+        return Object.keys(obj); 
+      }
 
     static create(req) {
         let report = req.body;
         report.totalHours = 0;
         report.totalMissedMeetings = 0;
+        let assignedUsersByPlan = {};
+        let from = Moment(req.body.from);
+        let to = Moment(req.body.to).add(1, 'day');
+        report.countAssignedUsersByPlan = {};
         return User.findById(req.body.expertId)
-        .then(expert => report.expertName = `${expert.name} ${expert.lastName}`)
+        .then(expert => 
+            report.expertName = `${expert.name} ${expert.lastName}`
+        )
         .then(() => {
-            return expertReportController.getUsersAssignedToExpert(req.body.expertId)
-        }).then(users => {
-            report.countAssignedUsers = users.length;
-            return expertReportController.getUsersByPlan(users).then(usersByPlan => {
-                report.countAssignedUsersByPlan = usersByPlan;
-                return users;
+            return ExpertReport.find({expertId: req.body.expertId, createdAt: {$gte: from, $lte: to}})
+            .then(reports => {
+                if(reports[0]){
+                let assignedUsers = [];
+                let UsersBussinessName = [];
+                let assignedUsersByPlan = {};
+                let obj = {};
+                    for (let i = 0; i < reports.length; i++) 
+                        reports[i].assignedUsers.forEach(element => {
+                            assignedUsers.push(element._id);
+                            UsersBussinessName.push(element.businessName);
+                        })
+                    report.UsersBussinessName = expertReportController.unique(UsersBussinessName);
+                Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
+                    assignedUsersByPlan[element] = [];
+                    report.countAssignedUsersByPlan[element] = 0;
+                })
+                for (let i = 0; i <reports.length; i++)
+                Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
+                    if (reports[i].assignedUsersByPlan[element].length > 0) {
+                        reports[i].assignedUsersByPlan[element].forEach(elem => {
+                            assignedUsersByPlan[element].push(elem)
+                        })
+                    }
+                })
+
+                Object.keys(assignedUsersByPlan).forEach(element => {
+                    let el = [];
+                    if (element) {
+                            el = expertReportController.unique(assignedUsersByPlan[element]);
+                            if (el != '')
+                                report.countAssignedUsersByPlan[element] = el.length;
+                    }
+                })
+                report.countAssignedUsers = expertReportController.unique(assignedUsers).length;
+                return expertReportController.unique(assignedUsers);
+                }
             })
         }).then(users => {
-            return expertReportController.getCountHours(users, req.body.from, req.body.to).then(hours => {
+            if (users)
+            return expertReportController.getCountHours(users, from, to).then(hours => {
                 for (let i = 0; i < hours.length; i++)
                     report.totalHours += +hours[i];
                 report.totalHours = report.totalHours/60;
                 return users;
             })
         }).then(users => {
-            return expertReportController.getCountOfMissedMeetings(users, req.body.from, req.body.to).then(count => {
+            if (users)
+            return expertReportController.getCountOfMissedMeetings(users, from, to).then(count => {
                 for (let i = 0; i < count.length; i++)
-                report.totalMissedMeetings += count[i].length;
+                    report.totalMissedMeetings += count[i].length;
                 return report;
             })
         })
         
     }
 
-    static getUsersAssignedToExpert(expertId) {
-        return User.find({expertId: expertId, stripeSubscription: {$ne: null}});         
-    }
-
-    static getUsersByPlan(users) {
-        let obj = {}; 
-        return Product.find({typeProduct: 1})
-        .then(products => {
-            products.map(product => obj[product.productName] = 0);
-            for (let i = 0; i < products.length; i++) {
-                for (let j = 0; j < users.length; j++) {
-                    if (products[i]._id == users[j].planId) 
-                        obj[products[i].productName]++;
-                }
-            } return obj;
-        })
-    }
 
     static getCountHours(users, from, to) {
         return Promise.map(users, element => {
-            return Activity.find({userId: element._id, type: 'SLAPexpert', createdAt: {$gte: Moment(from), $lte: Moment(to)}})
-            .then(interactions => {
+            return Activity.find({userId: element, type: 'SLAPexpert', 'extra.date': {$gte: from.toISOString(), $lte: to.toISOString()}}).then(interactions => {
                 let sum = 0;
-                interactions.map(int => {
+                interactions.forEach(int => {
                     sum += +int.extra.callLength;
-                })
+                });
                 return sum;
             })
         })
@@ -75,14 +108,12 @@ class expertReportController {
 
     static getCountOfMissedMeetings(users, from, to) {
         return  Promise.map(users, element => {
-            return Payment.find({userId: element._id, status: 1,
-            paymentDate:  {$gte: Moment(from), $lte: Moment(to)}, $or:[{'products.name': 'Missing 1:1 Call'}, {'products.name': 'Missing Group Call'}]})
+            return Payment.find({userId: element, status: 1,
+            paymentDate:  {$gte: from, $lte: to}, $or:[{'products.name': 'Missing 1:1 Call'}, {'products.name': 'Missing Group Call'}]})
         }).then(payment => {
             return payment;
         })
     }
-
-
 
 }
 

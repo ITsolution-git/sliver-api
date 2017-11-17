@@ -9,9 +9,9 @@ class ExcuteItemController {
     
     static create(req) {
         var con = {
-            action: { name:'ActionItem'},
-            reflextion: { name:'Pause & Reflect'} ,
-            sales: { name:'Sales'} 
+            action: { id: "ActionItem", name: "Action Item" },
+            reflextion: { id: "Pause & Reflect", name: "Pause & Reflect"},
+            sales: { id: 'Sales', name:'Sales'} 
         }
         let excuteItem = req.body;
         excuteItem.userId = req.decoded._doc._id;
@@ -22,29 +22,58 @@ class ExcuteItemController {
         // if(ExcuteItem.dateUntil) {
         //     ExcuteItem.dateUntil = new Date(ExcuteItem.dateUntil);
         // }
-        if (AdminTokenService.getToken() != undefined) 
-            return (new ExcuteItem(excuteItem)).save().then(resp => {
-                return activityController.create({
-                    userId: req.decoded._doc._id,
-                    title: 'Create a ' + con[excuteItem.type].name,
-                    type: con[excuteItem.type].name,
-                    notes: 'Admin' + ' created a ' + con[excuteItem.type].name
+        if (AdminTokenService.getToken()) {
+            if (con[excuteItem.type].id == 'Sales') { 
+                return (new ExcuteItem(excuteItem)).save().then(resp => {
+                    return activityController.create({
+                        userId: req.decoded._doc._id,
+                        title: con[excuteItem.type].name,
+                        type: con[excuteItem.type].id,
+                        notes: 'Admin' + ' sold ' + req.body.saleUnit + ' ' + req.body.name + ' Units of Sale'
+                    }).then(() => {
+                        return resp;
+                    });
+                })
+            }
+            else {                
+                return (new ExcuteItem(excuteItem)).save().then(resp => {
+                    return activityController.create({
+                        userId: req.decoded._doc._id,
+                        title: con[excuteItem.type].name,
+                        type: con[excuteItem.type].id,
+                        notes: 'Admin' + ' created a ' + con[excuteItem.type].name
                 }).then(() => {
                     return resp;
                 });
             })
-
-        else
-            return (new ExcuteItem(excuteItem)).save().then(resp => {
-                return activityController.create({
-                    userId: req.decoded._doc._id,
-                    title: 'Create a ' + con[excuteItem.type].name,
-                    type: con[excuteItem.type].name,
-                    notes: req.decoded._doc.businessName + ' created a ' + con[excuteItem.type].name
-                }).then(() => {
-                    return resp;
+            }
+        }
+        else {   
+            if (con[excuteItem.type].id == 'Sales') {        
+                return (new ExcuteItem(excuteItem)).save().then(resp => {
+                    return activityController.create({
+                        userId: req.decoded._doc._id,
+                        title: con[excuteItem.type].name,
+                        type: con[excuteItem.type].id,
+                        notes: req.decoded._doc.businessName + ' sold ' + req.body.saleUnit + ' ' + req.body.name + ' Units of Sale'
+                    }).then(() => {
+                        return resp;
+                    });
                 });
-            });
+            }
+            else {
+                return (new ExcuteItem(excuteItem)).save().then(resp => {
+                    return activityController.create({
+                        userId: req.decoded._doc._id,
+                        title: con[excuteItem.type].name,
+                        type: con[excuteItem.type].id,
+                        notes: req.decoded._doc.businessName + ' created a ' + con[excuteItem.type].name
+                    }).then(() => {
+                        return resp;
+                    });
+                });
+            }
+        }
     }
 
     static getExcuteItems(req) {

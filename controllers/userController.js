@@ -45,6 +45,10 @@ class UserController {
         });
     }
 
+    static getTestUsers(){
+        return User.find({role:6});
+    }
+
     static getUser(req) {
         return User.load({_id: req.params.id})
         .then((user) => {
@@ -179,6 +183,23 @@ class UserController {
                 else {
                     return User.delete({_id: req.params.id});
                 }
+        })
+        .then(user=>{
+            if (user.safe) {
+                return user.safe();
+            }
+        })
+    }
+
+    static activateUser(req) {
+        console.log(req);
+        return User.load({_id: req.decoded.id})
+        .then(user => {
+            return StripeService.toggleSubscription(req.params.id, false);
+        })
+        .then(user => { 
+            user.status = 'active';
+            return user.save();
         })
         .then(user=>{
             if (user.safe) {

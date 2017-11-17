@@ -7,6 +7,9 @@ module.exports = function(app) {
     // schedule.runPayments();
     schedule.runZoomJob();
     schedule.updateSubscriptions();
+    schedule.runExpertReport();
+    schedule.runPartnerReport();
+    schedule.runUserCredentialsJob();
 
     if (config.reports.adminDailyReport) {
         schedule.runReportJob();

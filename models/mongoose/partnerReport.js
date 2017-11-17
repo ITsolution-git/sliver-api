@@ -7,27 +7,22 @@ let schema = new Schema({
         type: String,
         required: 'Name is not empty',
     },
-    from : {
-        type: Date,
-        required: 'From is required'
-    },
-    to: {
-        type: Date,
-        required: 'To is required'
-    },
     createdAt: {
         type: Date,
         default: new Date(),
     },
-    countAssignedUsers: {
-        type: Number,
+    assignedUsers: {
+        type: Array,
     },
-    countAssignedUsersByPlan: {
+    assignedUsersByPlan: {
         type: Object,
     },
     totalIncome: {
         type: Number,
     },
+    totalShareToPartner: {
+        type: Number,
+    }
     
 });
 

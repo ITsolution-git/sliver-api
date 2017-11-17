@@ -3,6 +3,9 @@ const PaymentTime = require('../jobs/PaymentTime');
 const zoomController = require('../../controllers/zoomController');
 const EverydayReportService = require('../../services/everydayReportService');
 const Stripe = require('../../services/stripe/StripeService');
+const ExpertReport = require('../../services/expertReportService');
+const PartnerReport = require('../../services/partnerReportService');
+const UserReport = require('../../services/userReportService');
 
 class Scheduler {
 
@@ -21,6 +24,24 @@ class Scheduler {
         });
     }
 
+    static runExpertReport() {
+        return schedule.scheduleJob('20 36 * * * *', () => {
+            console.log('CRON: everyday expert report');
+            ExpertReport.create().then(() => {
+                console.log('Expert report created');
+            })
+        })
+    }
+
+    static runPartnerReport() {
+        return schedule.scheduleJob('30 13 17 * * *', () => {
+            console.log('CRON: everyday partner report');
+            PartnerReport.create().then(() => {
+                console.log('Partner report created');
+            })
+        })
+    }
+
     static runZoomJob(){
         return schedule.scheduleJob('00 00 12 * * *', () => {
             console.log('ZOOM CRON STARTED');
@@ -33,6 +54,13 @@ class Scheduler {
             console.log('REPORT CRON STARTED');
             return EverydayReportService.getLocalVariables();
         });
+    }
+
+    static runUserCredentialsJob(){
+        return schedule.scheduleJob('0 10 7 * * *', () => {
+            console.log('USER CRON STARTED');
+            return UserReport.create();
+        })
     }
 
 }

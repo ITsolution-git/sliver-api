@@ -67,11 +67,11 @@ let schema = new Schema({
     // },
     
     // User Role model
-    // Admin 1 SLAPexpert 2 SLAPmanagers 3 SLAPster 4 Partner 5
+    // Admin 1 SLAPexpert 2 SLAPmanagers 3 SLAPster 4 Partner 5 TEST 6
 
     role: {
         type: Number,
-        enum: [1,2,3,4,5],  
+        enum: [1,2,3,4,5,6],  
         default: 4  
     },
     planId : {

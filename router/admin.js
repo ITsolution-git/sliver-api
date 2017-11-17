@@ -54,6 +54,7 @@ router.post('/users',isAuth, isAdmin, (req, res) => runAction(userController.cre
 router.get('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.getUser, req, res));
 router.delete('/users/:id',isAuth, isAdmin, (req, res) => runAction(userController.deleteUser, req, res));
 router.get('/users',isAuth, isAdmin, (req, res) => runAction(userController.getUsers, req, res));
+router.get('/test-users', isAuth, isAdmin, (req, res) => runAction(userController.getTestUsers, req, res));
 router.get('/activate-user/:id',isAuth, isAdmin, (req, res) => runAction(userController.activateUser, req, res));
 
 

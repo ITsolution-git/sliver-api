@@ -45,6 +45,10 @@ class UserController {
         });
     }
 
+    static getTestUsers(){
+        return User.find({role:6});
+    }
+
     static getUser(req) {
         return User.load({_id: req.params.id})
         .then((user) => {

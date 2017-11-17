@@ -16,13 +16,11 @@ class partnerReportController {
 
     static unique(arr) {
         var obj = {};
-      
-        for (var i = 0; i < arr.length; i++) {
-          var str = arr[i];
-          obj[str] = true; 
-        }
-      
-        return Object.keys(obj); 
+          for (var i = 0; i < arr.length; i++) {
+            var str = arr[i];
+            obj[str] = true;
+          }
+          return Object.keys(obj);
     }
 
     static getCurrentQuater(users) {
@@ -38,14 +36,17 @@ class partnerReportController {
                         for(let i = 0; i < 4; i++)
                             quaters.push(Moment(quaters[i]).add(3, 'month').format('YYYY-MM-DD'));
 
-                        for(let i = 0; i < quaters.length; i++) 
-                            if (Moment().isBetween(quaters[i], quaters[i+1])) {
-                                user.currentQuater = {number: i+1, startDate: quaters[i], endDate: quaters[i+1]};
+                        for(let i = 1; i < quaters.length; i++) 
+                            if (Moment().isBetween(quaters[i-1], quaters[i])) {
+                                user.currentQuater = {number: i, startDate: quaters[i-1], endDate: quaters[i]};
                             }
 
                         let months = [];
 
-                        if (!user.currentQuater) user.currentQuater = 'Not Started!';
+                        if (!user.currentQuater) {
+                            user.currentQuater = 'Not Started!';
+                            user.currentMonth = 'Not Started!'
+                        }
                         else { 
                             for(let i = 0; i < 3; i++) {
                                 months.push(Moment(quaters[user.currentQuater-1]).add(i, 'month'))
@@ -64,7 +65,9 @@ class partnerReportController {
         let goals = [];
         let revenues = [];
         let sum = 0;
+        
         return Promise.map(users, user => {
+            if (user.currentQuater == 'Not Started!') {user.quaterlyGoal = 'Not Exist!'; return user};
             return ExecuteItem.find({userId: user._id, type: 'sales', progress: 100})
             .then(goal => {
                 goals = goal;
@@ -84,7 +87,7 @@ class partnerReportController {
                 let el = 0;
                 let totalGoals = 0;
 			    if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
-				        if (totalGoal[0].whatsHappening[user.currentQuater.number-1].units) {
+				        if (totalGoal[0].whatsHappening[user.currentQuater.number-1] && totalGoal[0].whatsHappening[user.currentQuater.number-1].units) {
                             Object.keys(totalGoal[0].whatsHappening[user.currentQuater.number-1].units).forEach(function (element, index){
                                 for (let i=0; i<revenues.length; i++) {
                                     if (revenues[i].name == element) 
@@ -101,7 +104,7 @@ class partnerReportController {
                 }
                     if (totalGoals > 0)
                         user.quaterlyGoal = sum/totalGoals * 100;
-                    else user.quaterlyGoal = 'Not Exist';
+                    else user.quaterlyGoal = 'Not Exist!';
                     
                     return user; 
             })
@@ -136,9 +139,9 @@ class partnerReportController {
                         for (let i=0; i<totalGoal[0].whatsHappening.length; i++) {
 				            if (totalGoal[0].whatsHappening[i].units) {
                                 Object.keys(totalGoal[0].whatsHappening[i].units).forEach(function (element, index){
-                                    for (let i=0; i<revenues.length; i++) {
-                                        if (revenues[i].name == element) 
-                                            el = revenues[i].sellingPrice;}
+                                    for (let j=0; j<revenues.length; j++) {    
+                                        if (revenues[j].name == element) 
+                                            el = revenues[j].sellingPrice;}
                                     totalGoals = (+totalGoal[0].whatsHappening[i].units[element] * el) + totalGoals;
                                 })
 				            }
@@ -169,7 +172,7 @@ class partnerReportController {
                 assignedUsers.push(element._id);
             }) 
             filtered = reports[i].assignedUsers.filter(function(el) {
-                return obj._id in used ? 0:(used[el._id]=1);
+                return obj.email in used ? 0:(used[el._id]=1);
             }) 
         }
         report.slapsters = filtered;
@@ -184,18 +187,20 @@ class partnerReportController {
            // report.totalShareToPartner += +reports[i].totalShareToPartner;
             Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
                 if (reports[i].assignedUsersByPlan[element].length > 0) {
-                    assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
+                    reports[i].assignedUsersByPlan[element].forEach(elem => {
+                        assignedUsersByPlan[element].push(elem)
+                    })
+                    }
             })
         }   
         Object.keys(assignedUsersByPlan).forEach(element => {
             let el = [];
             if (element) {
                 el = partnerReportController.unique(assignedUsersByPlan[element]);
-                if (el != '') {
                     report.countAssignedUsersByPlan[element] = el.length;
                 }
-            }
         })
+
         report.countAssignedUsers = partnerReportController.unique(assignedUsers).length;
 
             return {assignedUsers, filtered: report.slapsters};
@@ -228,7 +233,8 @@ class partnerReportController {
         }).then((assignedUsers) => {
                 let userPayments = [];
                     for (let i = 0; i < report.countAssignedUsers; i++)
-                        userPayments.push(StripeService.getPayments(assignedUsers[i], 0, true, from.format('X'), to.format('X')));
+                        if(assignedUsers[i] && assignedUsers[i]._id && assignedUsers[i].stripeId)
+                            userPayments.push(StripeService.getPayments(assignedUsers[i]._id, 0, true, from.format('X'), to.format('X'), assignedUsers[i].stripeId));
                     return Promise.all(userPayments);
         }).then(users => {
             if(!users) return;

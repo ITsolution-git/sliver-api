@@ -48,7 +48,7 @@ class expertReportController {
                             assignedUsers.push(element._id);
                             UsersBussinessName.push(element.businessName);
                         })
-                    report.UsersBussinessName = UsersBussinessName;
+                    report.UsersBussinessName = expertReportController.unique(UsersBussinessName);
                 Object.keys(reports[0].assignedUsersByPlan).forEach(element => {
                     assignedUsersByPlan[element] = [];
                     report.countAssignedUsersByPlan[element] = 0;

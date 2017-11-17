@@ -54,11 +54,14 @@ class expertReportController {
                     report.countAssignedUsersByPlan[element] = 0;
                 })
                 for (let i = 0; i <reports.length; i++)
-                    Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
-                        if (reports[i].assignedUsersByPlan[element]) {
-                        assignedUsersByPlan[element].push(reports[i].assignedUsersByPlan[element])}
+                Object.keys(reports[i].assignedUsersByPlan).forEach(element => {
+                    if (reports[i].assignedUsersByPlan[element].length > 0) {
+                        reports[i].assignedUsersByPlan[element].forEach(elem => {
+                            assignedUsersByPlan[element].push(elem)
+                        })
+                    }
                 })
-                
+
                 Object.keys(assignedUsersByPlan).forEach(element => {
                     let el = [];
                     if (element) {
@@ -74,7 +77,6 @@ class expertReportController {
         }).then(users => {
             if (users)
             return expertReportController.getCountHours(users, from, to).then(hours => {
-                console.log("hours " + hours);
                 for (let i = 0; i < hours.length; i++)
                     report.totalHours += +hours[i];
                 report.totalHours = report.totalHours/60;
@@ -94,9 +96,7 @@ class expertReportController {
 
     static getCountHours(users, from, to) {
         return Promise.map(users, element => {
-            console.log({$gte: from.toISOString(), $lte: to.toISOString()});
             return Activity.find({userId: element, type: 'SLAPexpert', 'extra.date': {$gte: from.toISOString(), $lte: to.toISOString()}}).then(interactions => {
-                console.log(interactions);
                 let sum = 0;
                 interactions.forEach(int => {
                     sum += +int.extra.callLength;

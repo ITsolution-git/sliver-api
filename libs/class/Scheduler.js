@@ -25,7 +25,7 @@ class Scheduler {
     }
 
     static runExpertReport() {
-        return schedule.scheduleJob('30 30 18 * * *', () => {
+        return schedule.scheduleJob('20 36 * * * *', () => {
             console.log('CRON: everyday expert report');
             ExpertReport.create().then(() => {
                 console.log('Expert report created');

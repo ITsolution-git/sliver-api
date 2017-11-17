@@ -19,10 +19,12 @@ class ExcuteController {
                 mailing_address: user.email,
                 phone_number: user.phone,
             }
-            return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: mailData}, 'slap-stuff')
-            .then(()=>{
-                return user;
-            })
+            if (user.role != 6) {
+                return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, {user: mailData}, 'slap-stuff')
+                .then(()=>{
+                    return user;
+                })
+            }
         }); 
     }
 

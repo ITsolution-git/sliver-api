@@ -214,24 +214,28 @@ class partnerReportController {
         report.countAssignedUsersByPlan = {};
         let from = Moment(req.body.from);
         let to = Moment(req.body.to).add(1, 'day');
-        let revenue_percent = 0;
+        report.revenue_percent = 0;
         return Partner.findById(req.body.partnerId)
         .then(partner => {
             report.partnerName = `${partner.name} ${partner.lastName}`;
-            revenue_percent = partner.revenue_percent;
+            report.revenue_percent = partner.revenue_percent;
             return PartnerReport.find({partnerId: req.body.partnerId,
             createdAt: {$gte: from, $lte: to}
         }).then(reports => {
             if(reports.length)
                 return partnerReportController.getReports(reports, report) 
         }).then((assignedUsers) => {
+            if(!assignedUsers) return
             return partnerReportController.getCurrentQuater(assignedUsers.filtered)
         }).then((assignedUsers) => {
+            if(!assignedUsers) return
             return partnerReportController.getUserAnnualGoal(assignedUsers)
         }).then((assignedUsers) => {
+            if(!assignedUsers) return;
             return partnerReportController.getUserQuaterlyGoal(assignedUsers)
         }).then((assignedUsers) => {
-                let userPayments = [];
+            let userPayments = [];
+                if (!assignedUsers) return;
                     for (let i = 0; i < report.countAssignedUsers; i++)
                         if(assignedUsers[i] && assignedUsers[i]._id && assignedUsers[i].stripeId)
                             userPayments.push(StripeService.getPayments(assignedUsers[i]._id, 0, true, from.format('X'), to.format('X'), assignedUsers[i].stripeId));
@@ -243,9 +247,9 @@ class partnerReportController {
                         report.sum += +element.amountCharges;
                         if (element.status) {
                             report.totalIncome += +element.amountCharges - element.discount;
-                            report.totalShareToPartner += report.totalIncome * (revenue_percent / 100); 
                         }
                 })
+                report.totalShareToPartner += report.totalIncome * (report.revenue_percent / 100); 
             });
             return report;
         })

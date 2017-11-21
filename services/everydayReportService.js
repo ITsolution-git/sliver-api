@@ -71,7 +71,7 @@ class everydayReportService {
         let revenues = [];
         return everydayReportService.getUserById(userId).then(function (user){
             return everydayReportService.getMindset(userId).then(function (mindset){
-                if (mindset[0]){
+                if (mindset[0] && mindset[0].slapStartDate){
                     startDate = Moment({year: mindset[0].slapStartDate.year, month: mindset[0].slapStartDate.month-1}).format('YYYY-MM-DD');
                     quaters.push(Moment(startDate).format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[0]).add(3, 'month').format('YYYY-MM-DD'));

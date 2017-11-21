@@ -130,7 +130,7 @@ class everydayReportService {
     }
 
     static numberOfDeleted() {
-        return User.count({role: '4', status: 'archived'}).exec();
+        return User.count({status: 'archived'}).exec();
     }
 
     static numberOfAccountsInBuild() {

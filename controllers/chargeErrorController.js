@@ -10,14 +10,14 @@ class chargeErrorController {
         let email = req.body.data.object.receipt_email;
         let amount = req.body.data.object.amount;
 
-        return User.findOne({email:email}).then((user)=>{
+        return User.findOne({ email: email, stripeSubscription: { $ne: null }}).then((user)=>{
             if (!user) return;
             if(user.role !=6){
                 ActivityController.create({
                     userId: user._id,
                     title: 'Payment Declined',
                     type: 'Milestone',
-                    notes: amount,
+                    notes: amount / 100,
                 });
                 return Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: user }, 'card-decline')
                 .then(() => {

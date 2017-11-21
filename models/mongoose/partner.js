@@ -23,7 +23,6 @@ const schema = new Schema({
     },
     additional_email: {
         type: String,
-        unique: true,
         required: false
     },
     phone: {

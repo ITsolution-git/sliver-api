@@ -303,13 +303,14 @@ class AuthController {
                     });
             })
             .then((customer) => {
+                let tiralPeriod = mObj.payments.products.length || mObj.buildPlan;
                 if (!req.body.isRenew){
-                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon).then(subscription => {
+                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon, tiralPeriod).then(subscription => {
                         mObj.customer.stripeSubscription = subscription.id;
                         return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                     }).then((subscription) => {
                         if (mObj.buildPlan) {
-                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, mObj.coupon).then(subscription => {
+                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, mObj.coupon, tiralPeriod).then(subscription => {
                                 mObj.customer.stripeBuildSubscription = subscription.id;
                                 return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                             })

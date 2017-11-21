@@ -37,6 +37,7 @@ class ExcuteItemController {
             }
             else {                
                 return (new ExcuteItem(excuteItem)).save().then(resp => {
+                    if (!excuteItem.fromExecute) return resp;
                     return activityController.create({
                         userId: req.decoded._doc._id,
                         title: con[excuteItem.type].name,
@@ -63,6 +64,7 @@ class ExcuteItemController {
             }
             else {
                 return (new ExcuteItem(excuteItem)).save().then(resp => {
+                    if (!excuteItem.fromExecute) return resp;
                     return activityController.create({
                         userId: req.decoded._doc._id,
                         title: con[excuteItem.type].name,
@@ -96,20 +98,21 @@ class ExcuteItemController {
             sales: { name:'SalesItem'} 
         }
        return ExcuteItem.findOneAndUpdate(req.body).then(resp => {
-           if (req.body.progress == 100)
+           if (req.body.type === 'sales' || req.body.fromExecute){
+            if (req.body.progress != 100)
                 return activityController.create({ 
                         userId: req.decoded._doc._id,
                         title: 'Update a ' + con[req.body.type].name, 
                         type: con[req.body.type].name,
                         notes: req.decoded._doc.businessName + ' updated a ' + con[req.body.type].name});
-
             else 
-
                 return activityController.create({ 
                         userId: req.decoded._doc._id,
                         title: 'Complete a ' + con[req.body.type].name, 
                         type: con[req.body.type].name,
                         notes: req.decoded._doc.businessName + ' completed a ' + con[req.body.type].name});
+        }
+        return resp;
        });
     }
 

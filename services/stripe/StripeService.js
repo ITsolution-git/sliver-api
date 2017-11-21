@@ -57,7 +57,7 @@ class Stripe {
         });
     }
 
-    static createSubscription(customer, subscriptionId, coupon) {
+    static createSubscription(customer, subscriptionId, coupon, trialPeriod) {
         return new Promise((resolve, reject) => {
             let subscription = {
                 'customer': customer.stripeId ? customer.stripeId : customer.id,
@@ -70,6 +70,9 @@ class Stripe {
             };
             if (coupon) {
                 subscription.coupon = coupon.code;
+            }
+            if (trialPeriod){
+                subscription.trial_end = moment().add(1, 'M').format('X');
             }
             stripe.subscriptions.create(subscription, (err, subscription) => {
                 console.log(err);
@@ -87,7 +90,7 @@ class Stripe {
         });
     }
 
-    static toggleSubscription(userId, enable) {
+    static toggleSubscription(userId, enable, trialPeriod) {
         return User.load({_id: userId}).then(user => {
             if (!enable) {
                 if (user.stripeSubscription != null) {
@@ -102,7 +105,7 @@ class Stripe {
                 if (user.stripeSubscription == null) {
                     return Product.load({_id: user.planId}).then(product => {
                         return Coupon.load({_id: user.couponId}).then(coupon => {
-                            return Stripe.createSubscription(user, product.productName, coupon).then(subscription => {
+                            return Stripe.createSubscription(user, product.productName, coupon, trialPeriod).then(subscription => {
                                 user.stripeSubscription = subscription.id;
                                 return user.save();
                             })
@@ -114,7 +117,7 @@ class Stripe {
             }
         });
     }
-    static toggleBuildSubscription(userId, enable) {
+    static toggleBuildSubscription(userId, enable ,trialPeriod) {
         return User.load({ _id: userId }).then(user => {
             if (!enable) {
                 if (user.stripeBuildSubscription != null) {
@@ -130,7 +133,7 @@ class Stripe {
                     return Product.load({ _id: user.buildId }).then(product => {
                         return Coupon.load({ _id: user.couponId }).then(coupon => {
                             if (product.buildType === 1)
-                            return Stripe.createSubscription(user, product.productName, coupon).then(subscription => {
+                                return Stripe.createSubscription(user, product.productName, coupon, trialPeriod).then(subscription => {
                                 user.stripeBuildSubscription = subscription.id;
                                 return user.save();
                             })
@@ -287,9 +290,9 @@ class Stripe {
                                             }).then((user) => {
                                                 return User.findOne({ awaitCreationSubscription: true, email: user.email }).exec().then(user =>{
                                                     if (user) {
-                                                        return Stripe.toggleSubscription(user._id, true).then((user) => {
+                                                        return Stripe.toggleSubscription(user._id, true, user.stripeBuildSubscription).then((user) => {
                                                             if (user.buildId) {
-                                                                return Stripe.toggleBuildSubscription(user._id, true).then(user => {
+                                                                return Stripe.toggleBuildSubscription(user._id, true, user.stripeBuildSubscription).then(user => {
                                                                     return User.findByIdAndUpdate(user._id, {awaitCreationSubscription: false}).then(cb);
                                                                 });
                                                             }

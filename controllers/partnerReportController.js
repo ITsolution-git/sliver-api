@@ -24,15 +24,16 @@ class partnerReportController {
     }
 
     static getCurrentQuater(users) {
-        if (users)
+        if (users.length)
             return Promise.map(users, user => {
+                console.log(user.businessName)
                 return Mindset.find({userId: user._id})
                 .then(function (mindset){
                     let quaters = [];
                     if (mindset[0] && mindset[0].slapStartDate){   
                         let startDate = Moment({year: mindset[0].slapStartDate.year, month: mindset[0].slapStartDate.month-1}).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));
-
+                        console.log(startDate);
                         for(let i = 0; i < 4; i++)
                             quaters.push(Moment(quaters[i]).add(3, 'month').format('YYYY-MM-DD'));
 
@@ -219,31 +220,29 @@ class partnerReportController {
         report.revenue_percent = 0;
         return Partner.findById(req.body.partnerId)
         .then(partner => {
+            if(!partner) return;
             report.partnerName = `${partner.name} ${partner.lastName}`;
             report.revenue_percent = partner.revenue_percent;
             return PartnerReport.find({partnerId: req.body.partnerId,
             createdAt: {$gte: from, $lte: to}
         }).then(reports => {
-            if(reports.length)
-                return partnerReportController.getReports(reports, report) 
+            if(!reports.length) return;
+            return partnerReportController.getReports(reports, report) 
         }).then((assignedUsers) => {
-            if(!assignedUsers) return
             return partnerReportController.getCurrentQuater(assignedUsers.filtered)
         }).then((assignedUsers) => {
-            if(!assignedUsers) return
             return partnerReportController.getUserAnnualGoal(assignedUsers)
         }).then((assignedUsers) => {
-            if(!assignedUsers) return;
             return partnerReportController.getUserQuaterlyGoal(assignedUsers)
         }).then((assignedUsers) => {
             let userPayments = [];
-                if (!assignedUsers) return;
+                if (!assignedUsers.length) return;
                     for (let i = 0; i < report.countAssignedUsers; i++)
                         if(assignedUsers[i] && assignedUsers[i]._id && assignedUsers[i].stripeId)
                             userPayments.push(StripeService.getPayments(assignedUsers[i]._id, 0, true, from.format('X'), to.format('X'), assignedUsers[i].stripeId));
                     return Promise.all(userPayments);
         }).then(users => {
-            if(!users) return;
+            if(!users.length) return report;
             users.forEach(userPayments => {
                 userPayments.forEach(element => {
                         report.sum += +element.amountCharges;

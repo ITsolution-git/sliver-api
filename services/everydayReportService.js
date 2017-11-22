@@ -118,11 +118,11 @@ class everydayReportService {
     }
 
     static totalNumberOfAccounts() {
-        return User.count({role: '4', status: 'active', stripeSubscription: {$gte: ''}}).exec();
+        return User.count({role: '4', status: 'active'}).exec();
     }
 
     static numberOfNewAccounts() {
-        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}, stripeSubscription: {$gte: ''}}).exec();
+        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}}).exec();
     }
 
     static numberOfRenewals() {
@@ -134,11 +134,11 @@ class everydayReportService {
     }
 
     static numberOfAccountsInBuild() {
-        return User.count({role: '4', status: 'active', finishedSteps: {$ne: 46}, stripeSubscription: {$gte: ''}}).exec();
+        return User.count({role: '4', status: 'active', finishedSteps: {$ne: 46}}).exec();
     }
 
     static numberOfAccountsInExecute() {
-        return User.count({role: '4', status: 'active', finishedSteps: 46, stripeSubscription: {$gte: ''}}).exec();
+        return User.count({role: '4', status: 'active', finishedSteps: 46}).exec();
     }
 
     // all sales of user
@@ -161,7 +161,7 @@ class everydayReportService {
     }
 
     static getUser() {
-        return User.find({role: '4', status: 'active', stripeSubscription: {$gte: ''}}).exec();
+        return User.find({role: '4', status: 'active'}).exec();
     }
 
     static getMindset(userId) {

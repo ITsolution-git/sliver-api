@@ -43,7 +43,7 @@ class PartnerReportService {
 
     static getUsersAssignedToPartner(partnerId) {
         if (!partnerId) return;
-        return User.find({partnerId: partnerId, stripeSubscription: {$ne: null}});         
+        return User.find({partnerId: partnerId}); 
     }
 
     static getTotalIncome(usersByPlan) {

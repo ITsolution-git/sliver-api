@@ -180,9 +180,10 @@ class AuthController {
                 throw new CustomError('The password you entered is incorrect.  Please remember they are case sensitive and try again!', 'UNAUTH');
             }
             let token = jwt.sign({_id: user._id}, config.secret, {
-                expiresIn: "300d" // expires in 24 hours
+                expiresIn: "24h" // expires in 24 hours
             });
             user.lastLogin = new Date();
+            activityController.create({userId: user._id, title: 'User login', type: 'UserLogin'});
             user.save();
             return {token: token};
         }).catch(err=>{
@@ -194,7 +195,7 @@ class AuthController {
 
         return User.load({_id: req.params.id}).then((user) => {
             let token = jwt.sign({_id: user._id}, config.secret, {
-            expiresIn: "300d" 
+            expiresIn: "24h" 
             });
         return {token: token};
         });
@@ -206,7 +207,7 @@ class AuthController {
         return User.load({_id: req.params.id}).then((user) => {
             
             let token = jwt.sign({_id: user._id}, config.secret, {
-                expiresIn: "300d" // expires in 24 hours
+                expiresIn: "24h" // expires in 24 hours
             });
 
             return {token: token};
@@ -264,10 +265,9 @@ class AuthController {
             .then((coupon) => {
                 if (coupon) {
                     mObj.coupon = coupon;
-                }
-            
-                return Partner.findOne({ promocode: coupon ? coupon._id : null }).then(partner => {
-                    if (partner) {
+                } 
+                return Partner.findOne({promocode: coupon ? coupon._id.toString() : null}).then(partner => {
+                    if(partner) {
                         mObj.user.partnerId = partner._id;
                         return mObj.user.save();
                     }
@@ -367,7 +367,7 @@ class AuthController {
                                                 notes: mObj.businessName + ' renewed an account with ' + mObj.plan.productName + '.'})
                                                 .then((user)=>{
                                                     let token = jwt.sign({ _id: mObj.user._id }, config.secret, {
-                                                        expiresIn: "300d" // expires in 24 hours
+                                                        expiresIn: "24h" // expires in 24 hours
                                                     });
                                                     return { token: token, id: mObj.user._id };
                                                 });
@@ -386,7 +386,7 @@ class AuthController {
                         Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-slap-manager-call'),
                         Mailer.renderTemplateAndSend(config.emailAdressSmallSupport, { user: mObj.user.toJSON() }, 'schedule-onboarding-call')
                     ]
-                    return Promise.all(sendMail)
+                    Promise.all(sendMail)
                         .then(()=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Auto Email',

@@ -4,6 +4,11 @@ const Schema = mongoose.Schema;
 const Partner = require('./class/Partner');
 
 const schema = new Schema({
+    email: {
+        type: String,
+        unique: true,
+        required: true
+    },
     businessName: {
         type: String,
         required: true
@@ -16,14 +21,9 @@ const schema = new Schema({
         type: String,
         required: true
     },
-    email: {
-        type: String,
-        unique: true,
-        required: true
-    },
     additional_email: {
         type: String,
-        required: false
+        required: false,
     },
     phone: {
         type: String,
@@ -38,8 +38,8 @@ const schema = new Schema({
         required: false
     }, 
     promocode: {
-        type: String,
-        required: true
+        type: Array,
+        required: false
     },
     snapshot: {
         type: String,

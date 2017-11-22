@@ -12,6 +12,7 @@ const stripe = require('../services/stripe');
 const stripeS = require('stripe')(config.stripe_key);
 const Product = mongoose.model('Product');
 const Coupon = mongoose.model('Coupon');
+const Promise = require('bluebird');
 const StripeService = stripe.service;
 var conn = mongoose.connection;
 Grid.mongo = mongoose.mongo;
@@ -173,21 +174,30 @@ class UserController {
     static deleteUser(req) {
         return User.load({_id: req.params.id})
         .then(user => {
-            return StripeService.toggleSubscription(req.params.id, false);
+            return User.find({email: user.email})
+            .then(users => {
+                return Promise.map(users, user => {
+                    return StripeService.toggleSubscription(user._id, false);
+                })
+            })
         })
-        .then(user => { 
+        .then(users => { 
+            return Promise.map(users, user => {
                 if (user.status != 'archived') {
                     user.status = 'archived';
                     return user.save();
                 }
                 else {
-                    return User.delete({_id: req.params.id});
+                    return User.delete({_id: user._id});
                 }
+            })   
         })
-        .then(user=>{
-            if (user.safe) {
-                return user.safe();
-            }
+        .then(users=>{
+            users.map(user => {
+                if (user.safe) {
+                    return user.safe();
+                }
+            })  
         })
     }
 
@@ -195,16 +205,25 @@ class UserController {
         console.log(req);
         return User.load({_id: req.decoded.id})
         .then(user => {
-            return StripeService.toggleSubscription(req.params.id, false);
+            return User.find({email: user.email})
+            .then(users => {
+                return Promise.map(users, user => {
+                    return StripeService.toggleSubscription(req.params.id, true);
+                })
+            })
         })
-        .then(user => { 
-            user.status = 'active';
-            return user.save();
+        .then(users => { 
+            return Promise.map(users, user => {
+                user.status = 'active';
+                return user.save();
+            })
         })
-        .then(user=>{
-            if (user.safe) {
-                return user.safe();
-            }
+        .then(users => {
+            users.map(user => {
+                if (user.safe) {
+                    return user.safe();
+                }
+            })
         })
     }
 

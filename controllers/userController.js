@@ -202,8 +202,7 @@ class UserController {
     }
 
     static activateUser(req) {
-        console.log(req);
-        return User.load({_id: req.decoded.id})
+        return User.load({_id: req.params.id})
         .then(user => {
             return User.find({email: user.email})
             .then(users => {

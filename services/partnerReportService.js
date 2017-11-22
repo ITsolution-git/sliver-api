@@ -14,12 +14,11 @@ const PartnerReport = mongoose.model('PartnerReport');
 class PartnerReportService {
 
     static create() {
-        let report = {};
         return Partner.find()
         .then(partners => {
-            if (partners){
+            if (partners.length){
                 Promise.map(partners, element => {
-                    report = {};
+                    let report = {};
                     report.totalShareToPartner = 0;
                     report.assignedUsers = [];
                     report.assignedUsersByPlan = {};
@@ -43,13 +42,15 @@ class PartnerReportService {
     }
 
     static getUsersAssignedToPartner(partnerId) {
-        return User.find({partnerId: partnerId, stripeSubscription: {$ne: null}});         
+        if (!partnerId) return;
+        return User.find({partnerId: partnerId}); 
     }
 
     static getTotalIncome(usersByPlan) {
         let sum = 0;
         return Product.find({typeProduct: 1})
         .then(products => {
+            if (!products.length) return sum;
             for (let i = 0; i < products.length; i++) {
                 if (usersByPlan[products[i].productName].length > 0)
                 sum += usersByPlan[products[i].productName].length * (products[i].costProduct/30);
@@ -59,7 +60,8 @@ class PartnerReportService {
     }
 
     static getUsersByPlan(users) {
-        let obj = {}; 
+        let obj = {};
+
         return Product.find({typeProduct: 1})
         .then(products => {
             products.map(product => obj[product.productName] = []);

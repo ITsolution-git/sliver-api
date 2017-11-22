@@ -32,7 +32,7 @@ class expertReportService {
     }
 
     static getUsersAssignedToExpert(expertId) {
-        return User.find({expertId: expertId, stripeSubscription: {$ne: null}});         
+        return User.find({expertId: expertId});         
     }
 
     static getUsersByPlan(users) {

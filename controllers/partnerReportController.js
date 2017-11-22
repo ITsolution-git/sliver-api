@@ -24,15 +24,16 @@ class partnerReportController {
     }
 
     static getCurrentQuater(users) {
-        if (users)
+        if (users.length)
             return Promise.map(users, user => {
+                console.log(user.businessName)
                 return Mindset.find({userId: user._id})
                 .then(function (mindset){
                     let quaters = [];
                     if (mindset[0] && mindset[0].slapStartDate){   
                         let startDate = Moment({year: mindset[0].slapStartDate.year, month: mindset[0].slapStartDate.month-1}).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));
-
+                        console.log(startDate);
                         for(let i = 0; i < 4; i++)
                             quaters.push(Moment(quaters[i]).add(3, 'month').format('YYYY-MM-DD'));
 
@@ -62,11 +63,9 @@ class partnerReportController {
     }
 
     static getUserQuaterlyGoal(users) { 
-        let goals = [];
-        let revenues = [];
-        let sum = 0;
-        
         return Promise.map(users, user => {
+            let goals = [];
+            let revenues = [];
             if (user.currentQuater == 'Not Started!') {user.quaterlyGoal = 'N/A'; return user};
             return ExecuteItem.find({userId: user._id, type: 'sales', progress: 100})
             .then(goal => {
@@ -86,6 +85,7 @@ class partnerReportController {
             .then(totalGoal => {
                 let el = 0;
                 let totalGoals = 0;
+                let sum = 0;
 			    if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
 				        if (totalGoal[0].whatsHappening[user.currentQuater.number-1] && totalGoal[0].whatsHappening[user.currentQuater.number-1].units) {
                             Object.keys(totalGoal[0].whatsHappening[user.currentQuater.number-1].units).forEach(function (element, index){
@@ -114,11 +114,13 @@ class partnerReportController {
     }
 
     static getUserAnnualGoal(users) {
-        let goals = [];
-        let totalGoals = 0; 
-        let revenues = [];
-        let sum = 0;
+
         return Promise.map(users, user => {
+            let goals = [];
+            let totalGoals = 0; 
+            let revenues = [];
+            let sum = 0;
+            
             if (user.currentQuater == 'Not Started!') {user.annualGoal = 'N/A'; return user};
             return ExecuteItem.find({userId: user._id, type: 'sales', progress: 100})
             .then(goals => {
@@ -224,26 +226,23 @@ class partnerReportController {
             return PartnerReport.find({partnerId: req.body.partnerId,
             createdAt: {$gte: from, $lte: to}
         }).then(reports => {
-            if(reports.length)
+            if(reports.length) 
                 return partnerReportController.getReports(reports, report) 
         }).then((assignedUsers) => {
-            if(!assignedUsers) return
             return partnerReportController.getCurrentQuater(assignedUsers.filtered)
         }).then((assignedUsers) => {
-            if(!assignedUsers) return
             return partnerReportController.getUserAnnualGoal(assignedUsers)
         }).then((assignedUsers) => {
-            if(!assignedUsers) return;
             return partnerReportController.getUserQuaterlyGoal(assignedUsers)
         }).then((assignedUsers) => {
             let userPayments = [];
-                if (!assignedUsers) return;
+                if (!assignedUsers.length) return;
                     for (let i = 0; i < report.countAssignedUsers; i++)
                         if(assignedUsers[i] && assignedUsers[i]._id && assignedUsers[i].stripeId)
                             userPayments.push(StripeService.getPayments(assignedUsers[i]._id, 0, true, from.format('X'), to.format('X'), assignedUsers[i].stripeId));
                     return Promise.all(userPayments);
         }).then(users => {
-            if(!users) return;
+            if(!users.length) return report;
             users.forEach(userPayments => {
                 userPayments.forEach(element => {
                         report.sum += +element.amountCharges;

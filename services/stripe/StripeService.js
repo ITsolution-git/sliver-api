@@ -184,14 +184,12 @@ class Stripe {
                             // console.log(payments);
                             if (payments) {
                                 return Promise.all(payments.data.map(payment => {
-                                    if (payment.paid) {
                                         let result = {};
                                         result.paymentDate = moment(new Date(payment.created * 1000)).format('ll');
                                         result.amountCharges = payment.amount / 100;
                                         result.discount = 0;
                                         result.status = payment.paid ? 1 : 0;
                                         return result; 
-                                    }
                                 }))
                                 .then(userPayments => {
                                     resolve(userPayments);

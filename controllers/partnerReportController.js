@@ -63,11 +63,9 @@ class partnerReportController {
     }
 
     static getUserQuaterlyGoal(users) { 
-        let goals = [];
-        let revenues = [];
-        let sum = 0;
-        
         return Promise.map(users, user => {
+            let goals = [];
+            let revenues = [];
             if (user.currentQuater == 'Not Started!') {user.quaterlyGoal = 'N/A'; return user};
             return ExecuteItem.find({userId: user._id, type: 'sales', progress: 100})
             .then(goal => {
@@ -87,6 +85,7 @@ class partnerReportController {
             .then(totalGoal => {
                 let el = 0;
                 let totalGoals = 0;
+                let sum = 0;
 			    if (totalGoal && totalGoal.length > 0 && totalGoal[0].whatsHappening) {
 				        if (totalGoal[0].whatsHappening[user.currentQuater.number-1] && totalGoal[0].whatsHappening[user.currentQuater.number-1].units) {
                             Object.keys(totalGoal[0].whatsHappening[user.currentQuater.number-1].units).forEach(function (element, index){
@@ -115,11 +114,13 @@ class partnerReportController {
     }
 
     static getUserAnnualGoal(users) {
-        let goals = [];
-        let totalGoals = 0; 
-        let revenues = [];
-        let sum = 0;
+
         return Promise.map(users, user => {
+            let goals = [];
+            let totalGoals = 0; 
+            let revenues = [];
+            let sum = 0;
+            
             if (user.currentQuater == 'Not Started!') {user.annualGoal = 'N/A'; return user};
             return ExecuteItem.find({userId: user._id, type: 'sales', progress: 100})
             .then(goals => {
@@ -220,14 +221,13 @@ class partnerReportController {
         report.revenue_percent = 0;
         return Partner.findById(req.body.partnerId)
         .then(partner => {
-            if(!partner) return;
             report.partnerName = `${partner.name} ${partner.lastName}`;
             report.revenue_percent = partner.revenue_percent;
             return PartnerReport.find({partnerId: req.body.partnerId,
             createdAt: {$gte: from, $lte: to}
         }).then(reports => {
-            if(!reports.length) return;
-            return partnerReportController.getReports(reports, report) 
+            if(reports.length) 
+                return partnerReportController.getReports(reports, report) 
         }).then((assignedUsers) => {
             return partnerReportController.getCurrentQuater(assignedUsers.filtered)
         }).then((assignedUsers) => {

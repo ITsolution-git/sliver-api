@@ -15,6 +15,7 @@ const smtpTransport = require('nodemailer-smtp-transport');
 const EmailTemplate = require('email-templates').EmailTemplate;
 const path = require('path');
 const Activity = mongoose.model('Activity');
+const _ = require('lodash');
 
 let  local;
 
@@ -118,11 +119,13 @@ class everydayReportService {
     }
 
     static totalNumberOfAccounts() {
-        return User.count({role: '4', status: 'active'}).exec();
+        return User.find({role: '4', status: 'active'}).then(users => {
+            return _.uniqBy(users, 'email').length
+        });
     }
 
     static numberOfNewAccounts() {
-        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}}).exec();
+        return User.count({role: '4', createdAt: {$gte: Moment().subtract(24, 'hours'), $lte: Moment()}, isRenew: null}).exec();
     }
 
     static numberOfRenewals() {
@@ -130,7 +133,9 @@ class everydayReportService {
     }
 
     static numberOfDeleted() {
-        return User.count({status: 'archived'}).exec();
+        return User.find({status: 'archived'}).then(users => {
+            return _.uniqBy(users, 'email').length
+        });
     }
 
     static numberOfAccountsInBuild() {

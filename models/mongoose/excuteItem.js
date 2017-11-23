@@ -43,6 +43,9 @@ let schema = new Schema({
         type: Date,
         default: new Date()
     },
+    updatedAt:{
+        type: Date
+    },
     //For prior 3 default actions when user enters slapexcute before start date.
     // 0 : none 
     // 1: prior actions(auto action items from action item page in build)

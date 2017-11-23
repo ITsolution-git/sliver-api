@@ -360,7 +360,8 @@ class AuthController {
                    // .then(res=>{
                         return activityController.create({ userId: mObj.user._id,
                                                 title: 'Account Renewed', 
-                                                type: 'Milestone',  
+                                                type: 'Milestone',
+                                                journey:   {section: 'renew', name: 'Account Renewed'},
                                                 notes: mObj.businessName + ' renewed an account with ' + mObj.plan.productName + '.'})
                                                 .then((user)=>{
                                                     let token = jwt.sign({ _id: mObj.user._id }, config.secret, {
@@ -393,16 +394,16 @@ class AuthController {
                    // });
                         });
                 }
-                activityController.create({ userId: mObj.user._id,
-                                            title: 'T&C Signed',
-                                            type: 'Milestone',
-                                            notes: mObj.user.businessName + ' agreed T&C Signed.',
-                                            journey: {section: 'start', name: 'T&C Signed'}});                                       
-                activityController.create({ userId: mObj.user._id,
-                                            title: 'Payment Set Up', 
-                                            type: 'Milestone',  
-                                            notes: mObj.user.businessName + ' set up the payment.',
-                                            journey: {section: 'start', name: 'Payment Set Up'}});
+                // activityController.create({ userId: mObj.user._id,
+                //                             title: 'T&C Signed',
+                //                             type: 'Milestone',
+                //                             notes: mObj.user.businessName + ' agreed T&C Signed.',
+                //                             journey: {section: 'start', name: 'T&C Signed'}});                                       
+                // activityController.create({ userId: mObj.user._id,
+                //                             title: 'Payment Set Up', 
+                //                             type: 'Milestone',  
+                //                             notes: mObj.user.businessName + ' set up the payment.',
+                //                             journey: {section: 'start', name: 'Payment Set Up'}});
                 
                 return mObj.user;
             })

@@ -80,8 +80,8 @@ class everydayReportService {
                     quaters.push(Moment(quaters[2]).add(3, 'month').format('YYYY-MM-DD'));
                     quaters.push(Moment(quaters[3]).add(3, 'month').format('YYYY-MM-DD'));
                         
-                return everydayReportService.getGoals(userId).then(function (goals){
-                    goal = goals.filter(gol => Moment(gol.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment()));
+                    return everydayReportService.getGoalsLast24h(userId).then(function (goals){
+                    goal = goals;
                     return everydayReportService.getRevenues(userId).then(function (revenue){
                         if (revenue[0]!= undefined){
                             let obj = revenue[0].revenueStreams.revenues;
@@ -148,9 +148,19 @@ class everydayReportService {
 
     // all sales of user
     static getGoals(userId) {
-        return ExecuteItem.find({userId: userId, type: 'sales'}).exec();
+        return ExecuteItem.find({ userId: userId, type: 'sales'}).exec();
     }
-
+    static getGoalsLast24h(userId){
+        return ExecuteItem.find({ userId: userId, type: 'sales',  createdAt: { $ne: null }  }).then(items =>{
+            return items.filter(item => {
+                let itemCreatedLast24h = Moment(item.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment());
+                if (item.updateddAt) return Moment(item.updateddAt).isBetween(Moment().subtract(24, 'hours'), Moment());
+                return itemCreatedLast24h;
+            });
+                
+            
+        });
+    }
     static getExecute(userId) {
         return ExecuteItem.find({userId: userId}).exec();
     }
@@ -470,7 +480,7 @@ class everydayReportService {
 
         let mailOptions = {
             from:  config.emailAddressSupport,
-            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com', // email
+            to: 'carissa@smallbizsilverlining.com, jon@smallbizsilverlining.com, fred@smallbizsilverlining.com, support@smallbizsilverlining.com', // email
             subject: 'Daily Report', // Subject line
             text: "Hello! It's a Daily Report message!", // plain text body
             html: htmlContent // html body

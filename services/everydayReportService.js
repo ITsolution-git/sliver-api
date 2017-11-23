@@ -55,7 +55,7 @@ class everydayReportService {
                                 else count++;
                         }
                         if (count > 0)
-                        result.push({name: user.businessName, string: "Added " + count +" "+ element.name});
+                            result.push({ name: user.businessName, string: "Added " + count + " " + element.name +" Activity" });
                     
                 })
                 return result;
@@ -153,12 +153,11 @@ class everydayReportService {
     static getGoalsLast24h(userId){
         return ExecuteItem.find({ userId: userId, type: 'sales',  createdAt: { $ne: null }  }).then(items =>{
             return items.filter(item => {
+                
                 let itemCreatedLast24h = Moment(item.createdAt).isBetween(Moment().subtract(24, 'hours'), Moment());
                 if (item.updateddAt) return Moment(item.updateddAt).isBetween(Moment().subtract(24, 'hours'), Moment());
                 return itemCreatedLast24h;
             });
-                
-            
         });
     }
     static getExecute(userId) {
@@ -192,7 +191,8 @@ class everydayReportService {
         return everydayReportService.getGoals(userId).then(function (goal){
             goals = goal.filter(gol => gol.type == 'sales' && gol.progress == 100);
                 return everydayReportService.getRevenues(userId).then(function (revenue){
-                    if (revenue[0] != undefined) {
+                    if (revenue[0] != undefined && revenue[0].revenueStreams) {
+                        
                         let obj = revenue[0].revenueStreams.revenues;
                         for (var key in obj) {
                             if (obj[key].deleted == false) {
@@ -406,7 +406,7 @@ class everydayReportService {
                                                             for (let i = 0; i < notLogged.length; i++)
                                                                 if(notLogged[i] != false) 
                                                                     notLog.push(notLogged[i])
-
+                                                            _.sortBy(notLog, ['date']);
                                                             let no = [];
                                                         
                                                             notes.forEach(function (element,index) {

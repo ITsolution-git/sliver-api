@@ -409,7 +409,7 @@ class everydayReportService {
                                                             notLog.sort((user1,user2) =>{
                                                                 let date1 = user1.date ==='Ever' ? new Date(1) : new Date(user1.date);
                                                                 let date2 = user2.date === 'Ever' ? new Date(1) : new Date(user2.date);
-                                                                return date1-date2;
+                                                                return date2-date1;
                                                             })
                                                             let no = [];
                                                         

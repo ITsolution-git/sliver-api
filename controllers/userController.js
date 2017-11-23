@@ -14,6 +14,8 @@ const Product = mongoose.model('Product');
 const Coupon = mongoose.model('Coupon');
 const Promise = require('bluebird');
 const StripeService = stripe.service;
+const Moment = require('moment');
+const _ = require('lodash');
 var conn = mongoose.connection;
 Grid.mongo = mongoose.mongo;
 var gfs = Grid(conn.db, mongoose.mongo);
@@ -56,7 +58,31 @@ class UserController {
             return user.safe();
         });
     }
+    static getActiveUserByEmail(email){
+        //let email = 'wanyaka44@gmail.com';
+        return User.find({email:email})
+        .then((users)=>{
+            //console.log(users);
+            return Promise.map(users, user =>{
+                return slapMindset.find({ userId: user._id })
+            }).then(mindests =>{
+                let StartDateWithId = mindests.filter((mindset) =>
+                     mindset[0] && mindset[0].slapStartDate
+                ).map(mindset =>{
+                    return {
+                        userId: mindset[0].userId,
+                        slapStartDate: Moment({ year: mindset[0].slapStartDate.year, month: mindset[0].slapStartDate.month - 1 }).format('YYYY-MM-DD')
+                    }
+                }).sort((date1,date2) =>{
+                    return new Date(date2)-new Date(date1);
+                }).find((date)=>{
+                    return Moment(date.slapStartDate).isBefore(new Date());
+                });
+                return StartDateWithId ? StartDateWithId.userId:null;
+            })
 
+        });
+    }
     static updateUser(req) {
         let bizName;
         let userObj;
@@ -206,9 +232,13 @@ class UserController {
         .then(user => {
             return User.find({email: user.email})
             .then(users => {
-                return Promise.map(users, user => {
-                    return StripeService.toggleSubscription(req.params.id, true);
+                return UserController.getActiveUserByEmail(users[0].email)
+                .then(id =>{
+                    return StripeService.toggleSubscription(id, true);
+                }).then(()=>{
+                    return users;
                 })
+            
             })
         })
         .then(users => { 
@@ -222,6 +252,16 @@ class UserController {
                 if (user.safe) {
                     return user.safe();
                 }
+            })
+        }).catch(()=>{
+            User.load({ _id: req.params.id })
+            .then(user =>{
+                return User.find({ email: user.email })
+            }).then(users =>{
+                return Promise.map(users, user => {
+                    user.status = 'active';
+                    return user.save();
+                })
             })
         })
     }

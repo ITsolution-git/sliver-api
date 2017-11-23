@@ -24,16 +24,14 @@ class partnerReportController {
     }
 
     static getCurrentQuater(users) {
-        if (users.length)
+        if (!users.length) return users;
             return Promise.map(users, user => {
-                console.log(user.businessName)
                 return Mindset.find({userId: user._id})
                 .then(function (mindset){
                     let quaters = [];
                     if (mindset[0] && mindset[0].slapStartDate){   
                         let startDate = Moment({year: mindset[0].slapStartDate.year, month: mindset[0].slapStartDate.month-1}).format('YYYY-MM-DD');
                         quaters.push(Moment(startDate).format('YYYY-MM-DD'));
-                        console.log(startDate);
                         for(let i = 0; i < 4; i++)
                             quaters.push(Moment(quaters[i]).add(3, 'month').format('YYYY-MM-DD'));
 
@@ -63,6 +61,7 @@ class partnerReportController {
     }
 
     static getUserQuaterlyGoal(users) { 
+        if (!users.length) return users;
         return Promise.map(users, user => {
             let goals = [];
             let revenues = [];
@@ -114,7 +113,7 @@ class partnerReportController {
     }
 
     static getUserAnnualGoal(users) {
-
+        if (!users.length) return users;
         return Promise.map(users, user => {
             let goals = [];
             let totalGoals = 0; 
@@ -226,8 +225,8 @@ class partnerReportController {
             return PartnerReport.find({partnerId: req.body.partnerId,
             createdAt: {$gte: from, $lte: to}
         }).then(reports => {
-            if(reports.length) 
-                return partnerReportController.getReports(reports, report) 
+            if (!reports.length) throw 'No reports for this date range.';
+            return partnerReportController.getReports(reports, report) 
         }).then((assignedUsers) => {
             return partnerReportController.getCurrentQuater(assignedUsers.filtered)
         }).then((assignedUsers) => {
@@ -236,7 +235,6 @@ class partnerReportController {
             return partnerReportController.getUserQuaterlyGoal(assignedUsers)
         }).then((assignedUsers) => {
             let userPayments = [];
-                if (!assignedUsers.length) return;
                     for (let i = 0; i < report.countAssignedUsers; i++)
                         if(assignedUsers[i] && assignedUsers[i]._id && assignedUsers[i].stripeId)
                             userPayments.push(StripeService.getPayments(assignedUsers[i]._id, 0, true, from.format('X'), to.format('X'), assignedUsers[i].stripeId));
@@ -253,6 +251,8 @@ class partnerReportController {
                 report.totalShareToPartner += report.totalIncome * (report.revenue_percent / 100); 
             });
             return report;
+        }).catch(e => {
+            return e;
         })
         })
     }

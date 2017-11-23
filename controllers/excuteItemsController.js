@@ -97,6 +97,7 @@ class ExcuteItemController {
             reflextion: { name:'Reflection'} ,
             sales: { name:'SalesItem'} 
         }
+    req.body.updatedAt = new Date();
        return ExcuteItem.findOneAndUpdate(req.body).then(resp => {
            if (req.body.type === 'sales' || req.body.fromExecute){
             if (req.body.progress != 100)

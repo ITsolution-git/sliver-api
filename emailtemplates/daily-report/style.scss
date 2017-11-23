@@ -1,6 +1,8 @@
 @import '../_common';
 
-
+td {
+    min-width: 235px;
+}
 th, td {
     padding-left: 15px;
     text-align: left;

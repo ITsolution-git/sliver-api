@@ -118,29 +118,38 @@ class ReportController {
             })
         })
         .then(result => {
-            console.log(result);
             let {users, report} = result;
             if (!users.length) throw new Error();
             if (!report) return;
-            if (_.isUndefined(report.filter.goalProgress)) return result;
-            if (_.isUndefined(report.filter.goalProgress.type)) return result;
-            if (_.isUndefined(report.filter.goalProgress.from) && _.isUndefined(report.filter.goalProgress.to)) return result;
+            if (_.isUndefined(report.filter.goalProgress)) report.filter.goalProgress = {};
+            if (_.isUndefined(report.filter.goalProgress.type)) report.filter.goalProgress.type = 'all';
+            if (_.isUndefined(report.filter.goalProgress.from) && _.isUndefined(report.filter.goalProgress.to)) {
+                report.filter.goalProgress.from =0;
+                report.filter.goalProgress.to= 1000000;
+            }
             if (!report.filter.slapStatus) return result;
             return ReportController.getUsersByQuater(users, '').then(usersByQuater => {
                 if (report.filter.goalProgress.type == 'annual') 
                     return partnerController.getUserAnnualGoal(usersByQuater).then(usersByGoal => {
                         usersByGoal = usersByGoal.filter(user => user.annualGoal >= +report.filter.goalProgress.from && user.annualGoal <= +report.filter.goalProgress.to)
-                        return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
+                        return partnerController.getUserQuaterlyGoal(usersByGoal).then(usersByGoal => {
                             return {users: usersByGoal, report}
                         })
                     })
                 if (report.filter.goalProgress.type == 'quaterly')
                     return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
                         usersByGoal = usersByGoal.filter(user => user.quaterlyGoal >= +report.filter.goalProgress.from && user.quaterlyGoal <= +report.filter.goalProgress.to)
-                        return partnerController.getUserAnnualGoal(usersByQuater).then(usersByGoal => {
+                        return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
                             return {users: usersByGoal, report}
                         })
                     })
+                if(report.filter.goalProgress.type == 'all'){
+                    return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
+                        return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
+                            return {users: usersByGoal, report}
+                        })
+                    })
+                }
             })
         })
         .catch(()=>{

@@ -8,6 +8,7 @@ const ActionPlan = mongoose.model('ActionPlan');
 const _ = require('lodash');
 const Activity = mongoose.model('Activity');
 const zipcodes = require('zipcodes');
+const partnerController = require('../controllers/partnerReportController');
 
 
 let allActivities = [{id: 0, name: 'Logged In', dataRange: false},{id: 1, name: 'Did not log in'},{id: 2, name: 'Completed Build Step 1'},{id: 3, name: 'Completed Build Step 2'},{id: 4, name: 'Completed Build Step 3'},{id: 5, name: 'Completed Build Step 4'},{id: 6, name: 'Commited Build'},{id: 7, name: 'Submitted their SLAP'},{id: 8, name: 'Submitted Weekly Reflection'},{id: 9, name: 'Submitted Monthly Reflection'},{id: 10, name: 'Submitted Quarterly Reflection'},{id: 11, name: 'Updated Sales Tracker'},{id: 12, name: 'Updated Action Items'}];
@@ -107,6 +108,25 @@ class ReportController {
             if (_.isUndefined(report.filter.country)) return result;
             return ReportController.getUsersByZip(users, report).then(users => {
                 return {users, report}
+            })
+        })
+        .then(result => {
+            let {users, report} = result;
+            if (!users.length) return;
+            if (!report) return;
+            if (_.isUndefined(report.filter.goalProgress.type)) return result;
+            if (_.isUndefined(report.filter.goalProgress.from) && _.isUndefined(report.filter.goalProgress.to)) return result;
+            return ReportController.getUsersByQuater(users, '').then(usersByQuater => {
+                if (report.filter.goalProgress.type == 'annual') 
+                    return partnerController.getUserAnnualGoal(usersByQuater).then(usersByGoal => {
+                        usersByGoal = usersByGoal.filter(user => user.annualGoal >= +report.filter.goalProgress.from && user.annualGoal <= +report.filter.goalProgress.to)
+                        return {users: usersByGoal, report}
+                    })
+                if (report.filter.goalProgress.type == 'quaterly')
+                    return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
+                        usersByGoal = usersByGoal.filter(user => user.quaterlyGoal >= +report.filter.goalProgress.from && user.quaterlyGoal <= +report.filter.goalProgress.to)
+                        return {users: usersByGoal, report}
+                    })
             })
         })
         .catch(()=>{

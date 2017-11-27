@@ -56,13 +56,13 @@ class ReportController {
             let {users, report} = result;
             if (!users.length) throw new Error();
             if (_.isUndefined(report.filter.slapStatus)) return result;
-            if (!report.filter.slapStatus)
-                if (_.isUndefined(report.filter.buildStatus)) return result;
-                    if (report.filter.buildStatus)
-                        return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report}
-                    else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
-            if (report.filter.slapStatus) 
+            if (!report.filter.slapStatus) {
+                if (report.filter.buildStatus) 
+                    return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report} 
+                else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
+            }
             if (!report.filter.quaters.length) return result;
+            if (report.filter.slapStatus) 
             return ReportController.getUsersByQuater(users, report.filter.quaters).then(users => {
                 return {users, report}
             }) 
@@ -77,15 +77,18 @@ class ReportController {
         })
         .then(result => {
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
+            if (_.isUndefined(report.filter.activities)) return result;
+            if (!report.filter.activities.length) return result;
             return ReportController.getActivities(users, report).then(users => {
                 return {users, report}
             })
         })
         .then(result => {
+
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.paymentStatus)) return result;
             return ReportController.getUsersByPaymentStatus(users, report).then(users => {
@@ -93,8 +96,9 @@ class ReportController {
             })
         })
         .then(result => {
+
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.declinedStatus)) return result;
             return ReportController.getUserCharges(users, report).then(users => {
@@ -102,8 +106,9 @@ class ReportController {
             })
         })
         .then(result => {
+
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.country)) return result;
             return ReportController.getUsersByZip(users, report).then(users => {
@@ -111,21 +116,27 @@ class ReportController {
             })
         })
         .then(result => {
+            console.log(result);
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.goalProgress.type)) return result;
             if (_.isUndefined(report.filter.goalProgress.from) && _.isUndefined(report.filter.goalProgress.to)) return result;
+            if (!report.filter.slapStatus) return result;
             return ReportController.getUsersByQuater(users, '').then(usersByQuater => {
                 if (report.filter.goalProgress.type == 'annual') 
                     return partnerController.getUserAnnualGoal(usersByQuater).then(usersByGoal => {
                         usersByGoal = usersByGoal.filter(user => user.annualGoal >= +report.filter.goalProgress.from && user.annualGoal <= +report.filter.goalProgress.to)
-                        return {users: usersByGoal, report}
+                        return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
+                            return {users: usersByGoal, report}
+                        })
                     })
                 if (report.filter.goalProgress.type == 'quaterly')
                     return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
                         usersByGoal = usersByGoal.filter(user => user.quaterlyGoal >= +report.filter.goalProgress.from && user.quaterlyGoal <= +report.filter.goalProgress.to)
-                        return {users: usersByGoal, report}
+                        return partnerController.getUserAnnualGoal(usersByQuater).then(usersByGoal => {
+                            return {users: usersByGoal, report}
+                        })
                     })
             })
         })
@@ -135,13 +146,13 @@ class ReportController {
     }
 
     static getActivities(users, report) {
+        if (!users.length) return;
+        if (!report) return users;
         let filteredActivities = ActivitiesAll.filter(act =>{
             return report.filter.activities.find((userAct)=>{
-                
                 return act.id == userAct;
             })
         });
-        
         let dateActivity = filteredActivities.filter(act => act.dateRange).map(act => act.name);
         let todayActivity = filteredActivities.filter(act => !act.dateRange).map(act => act.name);
 
@@ -153,7 +164,12 @@ class ReportController {
             if(todayActivity.length)
             promises.push(Activity.find({userId: user._id, title: {$in: todayActivity}}))
             return Promise.all(promises).then(activity => {
-                return _.uniqBy(activity[0], 'title').length == dateActivity.length && _.uniqBy(activity[1], 'title').length == todayActivity.length;
+                if (dateActivity.length && todayActivity.length)
+                    return _.uniqBy(activity[0], 'title').length == dateActivity.length && _.uniqBy(activity[1], 'title').length == todayActivity.length;
+                if (dateActivity.length)
+                    return _.uniqBy(activity[0], 'title').length == dateActivity.length;
+                if (todayActivity.length)
+                    return _.uniqBy(activity[0], 'title').length == todayActivity.length;
             })
         })
     }

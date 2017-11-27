@@ -7,6 +7,7 @@ const Mindset = mongoose.model('slapMindset');
 const ActionPlan = mongoose.model('ActionPlan');
 const _ = require('lodash');
 const Activity = mongoose.model('Activity');
+const zipcodes = require('zipcodes');
 
 
 let allActivities = [{id: 0, name: 'Logged In', dataRange: false},{id: 1, name: 'Did not log in'},{id: 2, name: 'Completed Build Step 1'},{id: 3, name: 'Completed Build Step 2'},{id: 4, name: 'Completed Build Step 3'},{id: 5, name: 'Completed Build Step 4'},{id: 6, name: 'Commited Build'},{id: 7, name: 'Submitted their SLAP'},{id: 8, name: 'Submitted Weekly Reflection'},{id: 9, name: 'Submitted Monthly Reflection'},{id: 10, name: 'Submitted Quarterly Reflection'},{id: 11, name: 'Updated Sales Tracker'},{id: 12, name: 'Updated Action Items'}];
@@ -15,7 +16,9 @@ let ActivitiesAll = [{id: 11, name: 'User login', dateRange: false}, {id: 1, nam
 {id: 4, name: 'Onboarding Call', dateRange: true}, {id: 5, name: 'Execute Call Set', dateRange: true}, 
 {id: 6, name: 'SLAPexpert Call', dateRange: true}, {id: 7, name: 'Accountability Call', dateRange: true}, 
 {id: 8, name: 'Q3 Hustle Call Set', dateRange: true}, {id: 9, name: 'Renewal Confirmed', dateRange: true}, 
-{id: 10, name: 'SLAPstuff Sent', dateRange: true}]
+{id: 10, name: 'SLAPstuff Sent', dateRange: true}];
+let countrys = [{id: 0, name: 'International'},{id: 1, name: 'Canada'},{id: 2, name: 'US'}]
+
 
 class ReportController {
     
@@ -51,10 +54,17 @@ class ReportController {
         .then(result => {
             let {users, report} = result;
             if (!users.length) throw new Error();
+            if (_.isUndefined(report.filter.slapStatus)) return result;
+            if (!report.filter.slapStatus)
+                if (_.isUndefined(report.filter.buildStatus)) return result;
+                    if (report.filter.buildStatus)
+                        return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report}
+                    else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
+            if (report.filter.slapStatus) 
             if (!report.filter.quaters.length) return result;
             return ReportController.getUsersByQuater(users, report.filter.quaters).then(users => {
                 return {users, report}
-            })
+            }) 
         })
         .then(result => {
             let {users, report} = result;
@@ -68,8 +78,38 @@ class ReportController {
             let {users, report} = result;
             if (!users.length) return;
             if (!report) return;
-            return ReportController.getActivities(users, report)
-        }).catch(()=>{
+            return ReportController.getActivities(users, report).then(users => {
+                return {users, report}
+            })
+        })
+        .then(result => {
+            let {users, report} = result;
+            if (!users.length) return;
+            if (!report) return;
+            if (_.isUndefined(report.filter.paymentStatus)) return result;
+            return ReportController.getUsersByPaymentStatus(users, report).then(users => {
+                return {users, report}
+            })
+        })
+        .then(result => {
+            let {users, report} = result;
+            if (!users.length) return;
+            if (!report) return;
+            if (_.isUndefined(report.filter.declinedStatus)) return result;
+            return ReportController.getUserCharges(users, report).then(users => {
+                return {users, report}
+            })
+        })
+        .then(result => {
+            let {users, report} = result;
+            if (!users.length) return;
+            if (!report) return;
+            if (_.isUndefined(report.filter.country)) return result;
+            return ReportController.getUsersByZip(users, report).then(users => {
+                return {users, report}
+            })
+        })
+        .catch(()=>{
             return[];
         })
     }
@@ -113,12 +153,16 @@ class ReportController {
             query.couponId = {$in: coupons};
         if (report.filter.status) 
             query.status = report.filter.status;
-        if (report.filter.slapStatus)
-            if (report.filter.slapStatus == 0)
-                query.finishedSteps = {$ne: 46};
-            else query.finishedSteps = 46;
-        
-        query.createdAt = {$gte: report.filter.startDate, $lte: report.filter.endDate};
+        if (!_.isUndefined(report.filter.slapStatus))
+            if (report.filter.slapStatus)
+                query.finishedSteps = 46;
+            else query.finishedSteps = {$ne: 46};
+        query.role = 4;
+
+        if (report.filter.expert.length) 
+            query.expertId = {$in: report.filter.expert};
+        if (report.filter.partner.length)
+            query.partnerId = {$in: report.filter.partner};
         return User.list({criteria:query}).then(users => {
             return users.map(user => {
                 return user.toObject();
@@ -155,7 +199,7 @@ class ReportController {
     }
 
     static getUsersByStrategy(users, strategy) {
-        return Promise.filter(users, user => {
+        return Promise.filter(usersInBuild, user => {
             return ActionPlan.findOne({userId: user._id})
             .then(plan => {
                 let result = [];
@@ -170,8 +214,57 @@ class ReportController {
         })
     }
 
+    static getUsersByPaymentStatus(users, report) {
+        let titles = ['PaymentPaused', 'PaymentActivated'];
+        return Promise.filter(users, user => {
+            return Activity.find({userId: user._id, $or: [{title: 'PaymentPaused'}, {title: 'PaymentActivated'}]})
+            .then(payments => {
+                if (!payments.length)
+                    return user.pausingPayment == report.filter.paymentStatus;
+                let lastPay = _.maxBy(payments, 'createdAt');
+                if (Moment(lastPay.createdAt).isBetween(Moment(report.filter.startDate), Moment(report.filter.endDate), 'day', []))
+                    return lastPay.title == titles[report.filter.paymentStatus];
+                let beforeStart = _.filter(payments, pay => {
+                    return Moment(pay.createdAt).isBefore(Moment(report.filter.startDate));
+                })
+                if (!beforeStart.length) return false == report.filter.paymentStatus;
+                let lastPayBeforeStart = _.maxBy(beforeStart, 'createdAt');
+                return lastPayBeforeStart.title == titles[report.filter.paymentStatus];
+            })
+        })
+    }
 
+    static getUsersInBuild(users, report) {
+        let usersInBuild = [];
+        if (report.filter.buildStatus) 
+            usersInBuild = users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day'))
+        else usersInBuild = users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', []))
+        return usersInBuild;
+    }
 
+    static getUserCharges(users, report) {
+        return Promise.filter(users, user => {
+            return Activity.findOne({userId: user._id, 
+                title: report.filter.declinedStatus ? 'Payment Success' : 'Payment Declined',
+                createdAt: {$gte: report.filter.startDate, $lte: report.filter.endDate}})
+        })
+    }
+
+    static getUsersByZip(users, report) {
+        return Promise.filter(users, user => {
+            let countryObj = zipcodes.lookup(user.billingAddress);
+            if (report.filter.country == 0) {
+                
+                if (countryObj)
+                    return ~_.findIndex(countrys, c => {
+                        return c.name == countryObj.name;
+                    })
+                return true;
+            }
+            if (countryObj)
+                return countryObj.country == countrys[report.filter.country].name;
+        })
+    }
 
 }
 

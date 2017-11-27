@@ -61,6 +61,7 @@ class ReportController {
                     return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report} 
                 else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
             }
+            if(_.isUndefined(report.filter.quaters)) return result;
             if (!report.filter.quaters.length) return result;
             if (report.filter.slapStatus) 
             return ReportController.getUsersByQuater(users, report.filter.quaters).then(users => {
@@ -70,6 +71,7 @@ class ReportController {
         .then(result => {
             let {users, report} = result;
             if (!users.length) throw new Error();
+            if(_.isUndefined(report.filter.strategies)) return result;
             if (!report.filter.strategies.length) return result;
             return ReportController.getUsersByStrategy(users, report.filter.strategies).then(users => {
                 return {users, report}
@@ -178,6 +180,7 @@ class ReportController {
         let query = {};
         let coupons = [];
         let products = [];
+
         if (report.filter.coupons && report.filter.coupons.length)
             coupons = report.filter.coupons.map(coupon => coupon);
         if (report.filter.products && report.filter.products.length)
@@ -195,9 +198,9 @@ class ReportController {
             else query.finishedSteps = {$ne: 46};
         query.role = 4;
 
-        if (report.filter.expert.length) 
+        if (report.filter.expert && report.filter.expert.length) 
             query.expertId = {$in: report.filter.expert};
-        if (report.filter.partner.length)
+        if (report.filter.partner && report.filter.partner.length)
             query.partnerId = {$in: report.filter.partner};
         return User.list({criteria:query}).then(users => {
             return users.map(user => {

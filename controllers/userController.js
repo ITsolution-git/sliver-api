@@ -89,6 +89,7 @@ class UserController {
         return User.load({_id: req.body._id}).then(function(user){
             bizName = user._doc.businessName;
             userObj = user;
+            if (req.body.pausingPayment == user.pausingPayment) return User.list({ criteria: { email: userObj._doc.email } });
             return UserController.checkPaymentStatus(req.body, user).then(()=>{
                 return User.list({ criteria: { email: userObj._doc.email } });
             });
@@ -151,9 +152,10 @@ class UserController {
                    // }
 
     static checkPaymentStatus(reqUser, savedUser){
-        if (reqUser.pausingPayment == savedUser.pausingPayment) return;
+        
         return UserController.getActiveUserByEmail(savedUser.email)
         .then(userId =>{
+            console.log(userId)
             let activity = {
                 userId: userId,
                 type: 'Other'

@@ -89,7 +89,10 @@ class UserController {
         return User.load({_id: req.body._id}).then(function(user){
             bizName = user._doc.businessName;
             userObj = user;
-            return User.list({criteria: {email: userObj._doc.email}});
+            if (req.body.pausingPayment == user.pausingPayment) return User.list({ criteria: { email: userObj._doc.email } });
+            return UserController.checkPaymentStatus(req.body, user).then(()=>{
+                return User.list({ criteria: { email: userObj._doc.email } });
+            });
         })
         .then(function(users){
             return Promise.all( users.map(function(user){
@@ -148,7 +151,27 @@ class UserController {
                 //     return user;
                    // }
 
-
+    static checkPaymentStatus(reqUser, savedUser){
+        
+        return UserController.getActiveUserByEmail(savedUser.email)
+        .then(userId =>{
+            console.log(userId)
+            let activity = {
+                userId: userId,
+                type: 'Other'
+            }
+            if (reqUser.pausingPayment){
+                activity.title = 'PaymentPaused';
+                activity.notes = savedUser.businessName + ' was paused Payment.'
+            }
+            else {
+                activity.title = 'PaymentActivated';
+                activity.notes = savedUser.businessName + ' was activated Payment.';
+            }
+            return activityController.create(activity);
+                
+        })
+    }
     static updateMe(req) {
         var bizName;
         var userObj;

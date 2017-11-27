@@ -99,6 +99,7 @@ router.put('/report/:id',isAuth, isAdmin, (req, res) => runAction(reportControll
 router.delete('/report/:id',isAuth, isAdmin, (req,res) => runAction(reportController.remove,req,res));
 router.post('/partner-report', isAuth, isAdmin, (req,res) => runAction(partnerReportController.create, req, res));
 router.post('/expert-report', isAuth, isAdmin, (req,res) => runAction(expertReportController.create, req, res));
+router.get('/report-run/:id', isAuth, isAdmin, (req, res) => runAction(reportController.runReport, req, res));
 
 
 //Manage Partners 

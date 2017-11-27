@@ -122,6 +122,7 @@ class ReportController {
             let {users, report} = result;
             if (!users.length) throw new Error();
             if (!report) return;
+            if (_.isUndefined(report.filter.goalProgress)) return result;
             if (_.isUndefined(report.filter.goalProgress.type)) return result;
             if (_.isUndefined(report.filter.goalProgress.from) && _.isUndefined(report.filter.goalProgress.to)) return result;
             if (!report.filter.slapStatus) return result;

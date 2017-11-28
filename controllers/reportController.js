@@ -56,13 +56,14 @@ class ReportController {
             let {users, report} = result;
             if (!users.length) throw new Error();
             if (_.isUndefined(report.filter.slapStatus)) return result;
-            if (!report.filter.slapStatus)
-                if (_.isUndefined(report.filter.buildStatus)) return result;
-                    if (report.filter.buildStatus)
-                        return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report}
-                    else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
-            if (report.filter.slapStatus) 
+            if (!report.filter.slapStatus) {
+                if (report.filter.buildStatus) 
+                    return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report} 
+                else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
+            }
+            if(_.isUndefined(report.filter.quaters)) return result;
             if (!report.filter.quaters.length) return result;
+            if (report.filter.slapStatus) 
             return ReportController.getUsersByQuater(users, report.filter.quaters).then(users => {
                 return {users, report}
             }) 
@@ -70,6 +71,7 @@ class ReportController {
         .then(result => {
             let {users, report} = result;
             if (!users.length) throw new Error();
+            if(_.isUndefined(report.filter.strategies)) return result;
             if (!report.filter.strategies.length) return result;
             return ReportController.getUsersByStrategy(users, report.filter.strategies).then(users => {
                 return {users, report}
@@ -77,15 +79,18 @@ class ReportController {
         })
         .then(result => {
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
+            if (_.isUndefined(report.filter.activities)) return result;
+            if (!report.filter.activities.length) return result;
             return ReportController.getActivities(users, report).then(users => {
                 return {users, report}
             })
         })
         .then(result => {
+
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.paymentStatus)) return result;
             return ReportController.getUsersByPaymentStatus(users, report).then(users => {
@@ -93,8 +98,9 @@ class ReportController {
             })
         })
         .then(result => {
+
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.declinedStatus)) return result;
             return ReportController.getUserCharges(users, report).then(users => {
@@ -102,8 +108,9 @@ class ReportController {
             })
         })
         .then(result => {
+
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.country)) return result;
             return ReportController.getUsersByZip(users, report).then(users => {
@@ -112,21 +119,37 @@ class ReportController {
         })
         .then(result => {
             let {users, report} = result;
-            if (!users.length) return;
+            if (!users.length) throw new Error();
             if (!report) return;
-            if (_.isUndefined(report.filter.goalProgress.type)) return result;
-            if (_.isUndefined(report.filter.goalProgress.from) && _.isUndefined(report.filter.goalProgress.to)) return result;
+            if (_.isUndefined(report.filter.goalProgress)) report.filter.goalProgress = {};
+            if (_.isUndefined(report.filter.goalProgress.type)) report.filter.goalProgress.type = 'all';
+            if (_.isUndefined(report.filter.goalProgress.from) && _.isUndefined(report.filter.goalProgress.to)) {
+                report.filter.goalProgress.from =0;
+                report.filter.goalProgress.to= 1000000;
+            }
+            if (!report.filter.slapStatus) return result;
             return ReportController.getUsersByQuater(users, '').then(usersByQuater => {
                 if (report.filter.goalProgress.type == 'annual') 
                     return partnerController.getUserAnnualGoal(usersByQuater).then(usersByGoal => {
                         usersByGoal = usersByGoal.filter(user => user.annualGoal >= +report.filter.goalProgress.from && user.annualGoal <= +report.filter.goalProgress.to)
-                        return {users: usersByGoal, report}
+                        return partnerController.getUserQuaterlyGoal(usersByGoal).then(usersByGoal => {
+                            return {users: usersByGoal, report}
+                        })
                     })
                 if (report.filter.goalProgress.type == 'quaterly')
                     return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
                         usersByGoal = usersByGoal.filter(user => user.quaterlyGoal >= +report.filter.goalProgress.from && user.quaterlyGoal <= +report.filter.goalProgress.to)
-                        return {users: usersByGoal, report}
+                        return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
+                            return {users: usersByGoal, report}
+                        })
                     })
+                if(report.filter.goalProgress.type == 'all'){
+                    return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
+                        return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
+                            return {users: usersByGoal, report}
+                        })
+                    })
+                }
             })
         })
         .catch(()=>{
@@ -135,13 +158,13 @@ class ReportController {
     }
 
     static getActivities(users, report) {
+        if (!users.length) return;
+        if (!report) return users;
         let filteredActivities = ActivitiesAll.filter(act =>{
             return report.filter.activities.find((userAct)=>{
-                
                 return act.id == userAct;
             })
         });
-        
         let dateActivity = filteredActivities.filter(act => act.dateRange).map(act => act.name);
         let todayActivity = filteredActivities.filter(act => !act.dateRange).map(act => act.name);
 
@@ -153,7 +176,12 @@ class ReportController {
             if(todayActivity.length)
             promises.push(Activity.find({userId: user._id, title: {$in: todayActivity}}))
             return Promise.all(promises).then(activity => {
-                return _.uniqBy(activity[0], 'title').length == dateActivity.length && _.uniqBy(activity[1], 'title').length == todayActivity.length;
+                if (dateActivity.length && todayActivity.length)
+                    return _.uniqBy(activity[0], 'title').length == dateActivity.length && _.uniqBy(activity[1], 'title').length == todayActivity.length;
+                if (dateActivity.length)
+                    return _.uniqBy(activity[0], 'title').length == dateActivity.length;
+                if (todayActivity.length)
+                    return _.uniqBy(activity[0], 'title').length == todayActivity.length;
             })
         })
     }
@@ -162,6 +190,7 @@ class ReportController {
         let query = {};
         let coupons = [];
         let products = [];
+
         if (report.filter.coupons && report.filter.coupons.length)
             coupons = report.filter.coupons.map(coupon => coupon);
         if (report.filter.products && report.filter.products.length)
@@ -179,9 +208,9 @@ class ReportController {
             else query.finishedSteps = {$ne: 46};
         query.role = 4;
 
-        if (report.filter.expert.length) 
+        if (report.filter.expert && report.filter.expert.length) 
             query.expertId = {$in: report.filter.expert};
-        if (report.filter.partner.length)
+        if (report.filter.partner && report.filter.partner.length)
             query.partnerId = {$in: report.filter.partner};
         return User.list({criteria:query}).then(users => {
             return users.map(user => {

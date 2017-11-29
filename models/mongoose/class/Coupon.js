@@ -38,14 +38,13 @@ class Coupon {
      * @param planId
      * @returns {Promise|*}
      */
-    static isValidCode(code, planId) {
+    static isValidCode(code, planId, buildId) {
         return this.load({code:code})
             .then((coupon) => {
                 if (!coupon) {
                     return Promise.reject(new CustomError('The promo code is invalid', 'BAD_DATA'));
                 }
-
-                const errors = coupon.validateSignUp(planId);
+                const errors = coupon.validateSignUp(planId, buildId);
                 if (errors.length === 0) {
                     return coupon;
                 }
@@ -84,8 +83,8 @@ class Coupon {
      * @param {string} productId
      * @returns {boolean}
      */
-    isCheckPlan(productId) {
-        return this.plan._id == productId;
+    isCheckPlan(productId, buildId) {
+        return this.plan._id == productId || this.plan._id == buildId;
     }
 
     isDurationOneTime() {
@@ -107,14 +106,14 @@ class Coupon {
      * @param planId
      * @returns {Array}
      */
-    validateSignUp(planId) {
+    validateSignUp(planId, buildId) {
         let errors = [];
 
         if (!this.expirationDate()) {
             errors.push(new CustomError('The promo code is already expired', 'BAD_DATA'));
         }
 
-        if (this.plan && !this.isCheckPlan(planId)) {
+        if (this.plan && !this.isCheckPlan(planId, buildId)) {
             errors.push(new CustomError('This promo code can\'t be applied for this plan', 'BAD_DATA'));
         }
 

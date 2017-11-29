@@ -57,11 +57,12 @@ class Payment {
         return payment;
     }
 
-    createBuildPayment(build) {
+    createBuildPayment(build, coupon) {
         let payment = {};
         payment.productId = build._id;
         payment.amount = build.costProduct;
         payment.name = build.productName;
+        this.couponId = coupon ? coupon._id : null;
         return payment;
     }
 

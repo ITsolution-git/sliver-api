@@ -43,7 +43,7 @@ class CouponController {
     }
     
     static isValidCode(req) {
-        return Coupon.isValidCode(req.params.code, req.params.planId);
+        return Coupon.isValidCode(req.params.code, req.params.planId, req.params.buildId);
     }
 }
 

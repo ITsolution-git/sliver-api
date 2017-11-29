@@ -65,7 +65,7 @@ router.get('/products/:id',isAuth, isAdmin, (req, res) => runAction(productContr
 router.put('/products/:id',isAuth, isAdmin, productValid, (req, res) => runAction(productController.updateProduct, req, res));
 router.delete('/products/:id',isAuth, isAdmin, (req, res) => runAction(productController.deleteProduct, req, res));
 router.get('/plans',isAuth, isAdmin, (req,res) => runAction(productController.getPlans, req, res));
-
+router.get('/allplans', isAuth, isAdmin, (req, res) => runAction(productController.getAllPlansForCoupons, req, res));
 //Manage Coupons
 router.post('/coupon',isAuth, isAdmin, (req,res) => runAction(couponController.create, req,res));
 router.get('/coupon',isAuth, isAdmin, (req,res) => runAction(couponController.getCoupons, req,res));

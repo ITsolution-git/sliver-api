@@ -70,7 +70,7 @@ router.get('/products/plans', (req, res) => runAction(productController.getPlans
 router.get('/products/builds', (req, res) => runAction(productController.getBuilds, req, res));
 router.get('/products/all', (req, res) => runAction(productController.getAll, req, res));
 //Dashboard buy couponValid
-router.get('/coupon/:code/:planId', (req, res) => runAction(couponController.isValidCode, req, res));
+router.get('/coupon/:code/:planId/:buildId', (req, res) => runAction(couponController.isValidCode, req, res));
 
 //Dashboard settingUser
 router.get('/payments', isAuth, (req, res) => runAction(financialTrackerController.getPaymentsByUser, req, res));

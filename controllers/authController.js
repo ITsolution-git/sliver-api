@@ -253,7 +253,7 @@ class AuthController {
 
                 if (req.body.code) {
                     return new Promise((resolve) => {
-                        Coupon.isValidCode(req.body.code, plan._id)
+                        Coupon.isValidCode(req.body.code, plan._id, req.body.buildId)
                             .then(resolve)
                             .catch((err) => {
                                 console.log(err); // TODO: winston logger add;
@@ -305,12 +305,19 @@ class AuthController {
             .then((customer) => {
                 let tiralPeriod = mObj.payments.products.length || mObj.buildPlan;
                 if (!req.body.isRenew){
-                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, mObj.coupon, tiralPeriod).then(subscription => {
+                    let couponForAll = mObj.coupon && !mObj.coupon.plan;
+                    let couponForPlan = mObj.coupon && mObj.coupon.plan &&
+                     mObj.coupon.plan.buildType == 1 && mObj.coupon.plan.typeProduct == 1;
+                    let coupon = couponForAll || couponForPlan ? mObj.coupon:null;
+                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, coupon, tiralPeriod).then(subscription => {
                         mObj.customer.stripeSubscription = subscription.id;
                         return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                     }).then((subscription) => {
                         if (mObj.buildPlan) {
-                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, mObj.coupon, tiralPeriod).then(subscription => {
+                            let couponForBuild = mObj.coupon && mObj.coupon.plan && 
+                            mObj.coupon.plan.buildType == 1 && mObj.coupon.plan.typeProduct == 2;
+                            let coupon =  couponForAll || couponForBuild ? mObj.coupon : null;
+                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, coupon, tiralPeriod).then(subscription => {
                                 mObj.customer.stripeBuildSubscription = subscription.id;
                                 return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                             })

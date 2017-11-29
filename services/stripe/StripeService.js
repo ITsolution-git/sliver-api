@@ -330,7 +330,7 @@ class Stripe {
                 duration: duration[couponData.duration-1]
             };
             if (coupon.duration === 'repeating'){
-                coupon.duration_in_months = coupon.durationLimited;
+                coupon.duration_in_months = couponData.durationLimited;
             }
             if (couponData.dateUntil){
                 coupon.redeem_by = new Date(couponData.dateUntil).getTime() / 1000;

@@ -49,6 +49,23 @@ class ProductController {
 
         return Product.list(options);
     }
+    static getAllPlansForCoupons() {
+        let options = {
+            //limit: 6,
+            criteria: {
+                status: Product.ACTIVE,
+                $or: [
+                    { typeProduct: Product.TYPE_BUILD, buildType: Product.BUILD_INSTALLMENTS },
+                    { typeProduct: Product.TYPE_PLAN }
+                ]
+
+            }
+        };
+        console.log({ typeProduct: Product.TYPE_BUILD, buildType: Product.BUILD_INSTALLMENTS })
+        return Product.list(options).then(products => {
+            return products
+        });
+    }
 
     static getAll() {
 

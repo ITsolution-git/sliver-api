@@ -34,7 +34,7 @@ class chargeErrorController {
         let amount = req.body.data.object.amount;
         return User.find({ email: email, role: 4 })
             .then((users) => {
-                if (!user.length) return;
+                if (!users.length) return;
                  return UserControler.getActiveUserByEmail(users[0].email)
                  .then(userId => {
                     return ActivityController.create({

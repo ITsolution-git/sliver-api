@@ -46,11 +46,9 @@ class ReportController {
     }
 
     static runReport(req) {
-        return ReportController.getReport(req)
-        .then(report => {
-            return ReportController.getUsers(report).then(users => {
-                return {users, report}
-            })
+        let report = req.body;
+        return ReportController.getUsers(report).then(users => {
+            return {users, report}
         })
         .then(result => {
             let {users, report} = result;
@@ -154,9 +152,9 @@ class ReportController {
         })
         .catch(()=>{
             return[];
-        })
+        })        
     }
-
+    
     static getActivities(users, report) {
         if (!users.length) return;
         if (!report) return users;

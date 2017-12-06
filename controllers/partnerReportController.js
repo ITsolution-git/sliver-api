@@ -1,6 +1,7 @@
 const Moment = require('moment');
 const mongoose = require('./../libs/mongoose');
 const User = mongoose.model('User');
+const Activity = mongoose.model('Activity');
 const PartnerReport = mongoose.model('PartnerReport');
 const Partner = mongoose.model('Partner');
 const Product = mongoose.model('Product');
@@ -164,6 +165,20 @@ class partnerReportController {
         })
     }
 
+    static getNotesFromActivities(report) {
+        let slapsters = report.slapsters;
+        return Promise.map(slapsters, slapster => {
+            return Activity.find({userId: slapster.id}).sort({createdAt: -1}).then(activities => {
+                slapster['title'] = activities[0].title;
+                slapster['notes'] = activities[0].notes;
+                return slapster;
+            });
+        }).then(slapsters => {
+            report.slapsters = slapsters;
+            return report;
+        });
+    }
+
     static getReports(reports, report) {
         let assignedUsers = [];
         let assignedUsersByPlan = {};
@@ -207,8 +222,7 @@ class partnerReportController {
         report.countAssignedUsers = partnerReportController.unique(assignedUsers).length;
 
             return {assignedUsers, filtered: report.slapsters};
-        }
-
+    }
 
     static create(req){
         let report = req.body;
@@ -220,6 +234,7 @@ class partnerReportController {
         report.revenue_percent = 0;
         return Partner.findById(req.body.partnerId)
         .then(partner => {
+            report.businessName = partner.businessName;            
             report.partnerName = `${partner.name} ${partner.lastName}`;
             report.revenue_percent = partner.revenue_percent;
             return PartnerReport.find({partnerId: req.body.partnerId,
@@ -251,6 +266,8 @@ class partnerReportController {
                 report.totalShareToPartner += report.totalIncome * (report.revenue_percent / 100); 
             });
             return report;
+        }).then(report => {
+            return partnerReportController.getNotesFromActivities(report)            
         }).catch(e => {
             return e;
         })

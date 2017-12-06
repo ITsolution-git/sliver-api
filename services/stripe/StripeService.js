@@ -198,41 +198,41 @@ class Stripe {
                         }) 
                     }
                 else if (user && user.stripeId) {
-                stripe.charges.list({customer: user.stripeId, limit: limit}, (err, payments) => {
-                    // console.log(payments);
-                    if (payments) {
-                        resolve(Promise.all(payments.data.map(payment => {
-                            let result = {};
-                            result.paymentDate = moment(new Date(payment.created * 1000)).format('ll');
-                            result.amountCharges = payment.amount / 100;
-                            result.discount = 0;
+                    stripe.charges.list({customer: user.stripeId, limit: limit}, (err, payments) => {
+                        // console.log(payments);
+                        if (payments) {
+                            resolve(Promise.all(payments.data.map(payment => {
+                                let result = {};
+                                result.paymentDate = moment(new Date(payment.created * 1000)).format('ll');
+                                result.amountCharges = payment.amount / 100;
+                                result.discount = 0;
 
-                            result.status = payment.paid ? 1 : 0;
+                                result.status = payment.paid ? 1 : 0;
 
-                            return new Promise((resolve, reject) => {
-                                stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
-                                    // console.log("Got invoice: " + JSON.stringify(invoice));
+                                return new Promise((resolve, reject) => {
+                                    stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
+                                        // console.log("Got invoice: " + JSON.stringify(invoice));
 
-                                    if (invoice && invoice.lines.subscriptions && invoice.lines.subscriptions.length > 0) {
-                                        result.programName = invoice.lines.subscriptions[0].plan.name;
-                                        result.costProduct = invoice.lines.subscriptions[0].plan.amount / 100;
+                                        if (invoice && invoice.lines.subscriptions && invoice.lines.subscriptions.length > 0) {
+                                            result.programName = invoice.lines.subscriptions[0].plan.name;
+                                            result.costProduct = invoice.lines.subscriptions[0].plan.amount / 100;
 
-                                        if (invoice.discount && invoice.discount.coupon) {
-                                            result.discount = '-' + (invoice.lines.subscriptions[0].amount - invoice.amount_due) / 100;
+                                            if (invoice.discount && invoice.discount.coupon) {
+                                                result.discount = '-' + (invoice.lines.subscriptions[0].amount - invoice.amount_due) / 100;
+                                            }
+                                        } else {
+                                            result.programName = payment.description;
+                                            result.costProduct = result.amountCharges;
                                         }
-                                    } else {
-                                        result.programName = payment.description;
-                                        result.costProduct = result.amountCharges;
-                                    }
-                                    resolve(result);
+                                        resolve(result);
+                                    });
                                 });
-                            });
-                        })));
-                    } else {
-                        resolve([]);
-                    }
-                });
-            } else {resolve([]);}
+                            })));
+                        } else {
+                            resolve([]);
+                        }
+                    });
+                } else {resolve([]);}
             });
         });
     }

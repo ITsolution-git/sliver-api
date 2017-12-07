@@ -245,10 +245,12 @@ class AuthController {
         return AuthController.signUpSaveUser(req)
         .then((user) => {
                     mObj.user = user;
+                    console.log(user);
                     return Product.load({_id: req.body.planId});
             })
             .then((plan) => {
                 mObj.plan = plan;
+
                 if (req.body.code) {
                     return new Promise((resolve) => {
                         Coupon.isValidCode(req.body.code, plan._id, req.body.buildId)
@@ -270,20 +272,21 @@ class AuthController {
                         return mObj.user.save();
                     }
                     else return coupon;
-                
-                }).then(()=>{
+
+                }).then(() => {
                     return mObj.payments.createPlanPayment(mObj.plan, coupon);
                 })
 
             }).then((payment) => {
                 // mObj.payments.products.push(payment);
+
                 return Product.load({_id: req.body.buildId});
             })
             .then((build) => {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
                 }
-                if (build && build.buildType === 1) {
+                if (build.buildType === 1) {
                     mObj.buildPlan = mObj.payments.createBuildPayment(build);
                 }
                 if (req.body.isRenew)
@@ -358,7 +361,7 @@ class AuthController {
                 }
                 if (req.body.isRenew) {
                     activityController.create({ userId: mObj.user._id,
-                                                title: 'Auto Email', 
+                                                title: 'Auto Email',
                                                 type: 'Communication',  
                                                 notes: mObj.user.businessName + ' renewed an account with ' + mObj.plan.productName + '.',
                                                 journey: {section: 'start', name: 'Account Created'}});
@@ -378,7 +381,6 @@ class AuthController {
                                                 });
                //     });
                 } else {
-
                     activityController.create({ userId: mObj.user._id,
                                             title: 'Account Created', 
                                             type: 'Milestone',  

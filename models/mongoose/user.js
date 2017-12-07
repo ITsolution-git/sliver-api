@@ -43,7 +43,7 @@ let schema = new Schema({
         type : String,
         default: ''
     },
-    stripeId : {
+    stripeId : {    
         type : String
         // require : true
     },

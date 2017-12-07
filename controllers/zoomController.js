@@ -20,9 +20,17 @@ class zoomController {
             Zoom.webinar.list(WEBINAR, (res) => res.error? reject(res.err) : resolve(res.webinars));
         })
     }
+    
     static getWebinarsFromDB() {
-        return Webinars.find();
-    }
+        return new Promise((resolve, reject) => {
+            zoomController.getWebinars().then(() => {
+                Webinars.find().then(webinars => {
+                    resolve(webinars);
+                })
+            })
+        }) 
+    }    
+
     static getWebinars() {
         return zoomController.getWebinarSpeaker().then(function (speakers) {
             let speakersWithWebinar = speakers.filter(speaker => speaker.enable_webinar);

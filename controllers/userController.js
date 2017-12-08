@@ -506,6 +506,11 @@ class UserController {
             res.send(File);
         });
     }
+
+    static sendSuggestion(req) {
+        return Mailer.renderTemplateAndSend('dpcarnage86@gmail.com',
+            {email: req.decoded.email, suggestionTypes: req.body.suggestionType, suggestionText: req.body.suggestionText}, 'suggestion');
+    }
 }
 
     

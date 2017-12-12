@@ -148,6 +148,7 @@ router.post('/me/change-card', isAuth, (req, res) => runAction(userController.ch
 router.get('/me/current-card', isAuth, (req, res) => runAction(userController.currentMyCard, req, res));
 router.post('/me/avatar', isAuth, upload, userController.changeAvatar);
 router.get('/user/avatar/:id', userController.getUserAvatar);
+router.post('/send-suggestion', isAuth, (req, res) => runAction(userController.sendSuggestion, req, res));
 //Get help
 router.post('/get-help', isAuth, (req, res) => runAction(userController.getHelp, req, res));
 

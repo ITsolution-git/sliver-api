@@ -195,6 +195,9 @@ class Stripe {
                                     resolve(userPayments);
                                 })
                             } 
+                            else {
+                                resolve([]);
+                            }
                         }) 
                     }
                 else if (user && user.stripeId) {

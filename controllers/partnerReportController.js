@@ -5,6 +5,7 @@ const Activity = mongoose.model('Activity');
 const PartnerReport = mongoose.model('PartnerReport');
 const Partner = mongoose.model('Partner');
 const Product = mongoose.model('Product');
+const Coupon = mongoose.model('Coupon');
 const ExecuteItem = mongoose.model('ExcuteItem');
 const YearGoal = mongoose.model('YearGoal');
 const Promise = require('bluebird');
@@ -24,7 +25,7 @@ class partnerReportController {
           return Object.keys(obj);
     }
 
-    static getCurrentQuater(users) {
+    static getCurrentQuater(users, selected_month_end_data) {
         if (!users.length) return users;
             return Promise.map(users, user => {
                 return Mindset.find({userId: user._id})
@@ -37,7 +38,7 @@ class partnerReportController {
                             quaters.push(Moment(quaters[i]).add(3, 'month').format('YYYY-MM-DD'));
 
                         for(let i = 1; i < quaters.length; i++) 
-                            if (Moment().isBetween(quaters[i-1], quaters[i])) {
+                            if (selected_month_end_data.isBetween(quaters[i-1], quaters[i])) {
                                 user.currentQuater = {number: i, startDate: quaters[i-1], endDate: quaters[i]};
                             }
 
@@ -49,8 +50,8 @@ class partnerReportController {
                         }
                         else { 
                             for(let i = 0; i < 3; i++) {
-                                months.push(Moment(quaters[user.currentQuater-1]).add(i, 'month'))
-                                if (Moment().month() == Moment(months[i]).month())
+                                months.push(Moment(quaters[user.currentQuater.number-1]).add(i, 'month'))
+                                if (selected_month_end_data.month() == Moment(months[i]).month())
                                     user.currentMonth = i+1; 
                             }
                         }
@@ -168,9 +169,15 @@ class partnerReportController {
     static getNotesFromActivities(report) {
         let slapsters = report.slapsters;
         return Promise.map(slapsters, slapster => {
-            return Activity.find({userId: slapster.id}).sort({createdAt: -1}).then(activities => {
-                slapster['title'] = activities[0].title;
-                slapster['notes'] = activities[0].notes;
+            return Activity.find({userId: slapster._id, createdAt: {$gte: report.from, $lte: report.to}}).sort({createdAt: -1}).then(activities => {
+                if (activities.length > 0) {
+                    slapster['title'] = activities[0].title;
+                    slapster['notes'] = activities[0].notes;
+                }
+                else {
+                    slapster['title'] = "";
+                    slapster['notes'] = "";
+                }
                 return slapster;
             });
         }).then(slapsters => {
@@ -224,6 +231,30 @@ class partnerReportController {
             return {assignedUsers, filtered: report.slapsters};
     }
 
+    static getTotalMonthlyRevenue(report) {
+        return new Promise((resolve, reject) => {
+            report.sum = 0; 
+            let users = report.slapsters;
+            let userPlans = [];
+            let userCoupons = [];
+            users.forEach(user => {
+                userPlans.push(Product.findById(user.planId));
+                userCoupons.push(Coupon.findById(user.couponId))
+            })
+            var allPromises = userPlans.concat(userCoupons);
+            Promise.all(allPromises).then(promises => {
+                let plans = promises.splice(0, userPlans.length)
+                let coupons = promises;
+                for (let i = 0; i < plans.length; i++) {
+                    let plan_cost = plans[i].costProduct;
+                    let coupon = coupons[i] ? coupons[i].amount : 0;
+                    report.sum += plan_cost - coupon;
+                }
+                resolve(report);
+            })
+        })
+    }
+
     static create(req){
         let report = req.body;
         let assignedUsersByPlan = {};
@@ -243,12 +274,15 @@ class partnerReportController {
             if (!reports.length) throw 'No reports for this date range.';
             return partnerReportController.getReports(reports, report) 
         }).then((assignedUsers) => {
-            return partnerReportController.getCurrentQuater(assignedUsers.filtered)
+            return partnerReportController.getCurrentQuater(assignedUsers.filtered, Moment(req.body.to))
         }).then((assignedUsers) => {
             return partnerReportController.getUserAnnualGoal(assignedUsers)
         }).then((assignedUsers) => {
             return partnerReportController.getUserQuaterlyGoal(assignedUsers)
         }).then((assignedUsers) => {
+            return partnerReportController.getTotalMonthlyRevenue(report)
+        }).then((report) => {
+            let assignedUsers = report.slapsters;
             let userPayments = [];
                     for (let i = 0; i < report.countAssignedUsers; i++)
                         if(assignedUsers[i] && assignedUsers[i]._id && assignedUsers[i].stripeId)
@@ -258,13 +292,12 @@ class partnerReportController {
             if(!users.length) return report;
             users.forEach(userPayments => {
                 userPayments.forEach(element => {
-                        report.sum += +element.amountCharges;
-                        if (element.status) {
+                        if (element.status === 1) {
                             report.totalIncome += +element.amountCharges - element.discount;
                         }
-                })
-                report.totalShareToPartner += report.totalIncome * (report.revenue_percent / 100); 
+                })   
             });
+            report.totalShareToPartner += report.totalIncome * (report.revenue_percent / 100);             
             return report;
         }).then(report => {
             return partnerReportController.getNotesFromActivities(report)            

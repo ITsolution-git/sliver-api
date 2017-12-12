@@ -9,9 +9,24 @@ const _ = require('lodash');
 const Activity = mongoose.model('Activity');
 const zipcodes = require('zipcodes');
 const partnerController = require('../controllers/partnerReportController');
+var ObjectId = require('mongoose').Types.ObjectId;
+const stripe = require('../services/stripe');
+const StripeService = stripe.service;
 
-
-let allActivities = [{id: 0, name: 'Logged In', dataRange: false},{id: 1, name: 'Did not log in'},{id: 2, name: 'Completed Build Step 1'},{id: 3, name: 'Completed Build Step 2'},{id: 4, name: 'Completed Build Step 3'},{id: 5, name: 'Completed Build Step 4'},{id: 6, name: 'Commited Build'},{id: 7, name: 'Submitted their SLAP'},{id: 8, name: 'Submitted Weekly Reflection'},{id: 9, name: 'Submitted Monthly Reflection'},{id: 10, name: 'Submitted Quarterly Reflection'},{id: 11, name: 'Updated Sales Tracker'},{id: 12, name: 'Updated Action Items'}];
+let allActivities = [
+    {id: 0, name: 'Logged In', dataRange: false},
+    {id: 1, name: 'Did not log in'},
+    {id: 2, name: 'Completed Build Step 1'},
+    {id: 3, name: 'Completed Build Step 2'},
+    {id: 4, name: 'Completed Build Step 3'},
+    {id: 5, name: 'Completed Build Step 4'},
+    {id: 6, name: 'Commited Build'},
+    {id: 7, name: 'Submitted their SLAP'},
+    {id: 8, name: 'Submitted Weekly Reflection'},
+    {id: 9, name: 'Submitted Monthly Reflection'},
+    {id: 10, name: 'Submitted Quarterly Reflection'},
+    {id: 11, name: 'Updated Sales Tracker'},
+    {id: 12, name: 'Updated Action Items'}];
 let ActivitiesAll = [{id: 11, name: 'User login', dateRange: false}, {id: 1, name: 'User login', dateRange: false},
 {id: 2, name: 'SE Calls Set', dateRange: false}, {id: 3, name: 'SM Calls Set', dateRange: false}, 
 {id: 4, name: 'Onboarding Call', dateRange: true}, {id: 5, name: 'Execute Call Set', dateRange: true}, 
@@ -51,6 +66,7 @@ class ReportController {
             return {users, report}
         })
         .then(result => {
+            
             let {users, report} = result;
             if (!users.length) throw new Error();
             if (_.isUndefined(report.filter.slapStatus)) return result;
@@ -59,19 +75,37 @@ class ReportController {
                     return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report} 
                 else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
             }
-            if(_.isUndefined(report.filter.quaters)) return result;
-            if (!report.filter.quaters.length) return result;
-            if (report.filter.slapStatus) 
             return ReportController.getUsersByQuater(users, report.filter.quaters).then(users => {
                 return {users, report}
-            }) 
+            })             
         })
         .then(result => {
             let {users, report} = result;
+            console.log("------------------users for strategy-----------------------");
             if (!users.length) throw new Error();
             if(_.isUndefined(report.filter.strategies)) return result;
             if (!report.filter.strategies.length) return result;
             return ReportController.getUsersByStrategy(users, report.filter.strategies).then(users => {
+                return {users, report}
+            })
+        })
+        .then(result => {
+
+            let {users, report} = result;
+            if (!users.length) throw new Error();
+            if (!report) return;
+            if (_.isUndefined(report.filter.country)) return result;
+            return ReportController.getUsersByZip(users, report).then(users => {
+                return {users, report}
+            })
+        })
+        .then(result => {
+
+            let {users, report} = result;
+            if (!users.length) throw new Error();
+            if (!report) return;
+            if (_.isUndefined(report.filter.paymentStatus)) return result;
+            return ReportController.getUsersByPaymentStatus(users, report).then(users => {
                 return {users, report}
             })
         })
@@ -90,33 +124,14 @@ class ReportController {
             let {users, report} = result;
             if (!users.length) throw new Error();
             if (!report) return;
-            if (_.isUndefined(report.filter.paymentStatus)) return result;
-            return ReportController.getUsersByPaymentStatus(users, report).then(users => {
-                return {users, report}
-            })
-        })
-        .then(result => {
-
-            let {users, report} = result;
-            if (!users.length) throw new Error();
-            if (!report) return;
             if (_.isUndefined(report.filter.declinedStatus)) return result;
             return ReportController.getUserCharges(users, report).then(users => {
                 return {users, report}
             })
         })
         .then(result => {
-
             let {users, report} = result;
-            if (!users.length) throw new Error();
-            if (!report) return;
-            if (_.isUndefined(report.filter.country)) return result;
-            return ReportController.getUsersByZip(users, report).then(users => {
-                return {users, report}
-            })
-        })
-        .then(result => {
-            let {users, report} = result;
+            console.log('-----------------report filter goalProcess--------------------------', report.filter.goalProgress);
             if (!users.length) throw new Error();
             if (!report) return;
             if (_.isUndefined(report.filter.goalProgress)) report.filter.goalProgress = {};
@@ -126,29 +141,31 @@ class ReportController {
                 report.filter.goalProgress.to= 1000000;
             }
             if (!report.filter.slapStatus) return result;
-            return ReportController.getUsersByQuater(users, '').then(usersByQuater => {
-                if (report.filter.goalProgress.type == 'annual') 
-                    return partnerController.getUserAnnualGoal(usersByQuater).then(usersByGoal => {
-                        usersByGoal = usersByGoal.filter(user => user.annualGoal >= +report.filter.goalProgress.from && user.annualGoal <= +report.filter.goalProgress.to)
-                        return partnerController.getUserQuaterlyGoal(usersByGoal).then(usersByGoal => {
-                            return {users: usersByGoal, report}
-                        })
+            
+            
+            if (report.filter.goalProgress.type == 'annual') 
+                return partnerController.getUserAnnualGoal(users).then(usersByGoal => {
+                    console.log("------------users By Goal---------------", usersByGoal[0]);
+                    usersByGoal = usersByGoal.filter(user => user.annualGoal >= +report.filter.goalProgress.from && user.annualGoal <= +report.filter.goalProgress.to)
+                    return partnerController.getUserQuaterlyGoal(usersByGoal).then(usersByGoal => {
+                        console.log("-----------------filtered quarterly users-------------------", usersByGoal);
+                        return {users: usersByGoal, report}
                     })
-                if (report.filter.goalProgress.type == 'quaterly')
-                    return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
-                        usersByGoal = usersByGoal.filter(user => user.quaterlyGoal >= +report.filter.goalProgress.from && user.quaterlyGoal <= +report.filter.goalProgress.to)
-                        return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
-                            return {users: usersByGoal, report}
-                        })
+                })
+            if (report.filter.goalProgress.type == 'quaterly')
+                return partnerController.getUserQuaterlyGoal(users).then(usersByGoal => {
+                    usersByGoal = usersByGoal.filter(user => user.quaterlyGoal >= +report.filter.goalProgress.from && user.quaterlyGoal <= +report.filter.goalProgress.to)
+                    return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
+                        return {users: usersByGoal, report}
                     })
-                if(report.filter.goalProgress.type == 'all'){
-                    return partnerController.getUserQuaterlyGoal(usersByQuater).then(usersByGoal => {
-                        return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
-                            return {users: usersByGoal, report}
-                        })
+                })
+            if(report.filter.goalProgress.type == 'all'){
+                return partnerController.getUserQuaterlyGoal(users).then(usersByGoal => {
+                    return partnerController.getUserAnnualGoal(usersByGoal).then(usersByGoal => {
+                        return {users: usersByGoal, report}
                     })
-                }
-            })
+                })
+            }
         })
         .catch(()=>{
             return[];
@@ -163,23 +180,16 @@ class ReportController {
                 return act.id == userAct;
             })
         });
-        let dateActivity = filteredActivities.filter(act => act.dateRange).map(act => act.name);
-        let todayActivity = filteredActivities.filter(act => !act.dateRange).map(act => act.name);
+        // let dateActivity = filteredActivities.filter(act => act.dateRange).map(act => act.name);
+        // let todayActivity = filteredActivities.filter(act => !act.dateRange).map(act => act.name);
+        // console.log("----------------date filter activities-------------------------------", dateActivity);
+        // console.log("----------------today filter activities-------------------------------", todayActivity);
 
+        var filteredActivities_names = filteredActivities.map(act => act.name);
         return Promise.filter(users, user => {
             let promises = [];
-            if(dateActivity.length) 
-            promises.push(Activity.find({userId: user._id, createdAt: {$gte: report.filter.startDate, $lte: report.filter.endDate},
-                title: {$in: dateActivity}}))
-            if(todayActivity.length)
-            promises.push(Activity.find({userId: user._id, title: {$in: todayActivity}}))
-            return Promise.all(promises).then(activity => {
-                if (dateActivity.length && todayActivity.length)
-                    return _.uniqBy(activity[0], 'title').length == dateActivity.length && _.uniqBy(activity[1], 'title').length == todayActivity.length;
-                if (dateActivity.length)
-                    return _.uniqBy(activity[0], 'title').length == dateActivity.length;
-                if (todayActivity.length)
-                    return _.uniqBy(activity[0], 'title').length == todayActivity.length;
+            return Activity.find({userId: user._id, title: {$in: filteredActivities_names}}).then(activities => {
+                return _.uniqBy(activities, 'title').length == filteredActivities.length
             })
         })
     }
@@ -207,9 +217,16 @@ class ReportController {
         query.role = 4;
 
         if (report.filter.expert && report.filter.expert.length) 
-            query.expertId = {$in: report.filter.expert};
+        {
+            var expertIds = report.filter.expert.map(expert => new ObjectId(expert));
+            query.expertId = {$in: expertIds};
+
+        }
         if (report.filter.partner && report.filter.partner.length)
-            query.partnerId = {$in: report.filter.partner};
+        {
+            var partnerIds = report.filter.partner.map(partner => new ObjectId(partner));
+            query.partnerId = {$in: partnerIds};
+        }
         return User.list({criteria:query}).then(users => {
             return users.map(user => {
                 return user.toObject();
@@ -218,15 +235,26 @@ class ReportController {
     }
 
     static getUsersByQuater(users, targetQuaters) {
-        return Promise.filter(users, user => {
-            return Mindset.find({userId: user._id})
-            .then(mindset => {
-                if(!mindset) return; 
-                user.currentQuater = ReportController.getCurrentQuater(mindset);
-                if((!targetQuaters.length || targetQuaters.length > 3) && user.currentQuater) return true;
-            return ~targetQuaters.indexOf(user.currentQuater);
+        return new Promise((resolve, resject) => {
+            let result = [];
+            let mindsets = [];
+            users.forEach(user => {
+                mindsets.push(Mindset.find({userId: user._id}))
+            });
+            Promise.all(mindsets).then(_mindsets => {
+                _mindsets.forEach(mindset => {
+                    var user = users[_mindsets.indexOf(mindset)];
+                    user.currentQuater = ReportController.getCurrentQuater(mindset);
+                    if((!targetQuaters.length || targetQuaters.length > 3) && user.currentQuater) {
+                        result.push(user);                        
+                    }
+                    else if (~targetQuaters.indexOf(user.currentQuater)) {
+                        result.push(user);
+                    }
+                })
+                resolve(result);
             })
-        });       
+        })
     }
 
     static getCurrentQuater(mindset) {
@@ -246,11 +274,11 @@ class ReportController {
     }
 
     static getUsersByStrategy(users, strategy) {
-        return Promise.filter(usersInBuild, user => {
+        return Promise.filter(users, user => {
             return ActionPlan.findOne({userId: user._id})
             .then(plan => {
                 let result = [];
-                if (!plan) return;
+                if (!plan) return [];
                 strategy.forEach(str => {
                     if (str == plan.whatsHappening[user.currentQuater-1].strategy.id) {
                         result.push(user);
@@ -262,22 +290,24 @@ class ReportController {
     }
 
     static getUsersByPaymentStatus(users, report) {
+
         let titles = ['PaymentPaused', 'PaymentActivated'];
         return Promise.filter(users, user => {
-            return Activity.find({userId: user._id, $or: [{title: 'PaymentPaused'}, {title: 'PaymentActivated'}]})
-            .then(payments => {
-                if (!payments.length)
-                    return user.pausingPayment == report.filter.paymentStatus;
-                let lastPay = _.maxBy(payments, 'createdAt');
-                if (Moment(lastPay.createdAt).isBetween(Moment(report.filter.startDate), Moment(report.filter.endDate), 'day', []))
-                    return lastPay.title == titles[report.filter.paymentStatus];
-                let beforeStart = _.filter(payments, pay => {
-                    return Moment(pay.createdAt).isBefore(Moment(report.filter.startDate));
-                })
-                if (!beforeStart.length) return false == report.filter.paymentStatus;
-                let lastPayBeforeStart = _.maxBy(beforeStart, 'createdAt');
-                return lastPayBeforeStart.title == titles[report.filter.paymentStatus];
-            })
+            // return Activity.find({userId: user._id, $or: [{title: 'PaymentPaused'}, {title: 'PaymentActivated'}]})
+            // .then(payments => {
+            //     if (!payments.length)
+            //         return user.pausingPayment == report.filter.paymentStatus;
+            //     let lastPay = _.maxBy(payments, 'createdAt');
+            //     if (Moment(lastPay.createdAt).isBetween(Moment(report.filter.startDate), Moment(report.filter.endDate), 'day', []))
+            //         return lastPay.title == titles[report.filter.paymentStatus];
+            //     let beforeStart = _.filter(payments, pay => {
+            //         return Moment(pay.createdAt).isBefore(Moment(report.filter.startDate));
+            //     })
+            //     if (!beforeStart.length) return false == report.filter.paymentStatus;
+            //     let lastPayBeforeStart = _.maxBy(beforeStart, 'createdAt');
+            //     return lastPayBeforeStart.title == titles[report.filter.paymentStatus];
+            // })
+            return user.pausingPayment == report.filter.paymentStatus;
         })
     }
 
@@ -291,9 +321,15 @@ class ReportController {
 
     static getUserCharges(users, report) {
         return Promise.filter(users, user => {
-            return Activity.findOne({userId: user._id, 
-                title: report.filter.declinedStatus ? 'Payment Success' : 'Payment Declined',
-                createdAt: {$gte: report.filter.startDate, $lte: report.filter.endDate}})
+            return new Promise((resolve, reject) => {
+                StripeService.getPayments(user._id, 1).then(payment => {
+                    if (!payment) resolve(false);
+                    else if (payment.length != 1) resolve(false);
+                    else {
+                        resolve(payment[0].status == report.filter.declinedStatus);
+                    }
+                });
+            })
         })
     }
 

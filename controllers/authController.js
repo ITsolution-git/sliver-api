@@ -285,9 +285,9 @@ class AuthController {
             .then((build) => {
                 if (build) {
                     mObj.payments.products.push(mObj.payments.createBuildFirstPayment(build));
-                }
-                if (build.buildType === 1) {
-                    mObj.buildPlan = mObj.payments.createBuildPayment(build);
+                    if (build.buildType === 1) {
+                        mObj.buildPlan = mObj.payments.createBuildPayment(build);
+                    }                    
                 }
                 if (req.body.isRenew)
                     return StripeService.getCustomerById(mObj.user.stripeId)
@@ -309,7 +309,7 @@ class AuthController {
                     let couponForPlan = mObj.coupon && mObj.coupon.plan &&
                      mObj.coupon.plan.buildType == 1 && mObj.coupon.plan.typeProduct == 1;
                     let coupon = couponForAll || couponForPlan ? mObj.coupon:null;
-                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, coupon, tiralPeriod).then(subscription => {
+                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, coupon, tiralPeriod, mObj.plan.costProduct).then(subscription => {
                         mObj.customer.stripeSubscription = subscription.id;
                         return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                     }).then((subscription) => {
@@ -317,7 +317,7 @@ class AuthController {
                             let couponForBuild = mObj.coupon && mObj.coupon.plan && 
                             mObj.coupon.plan.buildType == 1 && mObj.coupon.plan.typeProduct == 2;
                             let coupon =  couponForAll || couponForBuild ? mObj.coupon : null;
-                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, coupon, tiralPeriod).then(subscription => {
+                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, coupon, tiralPeriod, mObj.plan.costProduct).then(subscription => {
                                 mObj.customer.stripeBuildSubscription = subscription.id;
                                 return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                             })
@@ -341,7 +341,7 @@ class AuthController {
             })
             .then(() => {
                 if (mObj.payments.products.length > 0) {
-                    return StripeService.createCharges(mObj.customer, mObj.payments.calculate());
+                    return StripeService.createCharges(mObj.customer, mObj.payments.calculate(), mObj.payments.generateNameForCharge());
                 } else {
                     return null;
                 }

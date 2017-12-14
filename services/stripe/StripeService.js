@@ -57,7 +57,7 @@ class Stripe {
         });
     }
 
-    static createSubscription(customer, subscriptionId, coupon, trialPeriod) {
+    static createSubscription(customer, subscriptionId, coupon, trialPeriod, costProduct) {
         return new Promise((resolve, reject) => {
             let subscription = {
                 'customer': customer.stripeId ? customer.stripeId : customer.id,
@@ -73,11 +73,33 @@ class Stripe {
             }
             if (trialPeriod){
                 subscription.trial_end = moment().add(1, 'M').format('X');
+                if (!coupon.typeCoupon) {
+                    let invoice_item = {
+                        'customer':  customer.stripeId ? customer.stripeId : customer.id,
+                        'amount': coupon.amount * 100,
+                        'currency': 'usd',
+                        'description': 'preventing invoice from being applied by promo code' 
+                    };
+                    stripe.invoiceItems.create(invoice_item, (err, invoice_item) => {
+                        stripe.subscriptions.create(subscription, (err, subscription) => {
+                            console.log(err);
+                            return err ? reject(new StripeError('Failed to create subscription', 'BAD_DATA', {orig: err})) : resolve(subscription);
+                        });                    
+                    })
+                }
+                else {
+                    stripe.subscriptions.create(subscription, (err, subscription) => {
+                        console.log(err);
+                        return err ? reject(new StripeError('Failed to create subscription', 'BAD_DATA', {orig: err})) : resolve(subscription);
+                    });                                        
+                }
             }
-            stripe.subscriptions.create(subscription, (err, subscription) => {
-                console.log(err);
-                return err ? reject(new StripeError('Failed to create subscription', 'BAD_DATA', {orig: err})) : resolve(subscription);
-            });
+            else {
+                stripe.subscriptions.create(subscription, (err, subscription) => {
+                    console.log(err);
+                    return err ? reject(new StripeError('Failed to create subscription', 'BAD_DATA', {orig: err})) : resolve(subscription);
+                });                
+            }
         });
     }
 
@@ -212,7 +234,7 @@ class Stripe {
 
                                 result.status = payment.paid ? 1 : 0;
 
-                                return new Promise((resolve, reject) => {
+                                return new Promise((resolve, reject) => {BuildSub
                                     stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
                                         // console.log("Got invoice: " + JSON.stringify(invoice));
 

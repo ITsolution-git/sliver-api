@@ -31,6 +31,7 @@ class Payment {
         payment.name = plan.productName;
         payment.cost = plan.costProduct;
         this.couponId = coupon ? coupon._id : null;
+        // payment.couponId = coupon ? coupon._id : null;
 
         return payment;
     }
@@ -83,6 +84,19 @@ class Payment {
         return summ;
     }
 
+    /**
+     * Generate the all plan names and build names
+     * @return {*}
+     */
+    generateNameForCharge() {
+        let name = "";
+        this.products.forEach((item) => {
+            name += item.name + ",";
+        })
+        name = name.substring(0, name.length-1);
+        console.log("name: " + name);
+        return name;
+    }
     /**
      * Save payment in table
      * @param mObj

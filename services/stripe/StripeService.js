@@ -73,7 +73,7 @@ class Stripe {
             }
             if (trialPeriod){
                 subscription.trial_end = moment().add(1, 'M').format('X');
-                if (!coupon.typeCoupon) {
+                if (coupon && !coupon.typeCoupon) {
                     let invoice_item = {
                         'customer':  customer.stripeId ? customer.stripeId : customer.id,
                         'amount': coupon.amount * 100,

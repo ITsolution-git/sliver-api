@@ -9,6 +9,7 @@ const User = mongoose.model('User');
 const Mindset = mongoose.model('slapMindset');
 const Coupon = mongoose.model('Coupon');
 const Product = mongoose.model('Product');
+const extend = require('util')._extend;
 
 class Stripe {
 
@@ -57,7 +58,10 @@ class Stripe {
         });
     }
 
-    static createSubscription(customer, subscriptionId, coupon, trialPeriod, costProduct) {
+    /**
+     * couponName: refer to coupon on stripe for coupon: coupon_'m' is plan, coupon_'b' is build
+     */
+    static createSubscription(customer, subscriptionId, coupon, trialPeriod, costProduct, couponName) {
         return new Promise((resolve, reject) => {
             let subscription = {
                 'customer': customer.stripeId ? customer.stripeId : customer.id,
@@ -68,17 +72,18 @@ class Stripe {
                     }
                 ]
             };
-            if (coupon) {
-                subscription.coupon = coupon.code;
+            //check if coupon is valid  
+            if (coupon.typeCoupon != null) {
+                subscription.coupon = couponName;
             }
             if (trialPeriod){
                 subscription.trial_end = moment().add(1, 'M').format('X');
-                if (!coupon.typeCoupon) {
+                if (coupon.typeCoupon != null && coupon.typeCoupon == 0) {
                     let invoice_item = {
                         'customer':  customer.stripeId ? customer.stripeId : customer.id,
                         'amount': coupon.amount * 100,
                         'currency': 'usd',
-                        'description': 'preventing invoice from being applied by promo code' 
+                        'description': 'preventing invoice from being applied by promo code discount' 
                     };
                     stripe.invoiceItems.create(invoice_item, (err, invoice_item) => {
                         stripe.subscriptions.create(subscription, (err, subscription) => {
@@ -347,13 +352,19 @@ class Stripe {
         });
     }
 
+    /**
+     * create two coupons on stripe for each coupon
+     * one for plan, the other one for build
+     * naming convention is one for plan is gonna be like couponData.code + "_m", one for build is goona be like couponData.code + "_b"
+     * for instance if coupon code is "coupon" then coupon for plan will be 'coupon_m' whereas for plan will be 'coupon_b'
+     */
     static createCoupon(couponData){   
         return new Promise((resolve, reject) => {
             let duration = ['once', 'forever', 'repeating'];
+
             let coupon = {
-                id: couponData.code,
                 duration: duration[couponData.duration-1]
-            };
+            }
             if (coupon.duration === 'repeating'){
                 coupon.duration_in_months = couponData.durationLimited;
             }
@@ -363,13 +374,65 @@ class Stripe {
             if (couponData.redemption){
                 coupon.max_redemptions = +couponData.redemption                
             }
-            if (couponData.typeCoupon) 
-                coupon.percent_off = +couponData.amount ;
-            else {
-                coupon.currency = 'USD';
-                coupon.amount_off = +couponData.amount * 100;
+
+            let coupon_m = {}, 
+                coupon_b = {};
+            if (couponData.amount) {
+                coupon_m = extend({
+                    id: couponData.code + "_m",
+                }, coupon);     
+                if (couponData.typeCoupon) 
+                    coupon_m.percent_off = +couponData.amount;
+                else {
+                    coupon_m.currency = 'USD';
+                    coupon_m.amount_off = +couponData.amount * 100;
+                }                
             }
-            stripe.coupons.create(coupon,(err, coupon)=> err ? reject(err): resolve(coupon));
+            if (couponData.slapBuild.plan) {
+                coupon_b = extend({
+                    id: couponData.code + "_b"
+                }, coupon);
+                if (couponData.slapBuild.typeCoupon)
+                    coupon_b.percent_off = +couponData.slapBuild.amount;
+                else {
+                    coupon_b.currency = 'USD';
+                    coupon_b.amount_off = +couponData.slapBuild.amount * 100;
+                }
+            } 
+
+            if (coupon_m.id)
+            {
+                stripe.coupons.create(coupon_m, (err, _coupon_m)=> {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        if (coupon_b.id) {
+                            stripe.coupons.create(coupon_b, (err, _coupon_b) => {
+                                if (err) {
+                                    reject(err);
+                                }
+                                else {
+                                    resolve([_coupon_m, _coupon_b])
+                                }
+                            })
+                        }
+                        else {
+                            resolve([_coupon_m])
+                        }
+                    }
+                });
+            }    
+            else if (coupon_b.id) {
+                stripe.coupons.create(coupon_b, (err, _coupon_b) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve([_coupon_b])
+                    }
+                })
+            }
         })
     }
 

@@ -36,9 +36,25 @@ class CouponController {
     static remove(req) {
         return Coupon.findOneAndRemove({_id: req.body._id})
         .then(coupon => {
-            return StripeService.deleteCoupon(coupon.code).then(()=>{
-                return coupon;
-            })
+            //remove both of coupons for plan and build
+            if (coupon.typeCoupon != null)
+            {
+                return StripeService.deleteCoupon(coupon.code+'_m').then(()=>{
+                    if (coupon.slapBuild.plan) {
+                        return StripeService.deleteCoupon(coupon.code+'_b').then(()=>{
+                            return coupon;
+                        });
+                    }
+                   else {
+                        return coupon;
+                    }
+                })
+            }
+            else if (coupon.slapBuild.plan) {
+                return StripeService.deleteCoupon(coupon.code+'_b').then(()=>{
+                    return coupon;
+                });                
+            }
         });
     }
     

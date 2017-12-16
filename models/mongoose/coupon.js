@@ -17,7 +17,6 @@ let schema = new Schema({
     },
     amount: {
         type: Number,
-        required: 'Amount promo code is not empty'
     },
     plan: {
         type: Object,
@@ -38,6 +37,10 @@ let schema = new Schema({
     },
     durationLimited: {
         type: Number
+    },
+    slapBuild: {
+        type: Object,
+        default: null
     }
 });
 

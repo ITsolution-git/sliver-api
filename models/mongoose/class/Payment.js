@@ -50,10 +50,24 @@ class Payment {
      * @param build
      * @returns {{}}
      */
-    createBuildFirstPayment(build) {
+    createBuildFirstPayment(build, coupon) {
         let payment = {};
         payment.productId = build._id;
-        payment.amount = build.buildType == 1 ? build.amountFirstPayment : build.costProduct;
+        if (coupon.slapBuild.plan) {
+            if (build.buildType == 2)
+            {
+                if (coupon.slapBuild.typeCoupon == 1) 
+                    payment.amount = build.costProduct - build.costProduct * coupon.slapBuild.amount / 100;
+                else
+                    payment.amount = build.costProduct - coupon.slapBuild.amount;
+            }    
+            else
+                payment.amount = build.amountFirstPayment;
+        }
+        else 
+        {
+            payment.amount = build.buildType == 1 ? build.amountFirstPayment : build.costProduct;
+        }    
         payment.name = build.productName;
         return payment;
     }
@@ -61,7 +75,16 @@ class Payment {
     createBuildPayment(build, coupon) {
         let payment = {};
         payment.productId = build._id;
-        payment.amount = build.costProduct;
+        if (coupon.slapBuild.plan) {
+            //this coupon was already meant to be applied to slapbuild the buildtype of which is 1
+            if (coupon.slapBuild.typeCoupon == 1) 
+                payment.amount = build.costProduct - build.costProduct * coupon.slapBuild.amount / 100;
+            else
+                payment.amount = build.costProduct - coupon.slapBuild.amount;
+        }
+        else {
+            payment.amount = build.costProduct;
+        }
         payment.name = build.productName;
         this.couponId = coupon ? coupon._id : null;
         return payment;

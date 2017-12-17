@@ -24,7 +24,7 @@ class Coupon {
         const criteria = options.criteria || {};
         const field = options.field || {};
         const page = options.page || 0;
-        const limit = options.limit || 30;
+        const limit = options.limit || 10000; //number of coupons 
         return this.find(criteria)
             .limit(limit)
             .select(field)
@@ -113,10 +113,15 @@ class Coupon {
             errors.push(new CustomError('The promo code is already expired', 'BAD_DATA'));
         }
 
-        if (this.plan && !this.isCheckPlan(planId, buildId)) {
+        if (this.plan && this.plan._id != planId) {
             errors.push(new CustomError('This promo code can\'t be applied for this plan', 'BAD_DATA'));
         }
 
+        if (this.slapBuild.plan) {
+            if (this.slapBuild.plan._id != buildId) {
+                errors.push(new CustomError('This promo code can\'t be applied for this slapbuild', 'BAD_DATA'));                
+            }
+        }
         if (this.redemption != null && !this.isRedemption()) {
             errors.push(new CustomError('The promo code is invalid', 'BAD_DATA'));
         }

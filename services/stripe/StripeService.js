@@ -78,9 +78,6 @@ class Stripe {
             }
             if (trialPeriod){
                 subscription.trial_end = moment().add(1, 'M').format('X');
-<<<<<<< HEAD
-                if (coupon && !coupon.typeCoupon) {
-=======
                 if (coupon.typeCoupon != null && coupon.typeCoupon == 0) {
                     let description = ""
                     //monthly payment plan
@@ -91,7 +88,6 @@ class Stripe {
                     else {
                         description = "Confirmation of SLAPbuild Payment Plan with Monthly Payments starting next month"                        
                     }
->>>>>>> coupon_modify
                     let invoice_item = {
                         'customer':  customer.stripeId ? customer.stripeId : customer.id,
                         'amount': coupon.amount * 100,
@@ -252,7 +248,7 @@ class Stripe {
 
                                 result.status = payment.paid ? 1 : 0;
 
-                                return new Promise((resolve, reject) => {BuildSub
+                                return new Promise((resolve, reject) => {
                                     stripe.invoices.retrieve(payment.invoice, (err, invoice) => {
                                         // console.log("Got invoice: " + JSON.stringify(invoice));
 

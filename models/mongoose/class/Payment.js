@@ -111,10 +111,22 @@ class Payment {
      * Generate the all plan names and build names
      * @return {*}
      */
-    generateNameForCharge() {
+    generateNameForCharge(coupon) {
         let name = "";
         this.products.forEach((item) => {
-            name += item.name + ",";
+            let _name = item.name;
+            if (item.name == "One time SLAP") {
+                _name = "SLAPbuild One Time Payment"
+                let discount = "";
+                if (coupon.slapBuild.typeCoupon != null) {
+                    if (coupon.slapBuild.typeCoupon == 1) 
+                        discount = coupon.slapBuild.amount + "%"
+                    else
+                        discount = "$" + coupon.slapBuild.amount
+                    _name += ": " + discount + " off promo code applied "
+                }
+            }
+            name += _name + ",";
         })
         name = name.substring(0, name.length-1);
         console.log("name: " + name);

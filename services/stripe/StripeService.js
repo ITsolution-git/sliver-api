@@ -79,11 +79,20 @@ class Stripe {
             if (trialPeriod){
                 subscription.trial_end = moment().add(1, 'M').format('X');
                 if (coupon.typeCoupon != null && coupon.typeCoupon == 0) {
+                    let description = ""
+                    //monthly payment plan
+                    if (coupon.name) {
+                        description = "Confirmation of Monthly SLAP Plan with Monthly Payments starting next month"
+                    }
+                    //slapbuild plan
+                    else {
+                        description = "Confirmation of SLAPbuild Payment Plan with Monthly Payments starting next month"                        
+                    }
                     let invoice_item = {
                         'customer':  customer.stripeId ? customer.stripeId : customer.id,
                         'amount': coupon.amount * 100,
                         'currency': 'usd',
-                        'description': 'preventing invoice from being applied by promo code discount' 
+                        'description': description
                     };
                     stripe.invoiceItems.create(invoice_item, (err, invoice_item) => {
                         stripe.subscriptions.create(subscription, (err, subscription) => {
@@ -174,12 +183,12 @@ class Stripe {
         });
     }
     
-    static createCharges(customer,amount, programName) {
+    static createCharges(customer,amount, description) {
         return new Promise((resolve,reject) => {
             stripe.charges.create({
                 amount: amount * 100,
                 currency: 'usd',
-                description: programName,
+                description: description,
                 source: customer.default_source ? customer.default_source : customer.stripeSource,
                 customer: customer.stripeId ? customer.stripeId : customer.id
             }, (err, result) => {

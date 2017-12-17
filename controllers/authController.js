@@ -341,7 +341,7 @@ class AuthController {
             })
             .then(() => {
                 if (mObj.payments.products.length > 0) {
-                    return StripeService.createCharges(mObj.customer, mObj.payments.calculate(), mObj.payments.generateNameForCharge());
+                    return StripeService.createCharges(mObj.customer, mObj.payments.calculate(), mObj.payments.generateNameForCharge(mObj.coupon));
                 } else {
                     return null;
                 }

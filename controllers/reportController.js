@@ -63,6 +63,7 @@ class ReportController {
     static runReport(req) {
         let report = req.body;
         return ReportController.getUsers(report).then(users => {
+            console.log('----------------users length--------------------------', users.length);
             return {users, report}
         })
         .then(result => {
@@ -212,7 +213,7 @@ class ReportController {
             query.status = report.filter.status;
         if (!_.isUndefined(report.filter.slapStatus))
             if (report.filter.slapStatus)
-                query.finishedSteps = 46;
+                query.finishedSteps = {$eq: 46};
             else query.finishedSteps = {$ne: 46};
         query.role = 4;
 

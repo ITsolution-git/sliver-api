@@ -73,12 +73,12 @@ class Stripe {
                 ]
             };
             //check if coupon is valid  
-            if (coupon.typeCoupon != null) {
+            if (coupon && coupon.typeCoupon != null) {
                 subscription.coupon = couponName;
             }
             if (trialPeriod){
                 subscription.trial_end = moment().add(1, 'M').format('X');
-                if (coupon.typeCoupon != null && coupon.typeCoupon == 0) {
+                if (coupon && coupon.typeCoupon != null && coupon.typeCoupon == 0) {
                     let description = ""
                     //monthly payment plan
                     if (coupon.name) {

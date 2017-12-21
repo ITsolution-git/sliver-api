@@ -53,7 +53,7 @@ class Payment {
     createBuildFirstPayment(build, coupon) {
         let payment = {};
         payment.productId = build._id;
-        if (coupon.slapBuild.plan) {
+        if (coupon && coupon.slapBuild.plan) {
             if (build.buildType == 2)
             {
                 if (coupon.slapBuild.typeCoupon == 1) 
@@ -75,7 +75,7 @@ class Payment {
     createBuildPayment(build, coupon) {
         let payment = {};
         payment.productId = build._id;
-        if (coupon.slapBuild.plan) {
+        if (coupon && coupon.slapBuild.plan) {
             //this coupon was already meant to be applied to slapbuild the buildtype of which is 1
             if (coupon.slapBuild.typeCoupon == 1) 
                 payment.amount = build.costProduct - build.costProduct * coupon.slapBuild.amount / 100;

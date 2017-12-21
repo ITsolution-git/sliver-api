@@ -309,15 +309,16 @@ class AuthController {
                     let couponForPlan = mObj.coupon && mObj.coupon.plan &&
                      mObj.coupon.plan.buildType == 1 && mObj.coupon.plan.typeProduct == 1;
                     let coupon = couponForAll || couponForPlan ? mObj.coupon:null;
-                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, coupon, tiralPeriod, mObj.plan.costProduct, coupon.code + "_m").then(subscription => {
+                    let coupon_code_name = coupon ? coupon.code + '_m' : '';
+                    return StripeService.createSubscription(mObj.customer, mObj.plan.productName, coupon, tiralPeriod, mObj.plan.costProduct, coupon_code_name).then(subscription => {
                         mObj.customer.stripeSubscription = subscription.id;
                         return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                     }).then((subscription) => {
                         if (mObj.buildPlan) {
-                            let couponForBuild = mObj.coupon && mObj.coupon.plan && 
-                            mObj.coupon.plan.buildType == 1 && mObj.coupon.plan.typeProduct == 2;
-                            let coupon =  couponForAll || couponForBuild ? mObj.coupon : null;
-                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, mObj.coupon.slapBuild, tiralPeriod, mObj.plan.costProduct, mObj.coupon.code + "_b").then(subscription => {
+                            let coupon =  mObj.coupon;
+                            let slapBuild = coupon ? coupon.slapBuild : null;
+                            let slapBuild_code_name = coupon ? coupon.code + "_b" : "";
+                            return StripeService.createSubscription(mObj.customer, mObj.buildPlan.name, slapBuild, tiralPeriod, mObj.plan.costProduct, slapBuild_code_name).then(subscription => {
                                 mObj.customer.stripeBuildSubscription = subscription.id;
                                 return mObj.user.updateStripeCustomer(mObj.customer, mObj.coupon);
                             })

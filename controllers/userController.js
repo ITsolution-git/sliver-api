@@ -89,56 +89,122 @@ class UserController {
         return User.load({_id: req.body._id}).then(function(user){
             bizName = user._doc.businessName;
             userObj = user;
-            if (req.body.pausingPayment == user.pausingPayment) return User.list({ criteria: { email: userObj._doc.email } });
-            return UserController.checkPaymentStatus(req.body, user).then(()=>{
-                return User.list({ criteria: { email: userObj._doc.email } });
-            });
-        })
-        .then(function(users){
-            return Promise.all( users.map(function(user){
-                if(user.id == userObj._id) {// If user is current user, update all other informations.
-                    user.expertId = req.body.expertId; 
+            if (req.body.pausingPayment != user.pausingPayment) {
+                return UserController.changePaymentStatus(req.body, user).then(()=>{
                     user.pausingPayment = req.body.pausingPayment;
-                    user.couponId = req.body.couponId;
-                }
-                user.businessName = req.body.businessName;
-                user.name = req.body.name;
-                user.lastName = req.body.lastName;
-                user.role = req.body.role;
-                user.status = req.body.status;
-                user.email = req.body.email;
-                user.phone = req.body.phone;
-                if(req.body.password)  //Avoid to set password undefined
-                    user.password = req.body.password;
+                    user.save((err, user) => {
+                        if (err) {
+                            return Promise.reject(err);
+                        }
+                        return Promise.resolve(user);
+                    })
+                }).catch(err => {
+                    return Promise.reject(err);
+                });
+            }
+            else { 
+                return User.list({ criteria: { email: userObj._doc.email } })
+                    .then(users => {
+                        return Promise.all( users.map(function(user){
+                            if(user.id == userObj._id) {// If user is current user, update all other informations.
+                                user.expertId = req.body.expertId; 
+                                user.pausingPayment = req.body.pausingPayment;
+                                user.couponId = req.body.couponId;
+                            }
+                            user.businessName = req.body.businessName;
+                            user.name = req.body.name;
+                            user.lastName = req.body.lastName;
+                            user.role = req.body.role;
+                            user.status = req.body.status;
+                            user.email = req.body.email;
+                            user.phone = req.body.phone;
+                            if(req.body.password)  //Avoid to set password undefined
+                                user.password = req.body.password;
 
-                user.partnerId = req.body.partnerId;
-                
-                user.extrainfo = req.body.extrainfo;
-                return user.save();
-            }));
-        })
-        .then(function(){
-            if (req.body.role == 4){
-                return User.load({_id: req.body._id}).then(function(user){              
-                    return stripeS.subscriptions.retrieve(user.stripeSubscription).then((subscription) => {
-                            if (subscription)
-                                if (req.body.planId != user.planId) {
-                                    return Product.load({_id: req.body.planId}).then(product => {
-                                        return Coupon.load({_id: req.body.couponId}).then(coupon => {
-                                            return stripeS.plans.retrieve(product.productName, (err, plan) => {
-                                                return stripeS.subscriptionItems.update(subscription.items.data[0].id, {plan: product.productName}).then((transfer) => {
-                                                    user.planId = product._id;
-                                                    return user.save();
-                                                })
-                                            })
-                                        })
+                            user.partnerId = req.body.partnerId;
+                            
+                            user.extrainfo = req.body.extrainfo;
+                            return user.save();
+                        }));
+                    })
+                    .then(() => {
+                        return new Promise((resolve, reject) => {
+                            if (req.body.role == 4){
+                                User.load({_id: req.body._id}).then(function(user){              
+                                    stripeS.subscriptions.retrieve(user.stripeSubscription).then((subscription) => {
+                                            if (subscription)
+                                                if (req.body.planId != user.planId) {
+                                                    Product.load({_id: req.body.planId}).then(product => {
+                                                        stripeS.plans.retrieve(product.productName, (err, plan) => {
+                                                            stripeS.subscriptionItems.update(subscription.items.data[0].id, {plan: product.productName}).then((transfer) => {
+                                                                user.planId = product._id;
+                                                                user.save((err,user) => {                                                    
+                                                                    if (err) {
+                                                                        reject(err);
+                                                                    }
+                                                                    resolve({user: user, subscription: subscription});
+                                                                })                                
+                                                            })
+                                                        })
+                                                    })
+                                                }
+                                                else {
+                                                    resolve({user: user, subscription: subscription});
+                                                }                                
                                     })
-                                }
-                            }).catch((e) => {
-                                console.log(e);
-                                return StripeService.toggleSubscription(user._id, user.status == 'active' && !user.pausingPayment);
-                            })
-                })
+                                })
+                            }
+                        });
+                    })
+                    .then((data) => {
+                        let user = data.user;
+                        let subscription = data.subscription;
+                        return new Promise((resolve, reject) => {
+                            if (user.couponId) {
+                                Coupon.load({_id: req.body.couponId}).then(coupon => {
+                                    //assume that brand-new naming convention-based coupons are only applied whereas old ones are not applied
+                                    //for monthly payment plan, but not for SLAPbuild
+                                    if (coupon.validateSignUp(req.body.planId, user.buildId).length === 0) {
+                                        stripeS.subscriptions.update(subscription.id, {coupon: coupon.code + "_m"}, (err, subscription) => {
+                                            if (err) 
+                                                reject(err);
+                                            else {
+                                                user.couponId = coupon._id;
+                                                user.save((err, user) => {
+                                                    if (err) {
+                                                        reject(err);
+                                                    }
+                                                    else {
+                                                        resolve(user);
+                                                    }
+                                                })                                                                         
+                                            }
+                                        })
+                                    }
+                                    else {
+                                        stripeS.subscriptions.update(subscription.id, {coupon: null}, (err, subscription) => {
+                                                if (err) 
+                                                    reject(err);
+                                                else {
+                                                    user.couponId = null;
+                                                    user.save((err, user) => {
+                                                        if (err) {
+                                                            reject(err);
+                                                        }
+                                                        else {
+                                                            reject(new Error("the plan has changed successfully but the coupon is not applicable to this plan!"));
+                                                        }
+                                                    })                                                                         
+                                                }
+                                        })                                                                                                            
+                                    }
+                                })           
+                            }
+                        })
+                    })    
+                    .catch(err => {
+                        return Promise.reject(err);
+                    })                
             }
         })
     }
@@ -151,26 +217,92 @@ class UserController {
                 //     return user;
                    // }
 
-    static checkPaymentStatus(reqUser, savedUser){
-        
-        return UserController.getActiveUserByEmail(savedUser.email)
-        .then(userId =>{
-            console.log(userId)
-            let activity = {
-                userId: userId,
-                type: 'Other'
-            }
-            if (reqUser.pausingPayment){
-                activity.title = 'PaymentPaused';
-                activity.notes = savedUser.businessName + ' was paused Payment.'
-            }
-            else {
-                activity.title = 'PaymentActivated';
-                activity.notes = savedUser.businessName + ' was activated Payment.';
-            }
-            return activityController.create(activity);
-                
-        })
+    static changePaymentStatus(reqUser, savedUser){
+        return new Promise((resolve, reject) => {
+            UserController.getActiveUserByEmail(savedUser.email)
+            .then(userId =>{
+                console.log(userId)
+                let activity = {
+                    userId: userId,
+                    type: 'Other'
+                }
+                if (reqUser.pausingPayment){
+                    stripeS.subscriptions.del(savedUser.stripeSubscription, {at_period_end: true}, (err, confirmation) => {
+                        if (err) {
+                            reject(err);
+                        }
+                        else {
+                            if (savedUser.stripeBuildSubscription) {
+                                stripeS.subscriptions.del(savedUser.stripeBuildSubscription, {at_period_end: true}, (err, confirmation) => {
+                                    if (err) {
+                                        reject(err);
+                                    }
+                                    else {
+                                        activity.title = 'PaymentPaused';
+                                        activity.notes = savedUser.businessName + ' was paused Payment.'
+                                        resolve(activityController.create(activity));
+                                    }
+                                });
+                            }
+                            else {
+                                activity.title = 'PaymentPaused';
+                                activity.notes = savedUser.businessName + ' was paused Payment.'
+                                resolve(activityController.create(activity));
+                            }
+                        }
+                    })
+                }
+                else {
+                    stripeS.subscriptions.retrieve(savedUser.stripeSubscription, (err, subscription) => {
+                        var item_id = subscription.items.data[0].id;
+                        Product.load({_id: savedUser.planId}).then(product => {                
+                            var items = [
+                                {
+                                    id: item_id,
+                                    plan: product.productName
+                                }
+                            ]
+                            stripeS.subscriptions.update(savedUser.stripeSubscription, {items: items}, (err, subscription) => {
+                                if (err) {
+                                    reject(err);
+                                }
+                                else {
+                                    if (savedUser.stripeBuildSubscription) {
+                                        stripeS.subscriptions.retrieve(savedUser.stripeBuildSubscription, (err, subscription) => {
+                                            var item_id = subscription.items.data[0].id;
+                                            Product.load({_id: savedUser.buildId}).then(product => {                
+                                                var items = [
+                                                    {
+                                                        id: item_id,
+                                                        plan: product.productName
+                                                    }
+                                                ]
+                                                stripeS.subscriptions.update(savedUser.stripeBuildSubscription, {items: items}, (err, subscription) => {
+                                                    if (err) {
+                                                        reject(err);
+                                                    }
+                                                    else {
+                                                        activity.title = 'PaymentActivated';
+                                                        activity.notes = savedUser.businessName + ' was activated Payment.';
+                                                        resolve(activityController.create(activity));
+                                                    }                                        
+                                                });
+                                            });
+                                        });
+                                    }
+                                    else {
+                                        activity.title = 'PaymentActivated';
+                                        activity.notes = savedUser.businessName + ' was activated Payment.';
+                                        resolve(activityController.create(activity));
+                                    }
+                                }
+                            })
+                            
+                        });
+                    });
+                }    
+            })
+        })        
     }
     static updateMe(req) {
         var bizName;

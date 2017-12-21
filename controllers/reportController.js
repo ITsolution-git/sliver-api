@@ -72,9 +72,13 @@ class ReportController {
             if (!users.length) throw new Error();
             if (_.isUndefined(report.filter.slapStatus)) return result;
             if (!report.filter.slapStatus) {
-                if (report.filter.buildStatus) 
+                console.log('=============build status=====================', report.filter.buildStatus);
+                if (report.filter.buildStatus == -1)
+                    return {users: users, report}
+                else if (report.filter.buildStatus == 1) 
                     return {users: users.filter(user => Moment(user.createdAt).isBefore(Moment().subtract(1, 'month'), 'day')), report} 
-                else return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
+                else 
+                    return {users: users.filter(user => Moment(user.createdAt).isBetween(Moment().subtract(1, 'month'), Moment(), 'day', [])), report}
             }
             return ReportController.getUsersByQuater(users, report.filter.quaters).then(users => {
                 return {users, report}
